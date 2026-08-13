@@ -51,23 +51,23 @@
       </div>
       <div class="flex items-center gap-1">
         <span class="font-bold">วันที่:</span>
-        <span class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300">{{
-          pageData.date_str
-        }}</span>
+        <span class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300">
+          {{ pageData.date_str }}</span
+        >
         <span>ถึง</span>
-        <span class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300">{{
-          dateTo
-        }}</span>
+        <span class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300">
+          {{ formatDate(dateTo) }}</span
+        >
       </div>
       <div class="flex items-center gap-1">
         <span class="font-bold">เวลา:</span>
-        <span class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300">{{
-          timeFrom
-        }}</span>
+        <span class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300">
+          {{ timeFrom }}</span
+        >
         <span>ถึง</span>
-        <span class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300">{{
-          timeTo
-        }}</span>
+        <span class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300">
+          {{ timeTo }}</span
+        >
       </div>
     </div>
 
@@ -132,6 +132,16 @@
 <script setup>
 import { ref } from "vue";
 import ParameterTable from "./ParameterTable.vue";
+
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
 
 const props = defineProps({
   pageData: {

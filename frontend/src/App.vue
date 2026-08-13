@@ -110,9 +110,12 @@
           ></path>
         </svg>
         <h3 class="text-sm font-semibold text-gray-800">
-          ไม่พบข้อมูลรายงานในช่วงเวลาดังกล่าว
+          <div v-if="loadFristTime">
+            กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มสร้างรายงานใหม่
+          </div>
+          <div v-else>ไม่พบข้อมูลรายงานในช่วงเวลาดังกล่าว</div>
         </h3>
-        <p class="text-xs text-gray-500 mt-1">
+        <p v-if="!loadFristTime" class="text-xs text-gray-500 mt-1">
           กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มค้นหารายงานใหม่
         </p>
       </div>
@@ -126,6 +129,7 @@ import FilterBar from "./components/FilterBar.vue";
 import LaminateReportSheet from "./components/LaminateReportSheet.vue";
 import AppHeadTitle from "./components/AppHeadTitle.vue";
 // Helpers for default date formatting (YYYY-MM-DD)
+const loadFristTime = true;
 const getTodayStr = () => {
   const d = new Date();
   const year = d.getFullYear();
@@ -199,6 +203,6 @@ const printReport = () => {
 
 onMounted(() => {
   fetchMachines();
-  fetchReport();
+  // fetchReport();
 });
 </script>
