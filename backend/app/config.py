@@ -12,8 +12,9 @@ class Settings:
     DB_PASSWORD: str = os.getenv("DB_PASSWORD", "")
     DB_USE_WINDOWS_AUTH: bool = os.getenv("DB_USE_WINDOWS_AUTH", "false").lower() == "true"
     
-    # Enable fallback to mock data when database is unreachable
-    USE_MOCK_FALLBACK: bool = os.getenv("USE_MOCK_FALLBACK", "true").lower() == "true"
+    # Mock fallback disabled - strictly use live production SQL Server
+    USE_MOCK_FALLBACK: bool = os.getenv("USE_MOCK_FALLBACK", "false").lower() == "true"
+
 
 
     @property
