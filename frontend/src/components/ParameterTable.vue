@@ -1,39 +1,42 @@
 <template>
-  <div class="w-full overflow-x-auto">
+  <!-- overflow-auto so it scrolls on screen if needed, but is clipped for print -->
+  <div class="w-full h-full overflow-auto">
     <table class="report-table">
       <thead>
         <tr>
-          <!-- Fixed Column 1: Diagonal Header for Parameter Name vs Time -->
+          <!-- Column 1: Parameter name -->
+          <th style="width: 160px; min-width: 160px">Setting Parameter</th>
 
-          <th class="" style="width: 220px; height: 38px">Setting Parameter</th>
-
-          <!-- Fixed Column 2: Set Point -->
-          <th style="width: 80px" class="bg-gray-50 font-bold">
+          <!-- Column 2: Set Point -->
+          <th style="width: 54px; min-width: 54px" class="bg-gray-50 font-bold">
             Set Point (PS)
           </th>
 
-          <!-- Fixed Column 3: Unit -->
-          <th class="diagonal-cell w-20">
+          <!-- Column 3: Diagonal Time / Unit header -->
+          <th
+            class="diagonal-cell"
+            style="width: 46px; min-width: 46px; height: 36px"
+          >
             <div class="top-right-text">Time</div>
-            <div class="bottom-left-text bg-gray-50 font-bold">Unit</div>
+            <div class="bottom-left-text">Unit</div>
           </th>
 
-          <!-- Dynamic Time Columns -->
+          <!-- Dynamic time columns -->
           <th
             v-for="col in timeColumns"
             :key="col.key"
-            style="min-width: 50px"
             class="bg-gray-50 font-bold text-center"
+            style="min-width: 42px"
           >
             {{ col.label }}
           </th>
 
-          <!-- Empty filler header columns if page has fewer columns than 14 -->
+          <!-- Filler columns to always show 14 slots -->
           <th
             v-for="n in fillerColumnCount"
             :key="'fill-hdr-' + n"
-            style="min-width: 45px"
             class="bg-gray-50"
+            style="min-width: 42px"
           >
             น.
           </th>
@@ -42,21 +45,17 @@
       <tbody>
         <tr v-for="row in rows" :key="row.param_id">
           <!-- Parameter Name -->
-          <td class="param-name-cell font-medium">
-            {{ row.name }}
-          </td>
+          <td class="param-name-cell font-medium">{{ row.name }}</td>
 
           <!-- Set Point -->
-          <td class="text-center font-medium">
-            {{ row.set_point }}
-          </td>
+          <td class="text-center font-medium">{{ row.set_point }}</td>
 
           <!-- Unit -->
-          <td class="text-center text-xs text-gray-700">
+          <td class="text-center text-gray-700" style="font-size: 8.5px">
             {{ row.unit }}
           </td>
 
-          <!-- Value Cells for Time Columns -->
+          <!-- Value cells for each time column -->
           <td
             v-for="col in timeColumns"
             :key="col.key"
@@ -66,14 +65,13 @@
               v-if="col.key === 'setup'"
               v-model="row.setup_val"
               type="text"
-              class="w-full text-center bg-transparent focus:outline-none focus:bg-yellow-50 text-xs font-semibold"
+              class="w-full text-center bg-transparent focus:outline-none focus:bg-yellow-50 font-semibold"
+              style="font-size: 8.5px"
             />
-            <span v-else>
-              {{ row.values[col.key] || "" }}
-            </span>
+            <span v-else>{{ row.values[col.key] || "" }}</span>
           </td>
 
-          <!-- Empty filler cells for aesthetic symmetry when columns are less than target count -->
+          <!-- Filler cells -->
           <td
             v-for="n in fillerColumnCount"
             :key="'fill-cell-' + n"
@@ -101,11 +99,10 @@ const props = defineProps({
   },
   targetColumnCount: {
     type: Number,
-    default: 14, // Standard company sheet has ~14 time slots
+    default: 14,
   },
 });
 
-// Calculate filler columns if the active timestamp columns count is less than 14
 const fillerColumnCount = computed(() => {
   const currentCount = props.timeColumns.length;
   return currentCount < props.targetColumnCount
@@ -114,8 +111,8 @@ const fillerColumnCount = computed(() => {
 });
 </script>
 
-<style lang="css">
+<style scoped>
 tr {
-  height: 28px;
+  height: 20px;
 }
 </style>

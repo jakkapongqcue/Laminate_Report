@@ -1,36 +1,8 @@
 <template>
-  <div class="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-[310mm] mx-auto">
+  <div class="min-h-screen py-6 px-4">
+    <div class="mx-auto" style="max-width: 297mm">
       <!-- App Header Title (Hidden on Print) -->
-      <div
-        class="no-print mb-6 flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-gray-200"
-      >
-        <div class="flex items-center gap-3">
-          <div
-            class="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center text-white font-bold shadow"
-          >
-            LR
-          </div>
-          <div>
-            <h1 class="text-lg font-bold text-gray-900">
-              Laminate Checking Report System
-            </h1>
-            <p class="text-xs text-gray-500">
-              ระบบดึงข้อมูลจาก SQL Server และออกรายงานตรวจบันทึกเครื่องเคลือบ
-            </p>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <span
-            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"
-          >
-            <span
-              class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"
-            ></span>
-            System Ready
-          </span>
-        </div>
-      </div>
+      <AppHeadTitle />
 
       <!-- Filter Controls Bar -->
       <FilterBar
@@ -102,6 +74,7 @@
 
       <!-- Report Pages Rendering Container -->
       <div
+        class="overflow-auto"
         v-else-if="
           reportData && reportData.pages && reportData.pages.length > 0
         "
@@ -151,7 +124,7 @@
 import { ref, reactive, onMounted } from "vue";
 import FilterBar from "./components/FilterBar.vue";
 import LaminateReportSheet from "./components/LaminateReportSheet.vue";
-
+import AppHeadTitle from "./components/AppHeadTitle.vue";
 // Helpers for default date formatting (YYYY-MM-DD)
 const getTodayStr = () => {
   const d = new Date();
@@ -170,10 +143,7 @@ const filters = reactive({
   hour_step: 1,
 });
 
-const machines = ref([
-  { id: "1LB09_Bobst", name: "1LB09_Bobst" }
-]);
-
+const machines = ref([{ id: "1LB09_Bobst", name: "1LB09_Bobst" }]);
 
 const loading = ref(false);
 const errorMessage = ref("");
