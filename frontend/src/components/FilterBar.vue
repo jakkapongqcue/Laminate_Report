@@ -15,7 +15,7 @@
             v-model="filters.machine"
             class="input bg-white min-w-[200px]"
           >
-            <option v-for="m in machines" :key="m.id" :value="m.name">
+            <option v-for="m in machines" :key="m.id" :value="m.id">
               {{ m.name }}
             </option>
           </select>

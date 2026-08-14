@@ -41,7 +41,7 @@ STANDARD_PARAMETERS = [
 ]
 
 MACHINES = [
-    {"id": "1LB09_Bobst", "name": "1LB09_Bobst"}
+    {"id": "1LB09_Bobst", "name": "1LB09 Bobst"}
 ]
 
 def process_sql_view_data(
@@ -104,7 +104,7 @@ def process_sql_view_data(
         actual_datetime is the real DB timestamp, used to label the column header."""
         best_row = None
         best_actual_dt = None
-        best_delta = timedelta(minutes=MATCH_TOLERANCE_MINUTES)
+        best_delta = timedelta(minutes=MATCH_TOLERANCE_MINUTES)  #timedelta is used to represent the difference between two datetime objects 
         for dt_obj, row in timestamp_list:
             delta = abs(dt_obj - target_dt)
             if delta <= best_delta:

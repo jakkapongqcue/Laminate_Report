@@ -108,7 +108,7 @@ const filters = reactive({
   hour_step: 1,
 });
 
-const machines = ref([{ id: "1LB09_Bobst", name: "1LB09_Bobst" }]);
+const machines = ref([]);
 
 const isLoading = ref(false);
 const errorMessage = ref("");
