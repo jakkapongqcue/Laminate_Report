@@ -31,19 +31,7 @@
         class="no-print p-4 mb-6 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center justify-between"
       >
         <div class="flex items-center gap-2">
-          <svg
-            class="w-5 h-5 text-red-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            ></path>
-          </svg>
+          <Icon_error />
           <span>{{ errorMessage }}</span>
         </div>
         <button
@@ -78,19 +66,7 @@
         v-else
         class="no-print py-16 text-center bg-white rounded-lg border border-gray-200 shadow-sm"
       >
-        <svg
-          class="mx-auto h-12 w-12 text-gray-400 mb-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          ></path>
-        </svg>
+        <Icon_report />
         <h3 class="text-sm font-semibold text-gray-800">
           <div v-if="loadFristTime">
             กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มสร้างรายงานใหม่
@@ -111,8 +87,9 @@ import FilterBar from "./components/FilterBar.vue";
 import LaminateReportSheet from "./components/LaminateReportSheet.vue";
 import AppHeadTitle from "./components/AppHeadTitle.vue";
 import Icon_circleLoad from "./components/icon/Icon_circleLoad.vue";
-
-// Helpers for default date formatting (YYYY-MM-DD)
+import Icon_report from "./components/icon/Icon_report.vue";
+import Icon_error from "./components/icon/Icon_Error.vue";
+// Helpers for default dat  e formatting (YYYY-MM-DD)
 const loadFristTime = true;
 const getTodayStr = () => {
   const d = new Date();

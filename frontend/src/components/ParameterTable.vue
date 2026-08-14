@@ -15,7 +15,7 @@
           <!-- Column 3: Diagonal Time / Unit header -->
           <th
             class="diagonal-cell"
-            style="width: 46px; min-width: 46px; height: 36px"
+            style="width: 48px; min-width: 48px; height: 36px"
           >
             <div class="top-right-text">Time</div>
             <div class="bottom-left-text">Unit</div>
