@@ -73,7 +73,7 @@
           :disabled="statusLoading"
           class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50"
         >
-          <Icon_loading :loading="statusLoading" :cusClass="'w-4 h-4'" />
+          <Icon_search :loading="statusLoading" :cusClass="'w-4 h-4'" />
           ดึงข้อมูล
         </button>
 
@@ -113,7 +113,7 @@ import { defineProps, defineEmits } from "vue";
 import Icon_calendar from "../components/icon/Icon_calendar.vue";
 import Icon_time from "../components/icon/Icon_time.vue";
 import Icon_print from "../components/icon/Icon_print.vue";
-import Icon_loading from "../components/icon/Icon_loading.vue";
+import Icon_search from "../components/icon/Icon_search.vue";
 import Icon_machine from "../components/icon/Icon_machine.vue";
 const props = defineProps({
   filters: {
