@@ -5,33 +5,37 @@
       class="flex justify-between items-start mb-1 pb-1 border-b border-gray-400"
     >
       <!-- Company Logo & Brand -->
-      <div class="flex items-center gap-2">
-        <div
+      <div class="flex items-center gap-2" :class="customClass">
+        <!-- <div
           class="w-8 h-8 bg-sky-800 text-white rounded flex items-center justify-center font-bold text-[9px] tracking-wider leading-tight text-center"
         >
           STAR<br />FLEX
-        </div>
+        </div> -->
+        <img src="../assets/SFLEX.png" alt="SFLEX_logo" class="h-16 w-auto" />
         <div>
-          <div
+          <!-- <div
             class="text-[8px] uppercase font-bold text-gray-500 tracking-wider"
           >
             STARFLEX PUBLIC COMPANY LIMITED
           </div>
           <div class="text-[9px] font-bold text-gray-800">
             ฝ่ายประกันคุณภาพ (Quality Assurance)
-          </div>
+          </div> -->
         </div>
       </div>
 
       <!-- Main Report Title -->
-      <div class="text-center">
+      <div class="text-center self-center">
         <h1 class="text-base font-bold uppercase tracking-wide text-gray-900">
           LAMINATE CHECKING REPORT
         </h1>
       </div>
 
       <!-- Page Indicator -->
-      <div class="text-right text-[9px] font-semibold text-gray-700">
+      <div
+        class="text-right text-[9px] font-semibold text-gray-700 self-center"
+        :class="customClass"
+      >
         Page:
         <span class="text-xs font-bold text-gray-900">{{
           pageData.page_number
@@ -45,34 +49,34 @@
       <div class="flex items-center gap-1">
         <span class="font-bold">เครื่องเคลือบ:</span>
         <span
-          class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300 font-semibold"
+          class="px-1 py-0.5 rounded border border-gray-300 font-semibold"
           >{{ machine }}</span
         >
       </div>
       <div class="flex items-center gap-1">
         <span class="font-bold">วันที่:</span>
-        <span class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300">
+        <span class="px-1 py-0.5 rounded border border-gray-300">
           {{ pageData.date_str }}</span
         >
         <span>ถึง</span>
-        <span class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300">
+        <span class="px-1 py-0.5 rounded border border-gray-300">
           {{ formatDate(dateTo) }}</span
         >
       </div>
       <div class="flex items-center gap-1">
         <span class="font-bold">เวลา:</span>
-        <span class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300">
+        <span class="px-1 py-0.5 rounded border border-gray-300">
           {{ timeFrom }}</span
         >
         <span>ถึง</span>
-        <span class="px-1 py-0.5 bg-gray-100 rounded border border-gray-300">
+        <span class="px-1 py-0.5 rounded border border-gray-300">
           {{ timeTo }}</span
         >
       </div>
     </div>
 
     <!-- ── Parameter Table (fills remaining height) ─────────────────────── -->
-    <div class="flex-1 overflow-hidden">
+    <div class="flex-1">
       <ParameterTable
         :time-columns="pageData.time_columns"
         :rows="pageData.rows"
@@ -80,7 +84,7 @@
     </div>
 
     <!-- ── Footer ──────────────────────────────────────────────────────── -->
-    <div class="text-[9px]">
+    <div class="text-[9px] pt-4">
       <!-- Remark line -->
       <div class="flex items-center gap-2 pb-3">
         <span class="font-bold whitespace-nowrap">Remark:</span>
@@ -132,6 +136,8 @@
 <script setup>
 import { ref } from "vue";
 import ParameterTable from "./ParameterTable.vue";
+
+const customClass = "w-20";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";

@@ -1,6 +1,6 @@
 <template>
   <!-- overflow-auto so it scrolls on screen if needed, but is clipped for print -->
-  <div class="w-full h-full overflow-auto">
+  <div class="w-full h-full">
     <table class="report-table">
       <thead>
         <tr>
@@ -8,7 +8,7 @@
           <th style="width: 160px; min-width: 160px">Setting Parameter</th>
 
           <!-- Column 2: Set Point -->
-          <th style="width: 54px; min-width: 54px" class="bg-gray-50 font-bold">
+          <th style="width: 68px; min-width: 68px" class="bg-gray-50 font-bold">
             Set Point (PS)
           </th>
 

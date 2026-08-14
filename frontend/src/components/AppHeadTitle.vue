@@ -17,14 +17,13 @@
         </p>
       </div>
     </div>
-    <div class="flex items-center gap-2">
+    <!-- <div class="flex items-center gap-2">
       <span
         class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"
       >
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         System Ready
       </span>
-    </div>
+    </div> -->
   </div>
 </template>
-<script setup></script>
