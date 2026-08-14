@@ -8,7 +8,7 @@
       <FilterBar
         :filters="filters"
         :machines="machines"
-        :loading="loading"
+        :statusLoading="isLoading"
         @search="fetchReport"
         @print="printReport"
       />
@@ -81,7 +81,7 @@
       >
         <div v-for="page in reportData.pages" :key="page.page_number">
           <LaminateReportSheet
-            :page-data="page"
+            v-bind:page-data="page"
             :machine="reportData.machine"
             :date-from="reportData.date_from"
             :date-to="reportData.date_to"
@@ -149,7 +149,7 @@ const filters = reactive({
 
 const machines = ref([{ id: "1LB09_Bobst", name: "1LB09_Bobst" }]);
 
-const loading = ref(false);
+const isLoading = ref(false);
 const errorMessage = ref("");
 const reportData = ref(null);
 
@@ -168,7 +168,7 @@ const fetchMachines = async () => {
 };
 
 const fetchReport = async () => {
-  loading.value = true;
+  isLoading.value = true;
   errorMessage.value = "";
 
   try {
@@ -193,7 +193,7 @@ const fetchReport = async () => {
     console.error("Fetch report error:", err);
     errorMessage.value = `เกิดข้อผิดพลาดในการดึงข้อมูล: ${err.message}`;
   } finally {
-    loading.value = false;
+    isLoading.value = false;
   }
 };
 
