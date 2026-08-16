@@ -56,7 +56,34 @@ def process_sql_view_data(
     """
     Transforms SQL query result from [KEP_LOG].[dbo].[View_1LB09_Bobst] into ReportResponse pages.
     Strictly parses database rows without generating fake data.
+
+    Flow of work (numbered):
+    1. Receive raw SQL rows from the API or database query.
+    2. Convert each row timestamp into a Python datetime object.
+    3. Sort timestamps and find the nearest row for each target time slot.
+    4. Generate all target time columns within the selected date/time range and hour_step.
+    5. Map each database column to its parameter name and attach the value to the correct time cell.
+    6. Build ReportPageData objects (pages of rows & time columns) and return a final ReportResponse.
+
+    Example final structure:
+    {
+      "machine": "1LB09_Bobst",
+      "date_from": "2026-08-15",
+      "date_to": "2026-08-15",
+      "time_from": "08:00",
+      "time_to": "17:00",
+      "pages": [
+        {
+          "page_number": 1,
+          "date_str": "15/08/2026",
+          "time_columns": [{"key": "time_0800", "label": "08:00 น.", "full_datetime": "2026-08-15 08:00"}],
+          "rows": [{"param_id": 1, "name": "Line Speed", "values": {"time_0800": "100"}}]
+        }
+      ]
+    }
     """
+    # 1. map ชื่อ field ใน SQL view ไปยัง index ของ row ที่ต้องอ่าน
+    #    row = [timestamp, Machine : Speed, Tunnel : Zone 1 : Temperature, ...]
     COLUMN_INDEX_MAP = {
         "Machine : Speed": 1,
         "Tunnel : Zone 1 : Temperature": 2,
@@ -72,12 +99,12 @@ def process_sql_view_data(
         "Unwinder 2 : Corona : Specific Power": 12,
     }
 
-    # Build sorted list of (datetime, row) for nearest-neighbor lookup
-    # This handles real-world cases where DB records are at irregular intervals
-    # e.g. target = 10:00 but DB has 10:12 -> still matched within tolerance
-    MATCH_TOLERANCE_MINUTES = 30  # Accept records within ±30 min of target time
+    # 2. สร้าง list ของ timestamp จากแต่ละ row ของ SQL
+    #    เปลี่ยน string timestamp เป็น datetime object เพื่อจัดการเวลาได้ง่ายขึ้น
+    #    row[0] คือ timestamp ของแต่ละบันทึก เช่น "2026-08-15 08:00:00"
+    MATCH_TOLERANCE_MINUTES = 30  # ยอมรับ record ที่อยู่ภายใน ±30 นาทีจากเวลาเป้าหมาย
 
-    timestamp_list: List[tuple] = []  # list of (datetime_obj, row)
+    timestamp_list: List[tuple] = []  # list ของ (datetime_obj, row)
     for r in sql_rows:
         if not r or r[0] is None:
             continue
@@ -94,17 +121,21 @@ def process_sql_view_data(
             dt_obj = dt_val
         timestamp_list.append((dt_obj, r))
 
-    # Sort once by datetime for efficient nearest lookup
+    # 3. เรียงลำดับ timestamp จากน้อยไปมาก เพื่อความสะดวกในการค้นหา row ที่ใกล้เคียง
     timestamp_list.sort(key=lambda x: x[0])
 
+    # 4. สร้างฟังก์ชันหาค่า SQL row ที่ใกล้เคียงกับเวลาเป้าหมาย
+    #    ใช้เพราะฐานข้อมูลจริงอาจไม่มี record ตรงทุกชั่วโมง
+    #    เช่น เป้าหมาย 10:00 แต่ DB มี 10:12 ก็ใช้ได้ถ้าห่างน้อยกว่า 30 นาที
     def find_nearest_row(target_dt: datetime):
-        """Return (actual_datetime, row) for the DB row whose timestamp is closest
-        to target_dt, within MATCH_TOLERANCE_MINUTES.
-        Returns (None, None) if no match found.
-        actual_datetime is the real DB timestamp, used to label the column header."""
+        """
+        ค้นหา DB row ที่มี timestamp ใกล้เคียงกับ target_dt ที่สุดภายใน MATCH_TOLERANCE_MINUTES
+        ถ้าไม่พบ return (None, None)
+        actual_datetime คือ timestamp จริงจาก DB ใช้แสดงในหัวคอลัมน์
+        """
         best_row = None
         best_actual_dt = None
-        best_delta = timedelta(minutes=MATCH_TOLERANCE_MINUTES)  #timedelta is used to represent the difference between two datetime objects 
+        best_delta = timedelta(minutes=MATCH_TOLERANCE_MINUTES)
         for dt_obj, row in timestamp_list:
             delta = abs(dt_obj - target_dt)
             if delta <= best_delta:
@@ -112,10 +143,12 @@ def process_sql_view_data(
                 best_row = row
                 best_actual_dt = dt_obj
             elif dt_obj > target_dt + timedelta(minutes=MATCH_TOLERANCE_MINUTES):
-                # Since list is sorted, no need to keep scanning
+                # เพราะ list เรียงลำดับแล้ว ถ้าเกิน tolerance ก็ไม่ต้องค้นต่อ
                 break
         return best_actual_dt, best_row
 
+    # 5. แปลง parameter string เป็น datetime object
+    #    ถ้า parse error ก็ใช้วันนี้เวลา 08:00-17:00 เป็น default
     try:
         start_dt = datetime.strptime(f"{date_from_str} {time_from_str}", "%Y-%m-%d %H:%M")
         end_dt = datetime.strptime(f"{date_to_str} {time_to_str}", "%Y-%m-%d %H:%M")
@@ -124,15 +157,21 @@ def process_sql_view_data(
         start_dt = datetime.strptime(f"{today_str} 08:00", "%Y-%m-%d %H:%M")
         end_dt = datetime.strptime(f"{today_str} 17:00", "%Y-%m-%d %H:%M")
 
+    # ถ้าเวลาสิ้นสุดน้อยกว่าหรือเท่ากับเวลาเริ่มต้น ให้ขยับไปวันถัดไป
     if end_dt <= start_dt:
         end_dt += timedelta(days=1)
 
+    # 6. สร้าง list ของ target timestamps ตามช่วงและ step
+    #    เช่น start=08:00, end=17:00, step=1 => [08:00, 09:00, 10:00, ..., 17:00]
     all_timestamps: List[datetime] = []
     curr_dt = start_dt
     while curr_dt <= end_dt:
         all_timestamps.append(curr_dt)
         curr_dt += timedelta(hours=hour_step)
 
+    # 7. จัดกลุ่ม all_timestamps ตามวันที่
+    #    ถ้า query ครอบ 2-3 วัน ก็จะได้ 2-3 key ในพจนานุกรม
+    #    day_clusters = {"2026-08-15": [08:00, 09:00, ...], "2026-08-16": [...], ...}
     MAX_COLS_PER_PAGE = 14
     day_clusters: Dict[str, List[datetime]] = {}
     for dt in all_timestamps:
@@ -141,6 +180,9 @@ def process_sql_view_data(
             day_clusters[day_key] = []
         day_clusters[day_key].append(dt)
 
+    # 8. แบ่งแต่ละวันออกเป็นหน้า (แต่ละหน้ามี max 14 คอลัมน์ เพราะจะแคบมากถ้ามากกว่า)
+    #    เช่น วันที่ 15/08 มี 10 timestamp => 1 หน้า
+    #    วันที่ 16/08 มี 20 timestamp => 2 หน้า (14 + 6)
     page_chunks = []
     for day_str, dt_list in day_clusters.items():
         for i in range(0, len(dt_list), MAX_COLS_PER_PAGE):
@@ -150,12 +192,16 @@ def process_sql_view_data(
             })
 
     total_pages = len(page_chunks)
+    # 9. สร้าง ReportPageData สำหรับแต่ละ chunk (หน้า)
     pages: List[ReportPageData] = []
 
     for idx, chunk in enumerate(page_chunks, start=1):
+        # แปลง วันที่ เป็นรูป Thai เช่น "15/08/2026"
         dt_obj = datetime.strptime(chunk["date_key"], "%Y-%m-%d")
         formatted_date_th = dt_obj.strftime("%d/%m/%Y")
         
+        # 10. สร้าง time_columns เริ่มต้นด้วย "Set up" แล้วตามด้วยเวลาต่างๆ
+        #     เช่น [Set up, 08:00, 09:00, 10:00, ...]
         time_cols: List[TimeColumn] = [
             TimeColumn(
                 key="setup",
@@ -165,9 +211,9 @@ def process_sql_view_data(
         ]
         
         for dt in chunk["timestamps"]:
-            # Find actual DB timestamp nearest to this target slot
+            # หา DB row ที่ใกล้เคียงกับเวลานี้ เพื่อเอา timestamp จริงมาแสดง
             actual_dt, _ = find_nearest_row(dt)
-            # Display the real recorded time if found, otherwise fall back to target
+            # ถ้าพบ record จริง ใช้เวลาจริง ถ้าไม่มี ใช้เวลาเป้าหมาย
             display_dt = actual_dt if actual_dt is not None else dt
             time_cols.append(TimeColumn(
                 key=dt.strftime("time_%H%M"),
@@ -175,33 +221,39 @@ def process_sql_view_data(
                 full_datetime=display_dt.strftime("%Y-%m-%d %H:%M")
             ))
 
+        # 11. สร้าง rows ของแต่ละ parameter (Machine Speed, Temperature, Tension, ...)
         rows: List[ParameterRow] = []
         for p in STANDARD_PARAMETERS:
             setup_val = ""
             col_values: Dict[str, str] = {}
 
             for col in time_cols:
+                # ข้าม "Setup" column
                 if col.key == "setup":
                     continue
                 
-                # If parameter has no mapped column in View_1LB09_Bobst, leave it empty
+                # 12. ถ้า parameter นี้ไม่ได้ map กับ column ใน SQL view ก็ปล่อยไว้เป็นค่าว่าง
                 if not p["db_column"] or p["db_column"] not in COLUMN_INDEX_MAP:
                     col_values[col.key] = ""
                     continue
                 
+                # ดึง index ของ column นี้จาก SQL row
                 col_idx = COLUMN_INDEX_MAP[p["db_column"]]
-                # col.full_datetime is already the actual DB datetime (set when building time_cols)
+                
+                # 13. ค้นหา SQL row ที่ใกล้เคียงกับเวลาของ column นี้
                 try:
                     col_dt = datetime.strptime(col.full_datetime, "%Y-%m-%d %H:%M")
                 except ValueError:
                     col_values[col.key] = ""
                     continue
 
-                # Re-use nearest-neighbor lookup with actual col datetime
                 _, matched_row = find_nearest_row(col_dt)
+                
+                # 14. ถ้าพบ row และ index ถูกต้อง ก็อ่านค่า แล้วแปลงเป็น string
                 if matched_row and col_idx < len(matched_row) and matched_row[col_idx] is not None:
                     raw_val = matched_row[col_idx]
                     if isinstance(raw_val, (int, float)):
+                        # ถ้าเป็นเลขจำนวนเต็ม ไม่ใส่ทศนิยม ถ้าไม่ใช่ ปัดเศษ 1 ตำแหน่ง
                         col_values[col.key] = str(int(raw_val)) if float(raw_val).is_integer() else str(round(float(raw_val), 1))
                     else:
                         col_values[col.key] = str(raw_val)
@@ -217,6 +269,7 @@ def process_sql_view_data(
                 values=col_values
             ))
 
+        # 15. รวม time_columns และ rows ลงใน ReportPageData
         pages.append(ReportPageData(
             page_number=idx,
             total_pages=total_pages,
@@ -225,6 +278,7 @@ def process_sql_view_data(
             rows=rows
         ))
 
+    # 16. รวม pages ทั้งหมดลงใน ReportResponse พร้อมข้อมูล machine และช่วงวันที่เวลา
     return ReportResponse(
         machine=machine,
         date_from=date_from_str,

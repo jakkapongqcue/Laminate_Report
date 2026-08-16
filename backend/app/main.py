@@ -9,6 +9,7 @@ if str(backend_dir) not in sys.path:
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List
+from datetime import datetime, timedelta
 import logging
 
 try:
@@ -120,6 +121,103 @@ def get_laminate_report(
     except Exception as e:
         logger.error(f"PRD SQL Server Query Error: {e}")
         raise HTTPException(status_code=500, detail=f"เกิดข้อผิดพลาดในการดึงข้อมูลจาก SQL Server: {str(e)}")
+
+@app.get("/api/report/laminate/test", response_model=ReportResponse)
+def get_laminate_report_test(
+    machine: str = Query("1LB09_Bobst", description="Machine identifier"),
+    date_from: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    date_to: str = Query(..., description="End date (YYYY-MM-DD)"),
+    time_from: str = Query("08:00", description="Start time (HH:MM)"),
+    time_to: str = Query("17:00", description="End time (HH:MM)"),
+    hour_step: int = Query(1, description="Hourly step increment")
+):
+    """
+    Test endpoint returning synthetic sample data suitable for frontend/data tests.
+    Generates synthetic rows with timestamps between the requested range and numeric values
+    for mapped columns so the same processing path is exercised without connecting to the DB.
+
+    Flow of work (numbered):
+    1. Frontend/API client sends query parameters: machine, date_from, date_to, time_from, time_to, hour_step.
+    2. This function converts the input into Python datetime values and validates them.
+    3. It creates a list of timestamps from start to end using the step value (hour_step).
+    4. For each timestamp, it creates one fake SQL row like: (timestamp, 100, 101, 102, ...)
+    5. It calls process_sql_view_data(...) to map the fake SQL rows into the report structure used by the UI.
+    6. The final response is a ReportResponse object containing machine info + pages + time columns + parameter rows.
+
+    Example output:
+    {
+      "machine": "1LB09_Bobst",
+      "date_from": "2026-08-15",
+      "date_to": "2026-08-15",
+      "time_from": "08:00",
+      "time_to": "17:00",
+      "pages": [
+        {
+          "page_number": 1,
+          "total_pages": 1,
+          "date_str": "15/08/2026",
+          "time_columns": [
+            {"key": "setup", "label": "Set up", "full_datetime": "2026-08-15 Set up"},
+            {"key": "time_0800", "label": "08:00 น.", "full_datetime": "2026-08-15 08:00"}
+          ],
+          "rows": [
+            {
+              "param_id": 1,
+              "name": "Line Speed",
+              "set_point": "",
+              "unit": "m/min",
+              "values": {"time_0800": "100"}
+            }
+          ]
+        }
+      ]
+    }
+    """
+    try:
+        # 1. รับค่าเริ่มต้นและสิ้นสุดจาก Query params
+        start_dt = datetime.strptime(f"{date_from} {time_from}", "%Y-%m-%d %H:%M")
+        end_dt = datetime.strptime(f"{date_to} {time_to}", "%Y-%m-%d %H:%M")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date/time format. Use YYYY-MM-DD and HH:MM")
+
+    # 2. ถ้าช่วงเวลาไม่ถูกต้อง ให้ขยับวันถัดไปเพื่อให้มีช่วงที่ใช้งานได้
+    if end_dt <= start_dt:
+        end_dt += timedelta(days=1)
+
+    # 3. สร้างลิสต์ timestamp ตามช่วงเวลาและ step อย่างที่ client ส่งมา
+    #    เช่น hour_step=1 => [08:00, 09:00, 10:00, ...]
+    timestamps = []
+    curr = start_dt
+    idx = 0
+    while curr <= end_dt:
+        timestamps.append(curr)
+        curr += timedelta(hours=hour_step)
+        idx += 1
+
+    # 4. สร้าง SQL row ที่เลียนแบบข้อมูลจริง
+    #    โครงสร้าง row = [timestamp, col1, col2, ..., col12]
+    #    ตัวอย่าง: ('2026-08-15 08:00:00', 100, 101, 102, ... , 111)
+    sql_rows = []
+    for i, ts in enumerate(timestamps):
+        ts_str = ts.strftime("%Y-%m-%d %H:%M:%S")
+        # deterministic synthetic numbers:
+        # base = 100 + (i * 3)
+        # values = [base + 0, base + 1, ..., base + 11]
+        base = 100 + (i * 3)
+        cols = [base + j for j in range(12)]
+        row = tuple([ts_str] + cols)
+        sql_rows.append(row)
+
+    # 5. ส่ง row ที่สร้างขึ้น ไปให้ process_sql_view_data ทำหน้าที่ map ค่าลง report
+    return process_sql_view_data(
+        sql_rows=sql_rows,
+        machine=machine,
+        date_from_str=date_from,
+        date_to_str=date_to,
+        time_from_str=time_from,
+        time_to_str=time_to,
+        hour_step=hour_step
+    )
 
 if __name__ == "__main__":
     import uvicorn

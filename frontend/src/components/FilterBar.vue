@@ -1,8 +1,8 @@
 <template>
   <div
-    class="no-print bg-white rounded-lg shadow-md p-4 mb-6 border border-gray-200"
+    class="p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-md no-print"
   >
-    <div class="flex flex-wrap items-end gap-4 justify-between">
+    <div class="flex flex-wrap items-end justify-between gap-4">
       <!-- Filter Controls Group -->
       <div class="flex flex-wrap items-end gap-4">
         <!-- Machine Selection -->
@@ -58,7 +58,7 @@
         <!-- Hourly Step -->
         <div class="flex flex-col">
           <label class="label">ช่วงเวลา (Step)</label>
-          <select v-model.number="filters.hour_step" class="input bg-white">
+          <select v-model.number="filters.hour_step" class="bg-white input">
             <option :value="1">+1 ชั่วโมง</option>
             <option :value="2">+2 ชั่วโมง</option>
             <option :value="4">+4 ชั่วโมง</option>
@@ -68,6 +68,7 @@
 
       <!-- Action Buttons -->
       <div class="flex items-center gap-3">
+        <!-- Search button -->
         <button
           @click="$emit('search')"
           :disabled="statusLoading"
@@ -77,6 +78,7 @@
           ดึงข้อมูล
         </button>
 
+        <!-- Print / Export button -->
         <button
           @click="$emit('print')"
           class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out"
@@ -85,22 +87,34 @@
           พิมพ์รายงาน / Export PDF
         </button>
       </div>
+
+      <!-- Fixed top-right toggle placed outside normal flow -->
+      <div class="fixed top-4 right-4 z-50 no-print bg-white p-2 rounded-md shadow border">
+        <label class="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            v-model="filters.use_test_api"
+            class="w-4 h-4"
+          />
+          <span>Use test API</span>
+        </label>
+      </div>
     </div>
 
     <!-- Presets bar -->
     <div
-      class="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500"
+      class="flex items-center gap-2 pt-3 mt-3 text-xs text-gray-500 border-t border-gray-100"
     >
       <span class="font-semibold text-gray-700">Quick Presets:</span>
       <button
         @click="setShift(1)"
-        class="px-2 py-1 bg-gray-100 hover:bg-sky-100 hover:text-sky-700 rounded transition"
+        class="px-2 py-1 transition bg-gray-100 rounded hover:bg-sky-100 hover:text-sky-700"
       >
         กะเช้า (08:00 - 20:00)
       </button>
       <button
         @click="setShift(2)"
-        class="px-2 py-1 bg-gray-100 hover:bg-sky-100 hover:text-sky-700 rounded transition"
+        class="px-2 py-1 transition bg-gray-100 rounded hover:bg-sky-100 hover:text-sky-700"
       >
         กะดึกข้ามวัน (20:00 - 08:00)
       </button>

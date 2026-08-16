@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen py-6 px-4">
+  <div class="min-h-screen px-4 py-6">
     <div class="mx-auto" style="max-width: 297mm">
       <!-- App Header Title (Hidden on Print) -->
       <AppHeadTitle />
@@ -16,19 +16,19 @@
       <!-- Loading State Overlay -->
       <div
         v-if="isLoading"
-        class="no-print flex flex-col items-center justify-center py-20 bg-white rounded-lg shadow border border-gray-200"
+        class="flex flex-col items-center justify-center py-20 bg-white border border-gray-200 rounded-lg shadow no-print"
       >
         <Icon_circleLoad :cus-class="'h-10 w-10 text-sky-600 mb-3'" />
         <p class="text-sm font-semibold text-gray-700">
           กำลังดึงข้อมูลรายงานจากระบบ...
         </p>
-        <p class="text-xs text-gray-500 mt-1">กรุณารอสักครู่</p>
+        <p class="mt-1 text-xs text-gray-500">กรุณารอสักครู่</p>
       </div>
 
       <!-- Error Alert State -->
       <div
         v-else-if="errorMessage"
-        class="no-print p-4 mb-6 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center justify-between"
+        class="flex items-center justify-between p-4 mb-6 text-sm text-red-700 border border-red-200 rounded-lg no-print bg-red-50"
       >
         <div class="flex items-center gap-2">
           <Icon_error />
@@ -36,7 +36,7 @@
         </div>
         <button
           @click="fetchReport"
-          class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+          class="px-3 py-1 text-xs text-white bg-red-600 rounded hover:bg-red-700"
         >
           ลองใหม่
         </button>
@@ -64,7 +64,7 @@
       <!-- No Data State -->
       <div
         v-else
-        class="no-print py-16 text-center bg-white rounded-lg border border-gray-200 shadow-sm"
+        class="py-16 text-center bg-white border border-gray-200 rounded-lg shadow-sm no-print"
       >
         <Icon_report />
         <h3 class="text-sm font-semibold text-gray-800">
@@ -73,7 +73,7 @@
           </div>
           <div v-else>ไม่พบข้อมูลรายงานในช่วงเวลาดังกล่าว</div>
         </h3>
-        <p v-if="!loadFristTime" class="text-xs text-gray-500 mt-1">
+        <p v-if="!loadFristTime" class="mt-1 text-xs text-gray-500">
           กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มค้นหารายงานใหม่
         </p>
       </div>
@@ -106,6 +106,7 @@ const filters = reactive({
   time_from: "08:00",
   time_to: "17:00",
   hour_step: 1,
+  use_test_api: false, // Toggle to use test API endpoint
 });
 
 const machines = ref([]);
@@ -142,7 +143,10 @@ const fetchReport = async () => {
       hour_step: filters.hour_step.toString(),
     });
 
-    const res = await fetch(`/api/report/laminate?${queryParams.toString()}`);
+    const path = filters.use_test_api
+      ? "/api/report/laminate/test"
+      : "/api/report/laminate";
+    const res = await fetch(`${path}?${queryParams.toString()}`);
 
     if (!res.ok) {
       throw new Error(`Server returned status ${res.status}`);
