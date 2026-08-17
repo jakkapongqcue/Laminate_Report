@@ -88,17 +88,6 @@
         </button>
       </div>
 
-      <!-- Fixed top-right toggle placed outside normal flow -->
-      <div class="fixed top-4 right-4 z-50 no-print bg-white p-2 rounded-md shadow border">
-        <label class="flex items-center gap-2 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            v-model="filters.use_test_api"
-            class="w-4 h-4"
-          />
-          <span>Use test API</span>
-        </label>
-      </div>
     </div>
 
     <!-- Presets bar -->

@@ -17,13 +17,11 @@
         </p>
       </div>
     </div>
-    <!-- <div class="flex items-center gap-2">
-      <span
-        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"
-      >
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        System Ready
-      </span>
-    </div> -->
+    <router-link
+      to="/setting"
+      class="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-md border border-slate-200 hover:bg-slate-200 no-print"
+    >
+      Settings
+    </router-link>
   </div>
 </template>
