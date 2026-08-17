@@ -51,7 +51,11 @@ def process_sql_view_data(
     date_to_str: str,
     time_from_str: str,
     time_to_str: str,
-    hour_step: int = 1
+    hour_step: int = 1,
+    # setup_target_dt is the datetime chosen by user for the "Set up" column (can be None)
+    setup_target_dt: Any = None,
+    # setup_row is an optional DB row fetched specifically for the setup time (can be None)
+    setup_row: Any = None
 ) -> ReportResponse:
     """
     Transforms SQL query result from [KEP_LOG].[dbo].[View_1LB09_Bobst] into ReportResponse pages.
@@ -200,16 +204,39 @@ def process_sql_view_data(
         dt_obj = datetime.strptime(chunk["date_key"], "%Y-%m-%d")
         formatted_date_th = dt_obj.strftime("%d/%m/%Y")
         
-        # 10. สร้าง time_columns เริ่มต้นด้วย "Set up" แล้วตามด้วยเวลาต่างๆ
+        # 10. สร้าง time_columns: สำหรับหน้าแรกจะมีคอลัมน์ 'Set up' อยู่ด้านหน้า
         #     เช่น [Set up, 08:00, 09:00, 10:00, ...]
-        time_cols: List[TimeColumn] = [
-            TimeColumn(
+        time_cols: List[TimeColumn] = []
+
+        # ถ้าเป็นหน้าแรกและผู้ใช้ระบุ setup_target_dt ให้เพิ่มคอลัมน์ 'Set up'
+        include_setup = (setup_target_dt is not None) ## idx == 1 and 
+        setup_display_dt = None
+        if include_setup:
+            # ถ้ามี setup_row ให้ใช้ timestamp จริงจาก DB เพื่อแสดง ถ้าไม่มี ให้ใช้เวลาที่ผู้ใช้เลือก (setup_target_dt)
+            if setup_row and len(setup_row) > 0 and setup_row[0] is not None:
+                raw_setup_ts = setup_row[0]
+                if isinstance(raw_setup_ts, str):
+                    try:
+                        setup_display_dt = datetime.strptime(raw_setup_ts, "%Y-%m-%d %H:%M:%S")
+                    except ValueError:
+                        try:
+                            setup_display_dt = datetime.strptime(raw_setup_ts, "%Y-%m-%d %H:%M")
+                        except ValueError:
+                            setup_display_dt = setup_target_dt
+                else:
+                    setup_display_dt = raw_setup_ts
+            else:
+                setup_display_dt = setup_target_dt
+
+            # label จะเป็น "Set up \n %H:%M น." และ full_datetime แสดงเป็น timestamp ที่เลือก/พบ
+            setup_label = f"Set up \n{setup_display_dt.strftime("%H:%M น.")}"
+            setup_full_dt = setup_display_dt.strftime("%Y-%m-%d %H:%M") if setup_display_dt is not None else f"{chunk['date_key']} Set up"
+            time_cols.append(TimeColumn(
                 key="setup",
-                label="Set up",
-                full_datetime=f"{chunk['date_key']} Set up"
-            )
-        ]
-        
+                label=setup_label,
+                full_datetime=setup_full_dt
+            ))
+
         for dt in chunk["timestamps"]:
             # หา DB row ที่ใกล้เคียงกับเวลานี้ เพื่อเอา timestamp จริงมาแสดง
             actual_dt, _ = find_nearest_row(dt)
@@ -227,17 +254,50 @@ def process_sql_view_data(
             setup_val = ""
             col_values: Dict[str, str] = {}
 
+            # 11.a ถ้าผู้ใช้ส่ง setup_target_dt มา ให้พยายามหาค่า setup_val สำหรับ parameter นี้
+            if setup_target_dt is not None and p["db_column"] and p["db_column"] in COLUMN_INDEX_MAP:
+                try:
+                    setup_col_idx = COLUMN_INDEX_MAP[p["db_column"]]
+                except KeyError:
+                    setup_col_idx = None
+
+                if setup_col_idx is not None:
+                    # 1) ถ้ามี setup_row ที่ถูก query มาเฉพาะ ให้ใช้ค่านั้น
+                    if setup_row and setup_col_idx < len(setup_row) and setup_row[setup_col_idx] is not None:
+                        raw_val = setup_row[setup_col_idx]
+                        if isinstance(raw_val, (int, float)):
+                            setup_val = str(int(raw_val)) if float(raw_val).is_integer() else str(round(float(raw_val), 1))
+                        else:
+                            setup_val = str(raw_val)
+                    else:
+                        # 2) ถ้าไม่มี setup_row ให้ค้นใน timestamp_list ภายใน ±5 นาที
+                        best_row = None
+                        best_delta = timedelta(minutes=5)
+                        for dt_obj, row in timestamp_list:
+                            delta = abs(dt_obj - setup_target_dt)
+                            if delta <= best_delta:
+                                best_delta = delta
+                                best_row = row
+                            elif dt_obj > setup_target_dt + timedelta(minutes=5):
+                                break
+                        if best_row and setup_col_idx < len(best_row) and best_row[setup_col_idx] is not None:
+                            raw_val = best_row[setup_col_idx]
+                            if isinstance(raw_val, (int, float)):
+                                setup_val = str(int(raw_val)) if float(raw_val).is_integer() else str(round(float(raw_val), 1))
+                            else:
+                                setup_val = str(raw_val)
+
             for col in time_cols:
-                # ข้าม "Setup" column
+                # ข้าม "Setup" column — ค่าถูกเก็บไว้ที่ setup_val
                 if col.key == "setup":
                     continue
-                
+                    
                 # 12. ถ้า parameter นี้ไม่ได้ map กับ column ใน SQL view ก็ปล่อยไว้เป็นค่าว่าง
                 if not p["db_column"] or p["db_column"] not in COLUMN_INDEX_MAP:
                     col_values[col.key] = ""
                     continue
                 
-                # ดึง index ของ column นี้จาก SQL row
+                # ดึง indexของ column นี้จาก SQL row
                 col_idx = COLUMN_INDEX_MAP[p["db_column"]]
                 
                 # 13. ค้นหา SQL row ที่ใกล้เคียงกับเวลาของ column นี้
