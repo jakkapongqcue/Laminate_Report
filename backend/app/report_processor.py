@@ -228,9 +228,14 @@ def process_sql_view_data(
             else:
                 setup_display_dt = setup_target_dt
 
-            # label จะเป็น "Set up \n %H:%M น." และ full_datetime แสดงเป็น timestamp ที่เลือก/พบ
-            setup_label = f"Set up \n{setup_display_dt.strftime("%H:%M น.")}"
-            setup_full_dt = setup_display_dt.strftime("%Y-%m-%d %H:%M") if setup_display_dt is not None else f"{chunk['date_key']} Set up"
+            # label: หน้าแรกให้แสดงเวลา เช่น "Set up \n08:12 น.", แต่หน้าถัดไปให้แสดงเฉพาะ "Set up"
+            if idx == 1:
+                setup_label = f"Set up \n{setup_display_dt.strftime('%H:%M น.')}" if setup_display_dt is not None else "Set up"
+                setup_full_dt = setup_display_dt.strftime("%Y-%m-%d %H:%M") if setup_display_dt is not None else f"{chunk['date_key']} Set up"
+            else:
+                setup_label = "Set up"
+                setup_full_dt = f"{chunk['date_key']} Set up"
+
             time_cols.append(TimeColumn(
                 key="setup",
                 label=setup_label,
@@ -255,7 +260,8 @@ def process_sql_view_data(
             col_values: Dict[str, str] = {}
 
             # 11.a ถ้าผู้ใช้ส่ง setup_target_dt มา ให้พยายามหาค่า setup_val สำหรับ parameter นี้
-            if setup_target_dt is not None and p["db_column"] and p["db_column"] in COLUMN_INDEX_MAP:
+            #       แต่เฉพาะหน้าแรกเท่านั้นที่จะแสดงค่า (หน้าอื่นๆ ให้เป็นค่าว่าง) idx == 1 and
+            if idx == 1 and setup_target_dt is not None and p["db_column"] and p["db_column"] in COLUMN_INDEX_MAP:
                 try:
                     setup_col_idx = COLUMN_INDEX_MAP[p["db_column"]]
                 except KeyError:
