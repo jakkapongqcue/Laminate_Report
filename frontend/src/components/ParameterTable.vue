@@ -88,17 +88,17 @@ const props = defineProps({
   timeColumns: {
     type: Array,
     required: true,
-    default: () => []
+    default: () => [],
   },
   rows: {
     type: Array,
     required: true,
-    default: () => []
+    default: () => [],
   },
   targetColumnCount: {
     type: Number,
-    default: 14
-  }
+    default: 14,
+  },
 });
 
 const fillerColumnCount = computed(() => {
@@ -110,9 +110,3 @@ const fillerColumnCount = computed(() => {
     : 0;
 });
 </script>
-
-<style scoped>
-tr {
-  height: 20px;
-}
-</style>

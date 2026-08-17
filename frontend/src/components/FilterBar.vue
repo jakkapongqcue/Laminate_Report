@@ -4,25 +4,34 @@
   >
     <div class="flex flex-wrap items-end justify-between gap-4">
       <!-- Filter Controls Group -->
-      <div class="flex flex-wrap items-end gap-4">
+      <div
+        class="grid w-full grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+      >
         <!-- Machine Selection -->
-        <div class="flex flex-col">
+        <div class="flex flex-col col-span-2">
           <label class="label">
             <Icon_machine />
             เครื่องจักร (Machine)
           </label>
-          <select
-            v-model="filters.machine"
-            class="input bg-white min-w-[200px]"
-          >
+          <select v-model="filters.machine" class="bg-white input">
             <option v-for="m in machines" :key="m.id" :value="m.id">
               {{ m.name }}
             </option>
           </select>
         </div>
 
+        <!-- Hourly Step -->
+        <div class="flex flex-col col-span-1">
+          <label class="label"> <Icon_time />ช่วงเวลา (Step)</label>
+          <select v-model.number="filters.hour_step" class="bg-white input">
+            <option :value="1">+1 ชั่วโมง</option>
+            <option :value="2">+2 ชั่วโมง</option>
+            <option :value="4">+4 ชั่วโมง</option>
+          </select>
+        </div>
+
         <!-- Date Range -->
-        <div class="flex flex-col">
+        <div class="flex flex-col self-end col-span-1 col-start-1">
           <label class="label">
             <Icon_calendar />
             วันที่เริ่มต้น (From Date)
@@ -30,16 +39,8 @@
           <input type="date" v-model="filters.date_from" class="input" />
         </div>
 
-        <div class="flex flex-col">
-          <label class="label">
-            <Icon_calendar />
-            วันที่สิ้นสุด (To Date)
-          </label>
-          <input type="date" v-model="filters.date_to" class="input" />
-        </div>
-
         <!-- Time Range -->
-        <div class="flex flex-col">
+        <div class="flex flex-col self-end col-span-1">
           <label class="label">
             <Icon_time />
             เวลาเริ่มต้น (From Time)
@@ -47,16 +48,8 @@
           <input type="time" v-model="filters.time_from" class="input" />
         </div>
 
-        <div class="flex flex-col">
-          <label class="label">
-            <Icon_time />
-            เวลาสิ้นสุด (To Time)
-          </label>
-          <input type="time" v-model="filters.time_to" class="input" />
-        </div>
-
         <!-- Setup filter: date and time -->
-        <div class="flex flex-col">
+        <div class="flex flex-col self-end col-span-1" v-if="false">
           <label class="label">
             <Icon_calendar />
             วันสำหรับ Set up (Setup Date)
@@ -64,7 +57,7 @@
           <input type="date" v-model="filters.setup_date" class="input" />
         </div>
 
-        <div class="flex flex-col">
+        <div class="flex flex-col self-end col-span-1">
           <label class="label">
             <Icon_time />
             เวลา Set up (Setup Time)
@@ -72,19 +65,27 @@
           <input type="time" v-model="filters.setup_time" class="input" />
         </div>
 
-        <!-- Hourly Step -->
-        <div class="flex flex-col">
-          <label class="label">ช่วงเวลา (Step)</label>
-          <select v-model.number="filters.hour_step" class="bg-white input">
-            <option :value="1">+1 ชั่วโมง</option>
-            <option :value="2">+2 ชั่วโมง</option>
-            <option :value="4">+4 ชั่วโมง</option>
-          </select>
+        <div class="flex flex-col col-span-1 col-start-1">
+          <label class="label">
+            <Icon_calendar />
+            วันที่สิ้นสุด (To Date)
+          </label>
+          <input type="date" v-model="filters.date_to" class="input" />
+        </div>
+
+        <div class="flex flex-col col-span-1">
+          <label class="label">
+            <Icon_time />
+            เวลาสิ้นสุด (To Time)
+          </label>
+          <input type="time" v-model="filters.time_to" class="input" />
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center gap-3">
+      <div
+        class="flex items-center w-full gap-3 pt-3 text-xs text-gray-500 border-t border-gray-100"
+      >
         <!-- Search button -->
         <button
           @click="$emit('search')"
@@ -137,25 +138,35 @@ import Icon_machine from "../components/icon/Icon_machine.vue";
 const props = defineProps({
   filters: {
     type: Object,
-    required: true
+    required: true,
   },
   machines: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   statusLoading: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 const emit = defineEmits(["search", "print"]);
+const getTodayStr = (nDay = 0) => {
+  const d = new Date();
+  d.setDate(d.getDate() + nDay);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 const setShift = (shiftNum) => {
   if (shiftNum === 1) {
     props.filters.time_from = "08:00";
     props.filters.time_to = "20:00";
   } else if (shiftNum === 2) {
+    props.filters.date_from = getTodayStr(-1);
+    props.filters.date_to = getTodayStr();
     props.filters.time_from = "20:00";
     props.filters.time_to = "08:00";
   }

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="mx-auto" style="max-width: 297mm">
     <!-- App Header Title (Hidden on Print) -->
     <AppHeadTitle />
 
@@ -104,7 +104,7 @@ const filters = reactive({
   use_test_api: false,
   // setup filter: default date same as date_from, time empty (user must select)
   setup_date: getTodayStr(),
-  setup_time: ""
+  setup_time: "",
 });
 
 const loadUseTestApiSetting = () => {
@@ -146,7 +146,7 @@ const fetchReport = async () => {
       date_to: filters.date_to,
       time_from: filters.time_from,
       time_to: filters.time_to,
-      hour_step: filters.hour_step.toString()
+      hour_step: filters.hour_step.toString(),
     });
 
     // Include setup_date/setup_time only if setup_time is provided (backend expects setup_time to trigger setup behavior).
@@ -185,19 +185,25 @@ onMounted(() => {
 });
 
 // keep setup_date default in sync with date_from unless user sets a different setup_date
-import { watch } from 'vue';
+import { watch } from "vue";
 let _lastDateFrom = filters.date_from;
-watch(() => filters.date_from, (newVal) => {
-  // Only update setup_date automatically when it still equals the previous date_from
-  if (filters.setup_date === _lastDateFrom || !filters.setup_date) {
-    filters.setup_date = newVal;
-  }
-  _lastDateFrom = newVal;
-});
+watch(
+  () => filters.date_from,
+  (newVal) => {
+    // Only update setup_date automatically when it still equals the previous date_from
+    if (filters.setup_date === _lastDateFrom || !filters.setup_date) {
+      filters.setup_date = newVal;
+    }
+    _lastDateFrom = newVal;
+  },
+);
 
 // optional: when date_from changes, clear setup_time so user must reselect time if desired
-watch(() => filters.date_from, () => {
-  // do not clear setup_time automatically to avoid surprising the user; comment out if undesired
-  // filters.setup_time = "";
-});
+watch(
+  () => filters.date_from,
+  () => {
+    // do not clear setup_time automatically to avoid surprising the user; comment out if undesired
+    // filters.setup_time = "";
+  },
+);
 </script>
