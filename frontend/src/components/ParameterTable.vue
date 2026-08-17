@@ -26,9 +26,8 @@
             v-for="col in timeColumns"
             :key="col.key"
             class="font-bold text-center bg-gray-50"
-            style="min-width: 42px"
           >
-            {{ col.label }}
+            <span class="whitespace-pre-wrap">{{ col.label }}</span>
           </th>
 
           <!-- Filler columns to always show 14 slots -->
@@ -61,13 +60,12 @@
             :key="col.key"
             class="font-medium text-center"
           >
-            <input
+            <span
               v-if="col.key === 'setup'"
-              v-model="row.setup_val"
-              type="text"
               class="w-full font-semibold text-center bg-transparent focus:outline-none focus:bg-yellow-50"
               style="font-size: 8.5px"
-            />
+              >{{ row.setup_val }}</span
+            >
             <span v-else>{{ row.values[col.key] || "" }}</span>
           </td>
 
@@ -104,7 +102,9 @@ const props = defineProps({
 });
 
 const fillerColumnCount = computed(() => {
-  const currentCount = props.timeColumns.length;
+  // Exclude 'setup' column from counting toward the 14 visible time columns
+  const nonSetupCols = props.timeColumns.filter((c) => c.key !== "setup");
+  const currentCount = nonSetupCols.length;
   return currentCount < props.targetColumnCount
     ? props.targetColumnCount - currentCount
     : 0;

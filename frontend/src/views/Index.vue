@@ -101,7 +101,10 @@ const filters = reactive({
   time_from: "08:00",
   time_to: "17:00",
   hour_step: 1,
-  use_test_api: false
+  use_test_api: false,
+  // setup filter: default date same as date_from, time empty (user must select)
+  setup_date: getTodayStr(),
+  setup_time: ""
 });
 
 const loadUseTestApiSetting = () => {
@@ -146,6 +149,13 @@ const fetchReport = async () => {
       hour_step: filters.hour_step.toString()
     });
 
+    // Include setup_date/setup_time only if setup_time is provided (backend expects setup_time to trigger setup behavior).
+    if (filters.setup_time) {
+      queryParams.append("setup_time", filters.setup_time);
+      // setup_date defaults to date_from on backend, but send explicitly to be clear
+      queryParams.append("setup_date", filters.setup_date || filters.date_from);
+    }
+
     const path = filters.use_test_api
       ? "/api/report/laminate/test"
       : "/api/report/laminate";
@@ -172,5 +182,22 @@ const printReport = () => {
 onMounted(() => {
   loadUseTestApiSetting();
   fetchMachines();
+});
+
+// keep setup_date default in sync with date_from unless user sets a different setup_date
+import { watch } from 'vue';
+let _lastDateFrom = filters.date_from;
+watch(() => filters.date_from, (newVal) => {
+  // Only update setup_date automatically when it still equals the previous date_from
+  if (filters.setup_date === _lastDateFrom || !filters.setup_date) {
+    filters.setup_date = newVal;
+  }
+  _lastDateFrom = newVal;
+});
+
+// optional: when date_from changes, clear setup_time so user must reselect time if desired
+watch(() => filters.date_from, () => {
+  // do not clear setup_time automatically to avoid surprising the user; comment out if undesired
+  // filters.setup_time = "";
 });
 </script>

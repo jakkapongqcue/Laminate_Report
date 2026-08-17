@@ -55,6 +55,23 @@
           <input type="time" v-model="filters.time_to" class="input" />
         </div>
 
+        <!-- Setup filter: date and time -->
+        <div class="flex flex-col">
+          <label class="label">
+            <Icon_calendar />
+            วันสำหรับ Set up (Setup Date)
+          </label>
+          <input type="date" v-model="filters.setup_date" class="input" />
+        </div>
+
+        <div class="flex flex-col">
+          <label class="label">
+            <Icon_time />
+            เวลา Set up (Setup Time)
+          </label>
+          <input type="time" v-model="filters.setup_time" class="input" />
+        </div>
+
         <!-- Hourly Step -->
         <div class="flex flex-col">
           <label class="label">ช่วงเวลา (Step)</label>
