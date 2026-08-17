@@ -2,7 +2,7 @@
   <div class="report-page">
     <!-- ── Report Header ───────────────────────────────────────────────── -->
     <div
-      class="flex justify-between items-start mb-1 pb-1 border-b border-gray-400"
+      class="flex items-start justify-between pb-1 mb-1 border-b border-gray-400"
     >
       <!-- Company Logo & Brand -->
       <div class="flex items-center gap-2" :class="customClass">
@@ -11,7 +11,7 @@
         >
           STAR<br />FLEX
         </div> -->
-        <img src="../assets/SFLEX.png" alt="SFLEX_logo" class="h-16 w-auto" />
+        <img src="../assets/SFLEX.png" alt="SFLEX_logo" class="w-auto h-16" />
         <div>
           <!-- <div
             class="text-[8px] uppercase font-bold text-gray-500 tracking-wider"
@@ -25,8 +25,8 @@
       </div>
 
       <!-- Main Report Title -->
-      <div class="text-center self-center">
-        <h1 class="text-base font-bold uppercase tracking-wide text-gray-900">
+      <div class="self-center text-center">
+        <h1 class="text-base font-bold tracking-wide text-gray-900 uppercase">
           LAMINATE CHECKING REPORT
         </h1>
       </div>
@@ -97,29 +97,29 @@
       </div>
 
       <!-- Signatures Block -->
-      <div class="flex justify-around items-center pb-4">
+      <div class="flex items-center justify-around pb-4">
         <!-- Recorder -->
-        <div class="flex flex-col gap-3 w-40">
+        <div class="flex flex-col w-40 gap-3">
           <div class="flex items-center gap-2">
             <span class="text-nowrap">ผู้บันทึก:</span>
-            <span class="border-b border-gray-400 w-full block h-4"></span>
+            <span class="block w-full h-4 border-b border-gray-400"></span>
           </div>
           <div class="flex items-center gap-2">
             <span class="text-nowrap">วันที่:</span>
-            <span class="border-b border-gray-400 w-full block h-4 text-center">
+            <span class="block w-full h-4 text-center border-b border-gray-400">
             </span>
           </div>
         </div>
 
         <!-- Reviewer -->
-        <div class="flex flex-col gap-3 w-40">
+        <div class="flex flex-col w-40 gap-3">
           <div class="flex items-center gap-2">
             <span class="text-nowrap">ผู้ทบทวน:</span>
-            <span class="border-b border-gray-400 w-full block h-4"></span>
+            <span class="block w-full h-4 border-b border-gray-400"></span>
           </div>
           <div class="flex items-center gap-2">
             <span class="text-nowrap">วันที่:</span>
-            <span class="border-b border-gray-400 w-full block h-4 text-center">
+            <span class="block w-full h-4 text-center border-b border-gray-400">
             </span>
           </div>
         </div>
@@ -152,28 +152,28 @@ function formatDate(dateStr) {
 const props = defineProps({
   pageData: {
     type: Object,
-    required: true,
+    required: true
   },
   machine: {
     type: String,
-    default: "1LB09_Bobst",
+    default: "1LB09_Bobst"
   },
   dateFrom: {
     type: String,
-    default: "",
+    default: ""
   },
   dateTo: {
     type: String,
-    default: "",
+    default: ""
   },
   timeFrom: {
     type: String,
-    default: "",
+    default: ""
   },
   timeTo: {
     type: String,
-    default: "",
-  },
+    default: ""
+  }
 });
 
 const remark = ref("");

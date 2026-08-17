@@ -8,7 +8,7 @@
           <th style="width: 160px; min-width: 160px">Setting Parameter</th>
 
           <!-- Column 2: Set Point -->
-          <th style="width: 68px; min-width: 68px" class="bg-gray-50 font-bold">
+          <th style="width: 68px; min-width: 68px" class="font-bold bg-gray-50">
             Set Point (PS)
           </th>
 
@@ -25,7 +25,7 @@
           <th
             v-for="col in timeColumns"
             :key="col.key"
-            class="bg-gray-50 font-bold text-center"
+            class="font-bold text-center bg-gray-50"
             style="min-width: 42px"
           >
             {{ col.label }}
@@ -45,10 +45,10 @@
       <tbody>
         <tr v-for="row in rows" :key="row.param_id">
           <!-- Parameter Name -->
-          <td class="param-name-cell font-medium">{{ row.name }}</td>
+          <td class="font-medium param-name-cell">{{ row.name }}</td>
 
           <!-- Set Point -->
-          <td class="text-center font-medium">{{ row.set_point }}</td>
+          <td class="font-medium text-center">{{ row.set_point }}</td>
 
           <!-- Unit -->
           <td class="text-center text-gray-700" style="font-size: 8.5px">
@@ -59,13 +59,13 @@
           <td
             v-for="col in timeColumns"
             :key="col.key"
-            class="text-center font-medium"
+            class="font-medium text-center"
           >
             <input
               v-if="col.key === 'setup'"
               v-model="row.setup_val"
               type="text"
-              class="w-full text-center bg-transparent focus:outline-none focus:bg-yellow-50 font-semibold"
+              class="w-full font-semibold text-center bg-transparent focus:outline-none focus:bg-yellow-50"
               style="font-size: 8.5px"
             />
             <span v-else>{{ row.values[col.key] || "" }}</span>
@@ -90,17 +90,17 @@ const props = defineProps({
   timeColumns: {
     type: Array,
     required: true,
-    default: () => [],
+    default: () => []
   },
   rows: {
     type: Array,
     required: true,
-    default: () => [],
+    default: () => []
   },
   targetColumnCount: {
     type: Number,
-    default: 14,
-  },
+    default: 14
+  }
 });
 
 const fillerColumnCount = computed(() => {

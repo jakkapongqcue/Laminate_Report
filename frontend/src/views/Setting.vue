@@ -8,7 +8,7 @@
         to="/"
         class="inline-flex items-center px-3 py-2 text-sm font-medium bg-white border rounded-md shadow-sm text-slate-700 border-slate-200 hover:bg-slate-50"
       >
-        Back to dashboard
+        Back to Home
       </router-link>
     </div>
 

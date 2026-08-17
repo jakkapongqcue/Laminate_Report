@@ -84,7 +84,7 @@ import LaminateReportSheet from "../components/LaminateReportSheet.vue";
 import AppHeadTitle from "../components/AppHeadTitle.vue";
 import Icon_circleLoad from "../components/icon/Icon_circleLoad.vue";
 import Icon_report from "../components/icon/Icon_report.vue";
-import Icon_error from "../components/icon/Icon_Error.vue";
+import Icon_error from "../components/icon/Icon_error.vue";
 
 const getTodayStr = () => {
   const d = new Date();

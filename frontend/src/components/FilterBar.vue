@@ -87,7 +87,6 @@
           พิมพ์รายงาน / Export PDF
         </button>
       </div>
-
     </div>
 
     <!-- Presets bar -->
@@ -121,16 +120,16 @@ import Icon_machine from "../components/icon/Icon_machine.vue";
 const props = defineProps({
   filters: {
     type: Object,
-    required: true,
+    required: true
   },
   machines: {
     type: Array,
-    default: () => [],
+    default: () => []
   },
   statusLoading: {
     type: Boolean,
-    default: false,
-  },
+    default: false
+  }
 });
 
 const emit = defineEmits(["search", "print"]);
