@@ -10,6 +10,7 @@
       :statusLoading="isLoading"
       @search="fetchReport"
       @print="printReport"
+      @refreshMachine="fetchMachines"
     />
 
     <!-- Loading State Overlay -->
@@ -78,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, watch } from "vue";
 import FilterBar from "../components/FilterBar.vue";
 import LaminateReportSheet from "../components/LaminateReportSheet.vue";
 import AppHeadTitle from "../components/AppHeadTitle.vue";
@@ -104,7 +105,7 @@ const filters = reactive({
   use_test_api: false,
   // setup filter: default date same as date_from, time empty (user must select)
   setup_date: getTodayStr(),
-  setup_time: "",
+  setup_time: ""
 });
 
 const loadUseTestApiSetting = () => {
@@ -135,6 +136,11 @@ const fetchMachines = async () => {
 };
 
 const fetchReport = async () => {
+  if (!filters.setup_time) {
+    errorMessage.value = "กรุณาเลือกเวลา Set up ก่อนกดค้นหา";
+    return;
+  }
+
   isLoading.value = true;
   errorMessage.value = "";
   loadFristTime.value = false;
@@ -146,7 +152,7 @@ const fetchReport = async () => {
       date_to: filters.date_to,
       time_from: filters.time_from,
       time_to: filters.time_to,
-      hour_step: filters.hour_step.toString(),
+      hour_step: filters.hour_step.toString()
     });
 
     // Include setup_date/setup_time only if setup_time is provided (backend expects setup_time to trigger setup behavior).
@@ -185,7 +191,7 @@ onMounted(() => {
 });
 
 // keep setup_date default in sync with date_from unless user sets a different setup_date
-import { watch } from "vue";
+// import { watch } from "vue";
 let _lastDateFrom = filters.date_from;
 watch(
   () => filters.date_from,
@@ -195,7 +201,7 @@ watch(
       filters.setup_date = newVal;
     }
     _lastDateFrom = newVal;
-  },
+  }
 );
 
 // optional: when date_from changes, clear setup_time so user must reselect time if desired
@@ -204,6 +210,6 @@ watch(
   () => {
     // do not clear setup_time automatically to avoid surprising the user; comment out if undesired
     // filters.setup_time = "";
-  },
+  }
 );
 </script>

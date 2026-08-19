@@ -13,7 +13,11 @@
             <Icon_machine />
             เครื่องจักร (Machine)
           </label>
-          <select v-model="filters.machine" class="bg-white input">
+          <select
+            v-model="filters.machine"
+            class="bg-white input"
+            @click.ctrl.alt="$emit('refreshMachine')"
+          >
             <option v-for="m in machines" :key="m.id" :value="m.id">
               {{ m.name }}
             </option>
@@ -57,12 +61,18 @@
           <input type="date" v-model="filters.setup_date" class="input" />
         </div>
 
-        <div class="flex flex-col self-end col-span-1">
+        <div class="relative flex flex-col self-end col-span-1">
           <label class="label">
             <Icon_time />
             เวลา Set up (Setup Time)
           </label>
           <input type="time" v-model="filters.setup_time" class="input" />
+          <!-- คำเตือน: กรุณาเลือกเวลา Set up -->
+          <span
+            class="absolute text-xs text-red-500 transition-opacity -bottom-1"
+            :class="[filters.setup_time ? 'opacity-0' : 'opacity-100']"
+            >คำเตือน: กรุณาเลือกเวลา Set up
+          </span>
         </div>
 
         <div class="flex flex-col col-span-1 col-start-1">
@@ -89,8 +99,8 @@
         <!-- Search button -->
         <button
           @click="$emit('search')"
-          :disabled="statusLoading"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50"
+          :disabled="statusLoading || !filters.setup_time"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Icon_search :loading="statusLoading" :cusClass="'w-4 h-4'" />
           ดึงข้อมูล
@@ -138,16 +148,16 @@ import Icon_machine from "../components/icon/Icon_machine.vue";
 const props = defineProps({
   filters: {
     type: Object,
-    required: true,
+    required: true
   },
   machines: {
     type: Array,
-    default: () => [],
+    default: () => []
   },
   statusLoading: {
     type: Boolean,
-    default: false,
-  },
+    default: false
+  }
 });
 
 const emit = defineEmits(["search", "print"]);
@@ -165,8 +175,8 @@ const setShift = (shiftNum) => {
     props.filters.time_from = "08:00";
     props.filters.time_to = "20:00";
   } else if (shiftNum === 2) {
-    props.filters.date_from = getTodayStr(-1);
-    props.filters.date_to = getTodayStr();
+    // props.filters.date_from = getTodayStr(-1);
+    // props.filters.date_to = getTodayStr();
     props.filters.time_from = "20:00";
     props.filters.time_to = "08:00";
   }
@@ -179,6 +189,6 @@ const setShift = (shiftNum) => {
   @apply text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1;
 }
 .input {
-  @apply px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500;
+  @apply px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 mb-4;
 }
 </style>

@@ -1,12 +1,12 @@
 <template>
   <div
-    class="no-print mb-6 flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-gray-200"
+    class="flex items-center justify-between p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-sm no-print"
   >
     <div class="flex items-center gap-3">
       <div
-        class="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center text-white font-bold shadow"
+        class="flex items-center justify-center w-10 h-10 font-bold text-white rounded-lg shadow bg-sky-100"
       >
-        LR
+        <img src="../assets/favicon_NoBG.png" alt="SFLEX_logo" class="w-10 h-10" />
       </div>
       <div>
         <h1 class="text-lg font-bold text-gray-900">
@@ -17,11 +17,11 @@
         </p>
       </div>
     </div>
-    <router-link
+    <!-- <router-link
       to="/setting"
-      class="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-md border border-slate-200 hover:bg-slate-200 no-print"
+      class="inline-flex items-center px-3 py-2 text-sm font-medium border rounded-md text-slate-700 bg-slate-100 border-slate-200 hover:bg-slate-200 no-print"
     >
       Settings
-    </router-link>
+    </router-link> -->
   </div>
 </template>

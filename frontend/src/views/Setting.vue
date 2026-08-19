@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4">
+  <div class="mx-auto space-y-4" style="max-width: 297mm">
     <div class="flex items-center justify-between gap-3">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Settings</h1>
