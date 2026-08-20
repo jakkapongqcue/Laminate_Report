@@ -26,7 +26,6 @@ def get_db_connection():
         conn = pyodbc.connect(settings.connection_string, timeout=5)
         return conn
     except Exception as e:
-        logger.warning(f"Database connection failed: {e}. Fallback enabled: {settings.USE_MOCK_FALLBACK}")
-        if not settings.USE_MOCK_FALLBACK:
-            raise e
+        logger.warning(f"Database connection failed: {e}")
+        # No mock fallback: return None and let callers handle the error
         return None

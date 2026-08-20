@@ -34,7 +34,6 @@
    DB_USER=sa
    DB_PASSWORD=YourStrongPassword
    DB_USE_WINDOWS_AUTH=false
-   USE_MOCK_FALLBACK=false
    ```
 4. ติดตั้ง Windows Service ด้วย NSSM:
    - เปิด Command Prompt ด้วย權限 **Administrator**

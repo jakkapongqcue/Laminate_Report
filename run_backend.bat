@@ -39,3 +39,32 @@ pip install -q -r requirements.txt
 echo [INFO] Starting Uvicorn API server on http://localhost:8000 ...
 %PYTHON_CMD% -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 pause
+
+
+
+
+
+@REM @echo off
+@REM title Laminate Report - Node.js Express Backend
+@REM echo ===================================================
+@REM echo Starting Node.js Express Backend Service...
+@REM echo ===================================================
+@REM cd /d "%~dp0backend02"
+
+@REM :: Check for node command availability
+@REM where node >nul 2>nul
+@REM if %errorlevel% neq 0 (
+@REM     echo [ERROR] Node.js is not recognized in system PATH!
+@REM     echo Please install Node.js and try again.
+@REM     pause
+@REM     exit /b 1
+@REM )
+
+@REM if not exist node_modules (
+@REM     echo [INFO] Installing npm packages...
+@REM     npm install
+@REM )
+
+@REM echo [INFO] Starting Node.js API server on http://localhost:8000 ...
+@REM npm start
+@REM pause
