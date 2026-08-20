@@ -5,14 +5,13 @@
       <div class="grid w-full grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         <!-- Machine Selection -->
         <div class="flex flex-col col-span-2">
-          <label :class="class_Lable">
+          <label class="class_Lable">
             <Icon_machine />
             เครื่องจักร (Machine)
           </label>
           <select
             v-model="filters.machine"
-            class="bg-white"
-            :class="class_Input"
+            class="bg-white class_Input"
             @click.ctrl.alt="$emit('refreshMachine')"
           >
             <option v-for="m in machines" :key="m.id" :value="m.id">
@@ -23,8 +22,8 @@
 
         <!-- Hourly Step -->
         <div class="flex flex-col col-span-1">
-          <label :class="class_Lable"> <Icon_time />ช่วงเวลา (Step)</label>
-          <select v-model.number="filters.hour_step" :class="class_Input">
+          <label class="class_Lable"> <Icon_time />ช่วงเวลา (Step)</label>
+          <select v-model.number="filters.hour_step" class="class_Input">
             <option :value="1">+1 ชั่วโมง</option>
             <option :value="2">+2 ชั่วโมง</option>
             <option :value="4">+4 ชั่วโมง</option>
@@ -33,37 +32,37 @@
 
         <!-- Date Range -->
         <div class="flex flex-col self-end col-span-1 col-start-1">
-          <label :class="class_Lable">
+          <label class="class_Lable">
             <Icon_calendar />
             วันที่เริ่มต้น (From Date)
           </label>
-          <input type="date" v-model="filters.date_from" :class="class_Input" />
+          <input type="date" v-model="filters.date_from" class="class_Input" />
         </div>
 
         <!-- Time Range -->
         <div class="flex flex-col self-end col-span-1">
-          <label :class="class_Lable">
+          <label class="class_Lable">
             <Icon_time />
             เวลาเริ่มต้น (From Time)
           </label>
-          <input type="time" v-model="filters.time_from" :class="class_Input" />
+          <input type="time" v-model="filters.time_from" class="class_Input" />
         </div>
 
         <!-- Setup filter: date and time -->
         <div class="flex flex-col self-end col-span-1" v-if="false">
-          <label :class="class_Lable">
+          <label class="class_Lable">
             <Icon_calendar />
             วันสำหรับ Set up (Setup Date)
           </label>
-          <input type="date" v-model="filters.setup_date" :class="class_Input" />
+          <input type="date" v-model="filters.setup_date" class="class_Input" />
         </div>
 
         <div class="relative flex flex-col self-end col-span-1">
-          <label :class="class_Lable">
+          <label class="class_Lable">
             <Icon_time />
             เวลา Set up (Setup Time)
           </label>
-          <input type="time" v-model="filters.setup_time" :class="class_Input" />
+          <input type="time" v-model="filters.setup_time" class="class_Input" />
           <!-- คำเตือน: กรุณาเลือกเวลา Set up -->
           <span
             class="absolute text-xs text-red-500 transition-opacity -bottom-1"
@@ -73,19 +72,19 @@
         </div>
 
         <div class="flex flex-col col-span-1 col-start-1">
-          <label :class="class_Lable">
+          <label class="class_Lable">
             <Icon_calendar />
             วันที่สิ้นสุด (To Date)
           </label>
-          <input type="date" v-model="filters.date_to" :class="class_Input" />
+          <input type="date" v-model="filters.date_to" class="class_Input" />
         </div>
 
         <div class="flex flex-col col-span-1">
-          <label :class="class_Lable">
+          <label class="class_Lable">
             <Icon_time />
             เวลาสิ้นสุด (To Time)
           </label>
-          <input type="time" v-model="filters.time_to" :class="class_Input" />
+          <input type="time" v-model="filters.time_to" class="class_Input" />
         </div>
       </div>
 
@@ -155,10 +154,6 @@ const props = defineProps({
   },
 })
 
-const class_Lable = 'text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1'
-const class_Input =
-  'px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 mb-4'
-
 const emit = defineEmits(['search', 'print'])
 const getTodayStr = (nDay = 0) => {
   const d = new Date()
@@ -189,5 +184,5 @@ const setShift = (shiftNum) => {
 }
 .input {
   @reference px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 mb-4;
-} */
+} ==> use main.css*/
 </style>
