@@ -19,9 +19,7 @@
       class="flex flex-col items-center justify-center py-20 bg-white border border-gray-200 rounded-lg shadow no-print"
     >
       <Icon_circleLoad :cus-class="'h-10 w-10 text-sky-600 mb-3'" />
-      <p class="text-sm font-semibold text-gray-700">
-        กำลังดึงข้อมูลรายงานจากระบบ...
-      </p>
+      <p class="text-sm font-semibold text-gray-700">กำลังดึงข้อมูลรายงานจากระบบ...</p>
       <p class="mt-1 text-xs text-gray-500">กรุณารอสักครู่</p>
     </div>
 
@@ -66,9 +64,7 @@
     >
       <Icon_report />
       <h3 class="text-sm font-semibold text-gray-800">
-        <div v-if="loadFristTime">
-          กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มสร้างรายงานใหม่
-        </div>
+        <div v-if="loadFristTime">กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มสร้างรายงานใหม่</div>
         <div v-else>ไม่พบข้อมูลรายงานในช่วงเวลาดังกล่าว</div>
       </h3>
       <p v-if="!loadFristTime" class="mt-1 text-xs text-gray-500">
@@ -79,71 +75,72 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from "vue";
-import FilterBar from "../components/FilterBar.vue";
-import LaminateReportSheet from "../components/LaminateReportSheet.vue";
-import AppHeadTitle from "../components/AppHeadTitle.vue";
-import Icon_circleLoad from "../components/icon/Icon_circleLoad.vue";
-import Icon_report from "../components/icon/Icon_report.vue";
-import Icon_error from "../components/icon/Icon_error.vue";
+import { ref, reactive, onMounted, watch } from 'vue'
+import FilterBar from '../components/FilterBar.vue'
+import LaminateReportSheet from '../components/LaminateReportSheet.vue'
+import AppHeadTitle from '../components/AppHeadTitle.vue'
+import Icon_circleLoad from '../components/icons/Icon_circleLoad.vue'
+import Icon_report from '../components/icons/Icon_report.vue'
+import Icon_error from '../components/icons/Icon_error.vue'
 
 const getTodayStr = () => {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+  const d = new Date()
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 const filters = reactive({
-  machine: "1LB09_Bobst",
+  machine: '1LB09_Bobst',
   date_from: getTodayStr(),
   date_to: getTodayStr(),
-  time_from: "08:00",
-  time_to: "17:00",
+  time_from: '08:00',
+  time_to: '17:00',
   hour_step: 1,
   use_test_api: false,
   // setup filter: default date same as date_from, time empty (user must select)
   setup_date: getTodayStr(),
-  setup_time: ""
-});
+  setup_time: '',
+})
 
 const loadUseTestApiSetting = () => {
-  const savedValue = localStorage.getItem("laminate-report-use-test-api");
+  const savedValue = localStorage.getItem('laminate-report-use-test-api')
   if (savedValue !== null) {
-    filters.use_test_api = savedValue === "true";
+    filters.use_test_api = savedValue === 'true'
   }
-};
+}
 
-const machines = ref([]);
-const loadFristTime = ref(true);
-const isLoading = ref(false);
-const errorMessage = ref("");
-const reportData = ref(null);
+const machines = ref([])
+const loadFristTime = ref(true)
+const isLoading = ref(false)
+const errorMessage = ref('')
+const reportData = ref(null)
+const BACKEND_API_BASE_URL = import.meta.env.VITE_BACK_BASE_URL
 
 const fetchMachines = async () => {
   try {
-    const res = await fetch("/api/machines");
+    const res = await fetch(BACKEND_API_BASE_URL + '/api/machines')
     if (res.ok) {
-      const data = await res.json();
+      const data = await res.json()
       if (data && data.length > 0) {
-        machines.value = data;
+        machines.value = data
       }
     }
   } catch (err) {
-    console.warn("Could not fetch machines list, using defaults:", err);
+    console.warn('Could not fetch machines list, using defaults:', err)
   }
-};
+}
 
 const fetchReport = async () => {
   if (!filters.setup_time) {
-    errorMessage.value = "กรุณาเลือกเวลา Set up ก่อนกดค้นหา";
-    return;
+    errorMessage.value = 'กรุณาเลือกเวลา Set up ก่อนกดค้นหา'
+    return
   }
 
-  isLoading.value = true;
-  errorMessage.value = "";
-  loadFristTime.value = false;
+  isLoading.value = true
+  errorMessage.value = ''
+  loadFristTime.value = false
 
   try {
     const queryParams = new URLSearchParams({
@@ -152,57 +149,55 @@ const fetchReport = async () => {
       date_to: filters.date_to,
       time_from: filters.time_from,
       time_to: filters.time_to,
-      hour_step: filters.hour_step.toString()
-    });
+      hour_step: filters.hour_step.toString(),
+    })
 
     // Include setup_date/setup_time only if setup_time is provided (backend expects setup_time to trigger setup behavior).
     if (filters.setup_time) {
-      queryParams.append("setup_time", filters.setup_time);
+      queryParams.append('setup_time', filters.setup_time)
       // setup_date defaults to date_from on backend, but send explicitly to be clear
-      queryParams.append("setup_date", filters.setup_date || filters.date_from);
+      queryParams.append('setup_date', filters.setup_date || filters.date_from)
     }
 
-    const path = filters.use_test_api
-      ? "/api/report/laminate/test"
-      : "/api/report/laminate";
-    const res = await fetch(`${path}?${queryParams.toString()}`);
+    const path = filters.use_test_api ? '/api/report/laminate/test' : '/api/report/laminate'
+    const res = await fetch(`${BACKEND_API_BASE_URL}${path}?${queryParams.toString()}`)
 
     if (!res.ok) {
-      throw new Error(`Server returned status ${res.status}`);
+      throw new Error(`Server returned status ${res.status}`)
     }
 
-    const data = await res.json();
-    reportData.value = data;
+    const data = await res.json()
+    reportData.value = data
   } catch (err) {
-    console.error("Fetch report error:", err);
-    errorMessage.value = `เกิดข้อผิดพลาดในการดึงข้อมูล: ${err.message}`;
+    console.error('Fetch report error:', err)
+    errorMessage.value = `เกิดข้อผิดพลาดในการดึงข้อมูล: ${err.message}`
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
 const printReport = () => {
-  window.print();
-};
+  window.print()
+}
 
 onMounted(() => {
-  loadUseTestApiSetting();
-  fetchMachines();
-});
+  loadUseTestApiSetting()
+  fetchMachines()
+})
 
 // keep setup_date default in sync with date_from unless user sets a different setup_date
 // import { watch } from "vue";
-let _lastDateFrom = filters.date_from;
+let _lastDateFrom = filters.date_from
 watch(
   () => filters.date_from,
   (newVal) => {
     // Only update setup_date automatically when it still equals the previous date_from
     if (filters.setup_date === _lastDateFrom || !filters.setup_date) {
-      filters.setup_date = newVal;
+      filters.setup_date = newVal
     }
-    _lastDateFrom = newVal;
-  }
-);
+    _lastDateFrom = newVal
+  },
+)
 
 // optional: when date_from changes, clear setup_time so user must reselect time if desired
 watch(
@@ -210,6 +205,6 @@ watch(
   () => {
     // do not clear setup_time automatically to avoid surprising the user; comment out if undesired
     // filters.setup_time = "";
-  }
-);
+  },
+)
 </script>

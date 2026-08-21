@@ -1,21 +1,17 @@
 <template>
-  <div
-    class="p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-md no-print"
-  >
+  <div class="p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-md no-print">
     <div class="flex flex-wrap items-end justify-between gap-4">
       <!-- Filter Controls Group -->
-      <div
-        class="grid w-full grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-      >
+      <div class="grid w-full grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         <!-- Machine Selection -->
         <div class="flex flex-col col-span-2">
-          <label class="label">
+          <label class="class_Lable">
             <Icon_machine />
             เครื่องจักร (Machine)
           </label>
           <select
             v-model="filters.machine"
-            class="bg-white input"
+            class="bg-white class_Input"
             @click.ctrl.alt="$emit('refreshMachine')"
           >
             <option v-for="m in machines" :key="m.id" :value="m.id">
@@ -26,8 +22,8 @@
 
         <!-- Hourly Step -->
         <div class="flex flex-col col-span-1">
-          <label class="label"> <Icon_time />ช่วงเวลา (Step)</label>
-          <select v-model.number="filters.hour_step" class="bg-white input">
+          <label class="class_Lable"> <Icon_time />ช่วงเวลา (Step)</label>
+          <select v-model.number="filters.hour_step" class="class_Input">
             <option :value="1">+1 ชั่วโมง</option>
             <option :value="2">+2 ชั่วโมง</option>
             <option :value="4">+4 ชั่วโมง</option>
@@ -36,37 +32,37 @@
 
         <!-- Date Range -->
         <div class="flex flex-col self-end col-span-1 col-start-1">
-          <label class="label">
+          <label class="class_Lable">
             <Icon_calendar />
             วันที่เริ่มต้น (From Date)
           </label>
-          <input type="date" v-model="filters.date_from" class="input" />
+          <input type="date" v-model="filters.date_from" class="class_Input" />
         </div>
 
         <!-- Time Range -->
         <div class="flex flex-col self-end col-span-1">
-          <label class="label">
+          <label class="class_Lable">
             <Icon_time />
             เวลาเริ่มต้น (From Time)
           </label>
-          <input type="time" v-model="filters.time_from" class="input" />
+          <input type="time" v-model="filters.time_from" class="class_Input" />
         </div>
 
         <!-- Setup filter: date and time -->
         <div class="flex flex-col self-end col-span-1" v-if="false">
-          <label class="label">
+          <label class="class_Lable">
             <Icon_calendar />
             วันสำหรับ Set up (Setup Date)
           </label>
-          <input type="date" v-model="filters.setup_date" class="input" />
+          <input type="date" v-model="filters.setup_date" class="class_Input" />
         </div>
 
         <div class="relative flex flex-col self-end col-span-1">
-          <label class="label">
+          <label class="class_Lable">
             <Icon_time />
             เวลา Set up (Setup Time)
           </label>
-          <input type="time" v-model="filters.setup_time" class="input" />
+          <input type="time" v-model="filters.setup_time" class="class_Input" />
           <!-- คำเตือน: กรุณาเลือกเวลา Set up -->
           <span
             class="absolute text-xs text-red-500 transition-opacity -bottom-1"
@@ -76,19 +72,19 @@
         </div>
 
         <div class="flex flex-col col-span-1 col-start-1">
-          <label class="label">
+          <label class="class_Lable">
             <Icon_calendar />
             วันที่สิ้นสุด (To Date)
           </label>
-          <input type="date" v-model="filters.date_to" class="input" />
+          <input type="date" v-model="filters.date_to" class="class_Input" />
         </div>
 
         <div class="flex flex-col col-span-1">
-          <label class="label">
+          <label class="class_Lable">
             <Icon_time />
             เวลาสิ้นสุด (To Time)
           </label>
-          <input type="time" v-model="filters.time_to" class="input" />
+          <input type="time" v-model="filters.time_to" class="class_Input" />
         </div>
       </div>
 
@@ -118,9 +114,7 @@
     </div>
 
     <!-- Presets bar -->
-    <div
-      class="flex items-center gap-2 pt-3 mt-3 text-xs text-gray-500 border-t border-gray-100"
-    >
+    <div class="flex items-center gap-2 pt-3 mt-3 text-xs text-gray-500 border-t border-gray-100">
       <span class="font-semibold text-gray-700">Quick Presets:</span>
       <button
         @click="setShift(1)"
@@ -139,56 +133,56 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from "vue";
-import Icon_calendar from "../components/icon/Icon_calendar.vue";
-import Icon_time from "../components/icon/Icon_time.vue";
-import Icon_print from "../components/icon/Icon_print.vue";
-import Icon_search from "../components/icon/Icon_search.vue";
-import Icon_machine from "../components/icon/Icon_machine.vue";
+import { defineProps, defineEmits } from 'vue'
+import Icon_calendar from './icons/Icon_calendar.vue'
+import Icon_time from './icons/Icon_time.vue'
+import Icon_print from './icons/Icon_print.vue'
+import Icon_search from './icons/Icon_search.vue'
+import Icon_machine from './icons/Icon_machine.vue'
 const props = defineProps({
   filters: {
     type: Object,
-    required: true
+    required: true,
   },
   machines: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   statusLoading: {
     type: Boolean,
-    default: false
-  }
-});
+    default: false,
+  },
+})
 
-const emit = defineEmits(["search", "print"]);
+const emit = defineEmits(['search', 'print'])
 const getTodayStr = (nDay = 0) => {
-  const d = new Date();
-  d.setDate(d.getDate() + nDay);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+  const d = new Date()
+  d.setDate(d.getDate() + nDay)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 const setShift = (shiftNum) => {
   if (shiftNum === 1) {
-    props.filters.time_from = "08:00";
-    props.filters.time_to = "20:00";
+    props.filters.time_from = '08:00'
+    props.filters.time_to = '20:00'
   } else if (shiftNum === 2) {
     // props.filters.date_from = getTodayStr(-1);
     // props.filters.date_to = getTodayStr();
-    props.filters.time_from = "20:00";
-    props.filters.time_to = "08:00";
+    props.filters.time_from = '20:00'
+    props.filters.time_to = '08:00'
   }
-  emit("search");
-};
+  emit('search')
+}
 </script>
 
 <style lang="css" scoped>
-.label {
-  @apply text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1;
+/* .label {
+  @reference text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1;
 }
 .input {
-  @apply px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 mb-4;
-}
+  @reference px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 mb-4;
+} ==> use main.css*/
 </style>

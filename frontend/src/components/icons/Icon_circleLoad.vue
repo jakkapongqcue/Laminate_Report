@@ -18,13 +18,9 @@
 
 <script setup>
 const props = defineProps({
-  loading: {
-    type: Boolean,
-    required: true,
-  },
   cusClass: {
     type: String,
-    default: "",
+    default: '',
   },
-});
+})
 </script>
