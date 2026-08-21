@@ -132,6 +132,10 @@ body {
   .no-print {
     display: none !important;
   }
+  #__vue-devtools-container__,
+  #vue-inspector-container {
+    display: none !important;
+  }
 
   /* Each .report-page = exactly one printed page */
   .report-page {
