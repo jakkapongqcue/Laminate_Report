@@ -9,19 +9,12 @@
         <img src="../assets/favicon_NoBG.png" alt="SFLEX_logo" class="w-10 h-10" />
       </div>
       <div>
-        <h1 class="text-lg font-bold text-gray-900">
-          Laminate Checking Report System
-        </h1>
+        <h1 class="text-lg font-bold text-gray-900">Laminate Checking Report System</h1>
         <p class="text-xs text-gray-500">
           ระบบดึงข้อมูลจาก SQL Server และออกรายงานตรวจบันทึกเครื่องเคลือบ
         </p>
       </div>
     </div>
-    <!-- <router-link
-      to="/setting"
-      class="inline-flex items-center px-3 py-2 text-sm font-medium border rounded-md text-slate-700 bg-slate-100 border-slate-200 hover:bg-slate-200 no-print"
-    >
-      Settings
-    </router-link> -->
+    <router-link to="/setting" class="text-white"> .</router-link>
   </div>
 </template>
