@@ -22,8 +22,11 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Mount the router to the IIS application path
+const router = express.Router();
+
 // Root endpoint -> status
-app.get("/", (req, res) => {
+router.get("/", (req, res) => {
   res.json({
     status: "online",
     service: "Laminate Checking Report API",
@@ -32,12 +35,12 @@ app.get("/", (req, res) => {
 });
 
 // GET /api/machines -> list of machines
-app.get("/api/machines", (req, res) => {
+router.get("/api/machines", (req, res) => {
   res.json(MACHINES.map((m) => ({ id: m.id, name: m.name })));
 });
 
 // GET /api/report/laminate -> Query SQL Server database
-app.get("/api/report/laminate", async (req, res) => {
+router.get("/api/report/laminate", async (req, res) => {
   const {
     machine = "1LB09_Bobst",
     date_from,
@@ -163,7 +166,7 @@ app.get("/api/report/laminate", async (req, res) => {
 });
 
 // GET /api/report/laminate/test -> Query synthetic mock data
-app.get("/api/report/laminate/test", (req, res) => {
+router.get("/api/report/laminate/test", (req, res) => {
   const {
     machine = "1LB09_Bobst",
     date_from,
@@ -286,6 +289,10 @@ app.get("/api/report/laminate/test", (req, res) => {
     res.status(500).json({ detail: err.message });
   }
 });
+
+// Mount the router under both /LMR-Back (IIS Application path) and / (local dev fallback)
+app.use("/LMR-Back", router);
+app.use("/", router);
 
 // Start Express server
 const port = process.env.PORT || config.PORT || 8000;

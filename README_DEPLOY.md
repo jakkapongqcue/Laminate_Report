@@ -8,9 +8,9 @@
 
 1. **Node.js (เวอร์ชัน 18+)**: ติดตั้ง Node.js ลงในเซิร์ฟเวอร์
 2. **IIS (Internet Information Services)**: พร้อมติดตั้ง IIS Module 3 ตัว:
-   * **URL Rewrite**: [ดาวน์โหลด URL Rewrite](https://www.iis.net/downloads/microsoft/url-rewrite)
-   * **Application Request Routing (ARR)**: [ดาวน์โหลด ARR](https://www.iis.net/downloads/microsoft/application-request-routing)
-   * **iisnode (x64)**: [ดาวน์โหลด iisnode จาก GitHub Releases](https://github.com/tjanczuk/iisnode/releases) (ดาวน์โหลดเวอร์ชันล่าสุดที่เป็น `.msi`)
+   - **URL Rewrite**: [ดาวน์โหลด URL Rewrite](https://www.iis.net/downloads/microsoft/url-rewrite)
+   - **Application Request Routing (ARR)**: [ดาวน์โหลด ARR](https://www.iis.net/downloads/microsoft/application-request-routing)
+   - **iisnode (x64)**: [ดาวน์โหลด iisnode จาก GitHub Releases](https://github.com/tjanczuk/iisnode/releases) (ดาวน์โหลดเวอร์ชันล่าสุดที่เป็น `.msi`)
 3. **MS SQL Server**: สิทธิ์เชื่อมต่อฐานข้อมูล `KEP_LOG` และ View `View_1LB09_Bobst`
 
 ---
@@ -45,8 +45,8 @@ C:\inetpub\wwwroot\LaminateReport\
    PORT=8000
    ```
 4. **ตั้งค่าสิทธิ์ให้ Application Pool สามารถสร้าง log ได้**:
-   * คลิกขวาที่โฟลเดอร์ `backend02` -> **Properties** -> ไปที่แท็บ **Security**
-   * กด **Edit...** -> กด **Add...** -> พิมพ์คำว่า `IIS_IUSRS` -> ติ๊กเลือกสิทธิ์ **Modify**, **Read & execute**, **Write** แล้วกด **OK** (เพื่ออนุญาตให้ `iisnode` เขียนล็อกไฟล์ลงในโฟลเดอร์แอป)
+   - คลิกขวาที่โฟลเดอร์ `backend02` -> **Properties** -> ไปที่แท็บ **Security**
+   - กด **Edit...** -> กด **Add...** -> พิมพ์คำว่า `IIS_IUSRS` -> ติ๊กเลือกสิทธิ์ **Modify**, **Read & execute**, **Write** แล้วกด **OK** (เพื่ออนุญาตให้ `iisnode` เขียนล็อกไฟล์ลงในโฟลเดอร์แอป)
 
 ---
 
@@ -65,25 +65,29 @@ C:\inetpub\wwwroot\LaminateReport\
 ## 5. การตั้งค่าบน IIS Manager
 
 ### 5.1 ตั้งค่า Application Pool
+
 1. เปิด **IIS Manager** -> ไปที่ **Application Pools**
 2. คลิกขวา -> **Add Application Pool...**
-   * Name: `LaminateReportPool`
-   * .NET CLR version: **No Managed Code** (เนื่องจาก Node.js ไม่ใช่โค้ด .NET)
+   - Name: `LaminateReportPool`
+   - .NET CLR version: **No Managed Code** (เนื่องจาก Node.js ไม่ใช่โค้ด .NET)
 3. กด **OK**
 
 ### 5.2 ตั้งค่าเว็บไซต์หลัก (Frontend)
+
 1. ไปที่ **Sites** -> คลิกขวา -> **Add Website...**
-   * Site name: `LaminateReport`
-   * Physical path: `C:\inetpub\wwwroot\LaminateReport\wwwroot`
-   * Binding: พอร์ต 80 หรือพอร์ตที่คุณต้องการ
+   - Site name: `LaminateReport`
+   - Physical path: `C:\inetpub\wwwroot\LaminateReport\wwwroot`
+   - Binding: พอร์ต 80 หรือพอร์ตที่คุณต้องการ
 2. กด **OK**
 
 ### 5.3 ตั้งค่าแอปย่อยของ API (Backend)
+
 เพื่อให้ฟรอนต์เอนด์สามารถเรียกใช้งานเส้นทาง `/api` ได้โดยไม่ต้องผ่าน Port proxy:
+
 1. คลิกขวาที่ไซต์ `LaminateReport` -> เลือก **Add Application...**
-   * Alias: `api` *(ต้องตรงกับ path ที่ฟรอนต์เอนด์ส่งคำขอมา)*
-   * Physical path: `C:\inetpub\wwwroot\LaminateReport\backend02`
-   * Application pool: `LaminateReportPool`
+   - Alias: `api` _(ต้องตรงกับ path ที่ฟรอนต์เอนด์ส่งคำขอมา)_
+   - Physical path: `C:\inetpub\wwwroot\LaminateReport\backend02`
+   - Application pool: `LaminateReportPool`
 2. กด **OK**
 
 ---
@@ -91,7 +95,9 @@ C:\inetpub\wwwroot\LaminateReport\
 ## 6. โครงสร้างไฟล์ Config บน IIS
 
 ### 6.1 ไฟล์ `backend02/web.config` (สร้างอัตโนมัติแล้ว)
+
 ไฟล์นี้อยู่ในโฟลเดอร์ backend ทำหน้าที่ลงทะเบียน `server.js` กับ `iisnode`:
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
@@ -121,7 +127,9 @@ C:\inetpub\wwwroot\LaminateReport\
 ```
 
 ### 6.2 ไฟล์ `wwwroot/web.config` (สำหรับ Vue 3 SPA)
+
 ไฟล์นี้เก็บไว้ในโฟลเดอร์ของฟรอนต์เอนด์ เพื่ออำนวยความสะดวกในการเปลี่ยน URL ของ Vue Route โดยไม่แสดง Error 404:
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
@@ -147,6 +155,6 @@ C:\inetpub\wwwroot\LaminateReport\
 
 ## 7. ตรวจสอบสถานะการทำงาน (Verification)
 
-* **เช็ค Backend**: เปิดบราวเซอร์ไปที่ `http://your-server-ip/api/` หรือ `http://your-server-ip/api/machines`
-* **เช็ค Frontend**: เปิดบราวเซอร์ไปที่ `http://your-server-ip/`
-* **ล็อกการรัน Node.js**: หากมีข้อผิดพลาด เกิดขึ้นระหว่างการรัน Node.js `iisnode` จะบันทึกไฟล์ล็อกไว้ที่ `C:\inetpub\wwwroot\LaminateReport\backend02\iisnode\` ซึ่งสามารถเข้าไปเปิดดูเพื่อตรวจสอบ stack trace ได้
+- **เช็ค Backend**: เปิดบราวเซอร์ไปที่ `http://your-server-ip/api/` หรือ `http://your-server-ip/api/machines`
+- **เช็ค Frontend**: เปิดบราวเซอร์ไปที่ `http://your-server-ip/`
+- **ล็อกการรัน Node.js**: หากมีข้อผิดพลาด เกิดขึ้นระหว่างการรัน Node.js `iisnode` จะบันทึกไฟล์ล็อกไว้ที่ `C:\inetpub\wwwroot\LaminateReport\backend02\iisnode\` ซึ่งสามารถเข้าไปเปิดดูเพื่อตรวจสอบ stack trace ได้
