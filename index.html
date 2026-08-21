@@ -2,7 +2,13 @@
 <html lang="">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
+    <script>
+      // mount the folder name of iis
+      const iisName = 'LMR-front'
+      const base = window.location.pathname.startsWith(`/${iisName}`) ? `/${iisName}/` : '/'
+      document.write('<base href="' + base + '" />')
+    </script>
+    <link rel="icon" href="favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Laminate Checking Report</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -11,7 +17,6 @@
       href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link href="/src/style.css" rel="stylesheet" />
   </head>
   <body>
     <div id="app"></div>
