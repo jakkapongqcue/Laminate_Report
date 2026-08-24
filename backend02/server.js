@@ -2,11 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const config = require("./config");
 const { getPool, sql } = require("./db");
-const {
-  MACHINES,
-  processSqlViewData,
-  parseSqlTimestamp,
-} = require("./reportProcessor");
+const { MACHINES, processSqlViewData, parseSqlTimestamp } = require("./reportProcessor");
 
 const app = express();
 
@@ -53,9 +49,9 @@ router.get("/api/report/laminate", async (req, res) => {
   } = req.query;
 
   if (!date_from || !date_to) {
-    return res
-      .status(400)
-      .json({ detail: "date_from and date_to are required parameters." });
+    return res.status(400).json({
+      detail: "date_from and date_to are required parameters.",
+    });
   }
 
   const pool = await getPool();
@@ -70,9 +66,10 @@ router.get("/api/report/laminate", async (req, res) => {
     const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
     const tableName = machineConfig.tableName;
     const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
-    const selectCols = (machineConfig.columns && machineConfig.columns.length > 0)
-      ? machineConfig.columns.join(",\n          ")
-      : "*";
+    const selectCols =
+      machineConfig.columns && machineConfig.columns.length > 0
+        ? machineConfig.columns.join(",\n          ")
+        : "*";
 
     const startDatetime = `${date_from} ${time_from}:00`;
     const endDatetime = `${date_to} ${time_to}:00`;
@@ -162,32 +159,24 @@ router.get("/api/report/laminate/test", (req, res) => {
   } = req.query;
 
   if (!date_from || !date_to) {
-    return res
-      .status(400)
-      .json({ detail: "date_from and date_to are required parameters." });
+    return res.status(400).json({
+      detail: "date_from and date_to are required parameters.",
+    });
   }
 
   try {
     const [yearFrom, monthFrom, dayFrom] = date_from.split("-").map(Number);
     const [hourFrom, minFrom] = time_from.split(":").map(Number);
-    const startDt = new Date(
-      yearFrom,
-      monthFrom - 1,
-      dayFrom,
-      hourFrom,
-      minFrom,
-      0,
-      0,
-    );
+    const startDt = new Date(yearFrom, monthFrom - 1, dayFrom, hourFrom, minFrom, 0, 0);
 
     const [yearTo, monthTo, dayTo] = date_to.split("-").map(Number);
     const [hourTo, minTo] = time_to.split(":").map(Number);
     let endDt = new Date(yearTo, monthTo - 1, dayTo, hourTo, minTo, 0, 0);
 
     if (isNaN(startDt.getTime()) || isNaN(endDt.getTime())) {
-      return res
-        .status(400)
-        .json({ detail: "Invalid date/time format. Use YYYY-MM-DD and HH:MM" });
+      return res.status(400).json({
+        detail: "Invalid date/time format. Use YYYY-MM-DD and HH:MM",
+      });
     }
 
     if (endDt <= startDt) {
