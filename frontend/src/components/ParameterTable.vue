@@ -8,37 +8,21 @@
           <th style="width: 160px; min-width: 160px">Setting Parameter</th>
 
           <!-- Column 2: Set Point -->
-          <th style="width: 68px; min-width: 68px" class="font-bold bg-gray-50">
-            Set Point (PS)
-          </th>
+          <th style="width: 68px; min-width: 68px" class="font-bold bg-gray-50">Set Point (PS)</th>
 
           <!-- Column 3: Diagonal Time / Unit header -->
-          <th
-            class="diagonal-cell"
-            style="width: 48px; min-width: 48px; height: 36px"
-          >
+          <th class="diagonal-cell" style="width: 48px; min-width: 48px; height: 36px">
             <div class="top-right-text">Time</div>
             <div class="bottom-left-text">Unit</div>
           </th>
 
           <!-- Dynamic time columns -->
-          <th
-            v-for="col in timeColumns"
-            :key="col.key"
-            class="font-bold text-center bg-gray-50"
-          >
+          <th v-for="col in timeColumns" :key="col.key" class="font-bold text-center bg-gray-50">
             <span class="whitespace-pre-wrap">{{ col.label }}</span>
           </th>
 
           <!-- Filler columns to always show 14 slots -->
-          <th
-            v-for="n in fillerColumnCount"
-            :key="'fill-hdr-' + n"
-            class="bg-gray-50"
-            style="min-width: 42px"
-          >
-            น.
-          </th>
+          <th v-for="n in fillerColumnCount" :key="'fill-hdr-' + n" class="bg-gray-50" style="min-width: 42px">น.</th>
         </tr>
       </thead>
       <tbody>
@@ -55,26 +39,13 @@
           </td>
 
           <!-- Value cells for each time column -->
-          <td
-            v-for="col in timeColumns"
-            :key="col.key"
-            class="font-medium text-center"
-          >
-            <span
-              v-if="col.key === 'setup'"
-              class="w-full font-semibold text-center bg-transparent focus:outline-none focus:bg-yellow-50"
-              style="font-size: 8.5px"
-              >{{ row.setup_val }}</span
-            >
-            <span v-else>{{ row.values[col.key] || "" }}</span>
+          <td v-for="col in timeColumns" :key="col.key" class="font-medium text-center">
+            <span v-if="col.key === 'setup'" class="w-full font-semibold text-center"">{{ row.setup_val }}</span>
+            <span v-else>{{ row.values[col.key] || '' }}</span>
           </td>
 
           <!-- Filler cells -->
-          <td
-            v-for="n in fillerColumnCount"
-            :key="'fill-cell-' + n"
-            class="text-center"
-          ></td>
+          <td v-for="n in fillerColumnCount" :key="'fill-cell-' + n" class="text-center"></td>
         </tr>
       </tbody>
     </table>
@@ -82,7 +53,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed } from 'vue'
 
 const props = defineProps({
   timeColumns: {
@@ -97,16 +68,14 @@ const props = defineProps({
   },
   targetColumnCount: {
     type: Number,
-    default: 14,
+    default: 13,
   },
-});
+})
 
 const fillerColumnCount = computed(() => {
   // Exclude 'setup' column from counting toward the 14 visible time columns
-  const nonSetupCols = props.timeColumns.filter((c) => c.key !== "setup");
-  const currentCount = nonSetupCols.length;
-  return currentCount < props.targetColumnCount
-    ? props.targetColumnCount - currentCount
-    : 0;
-});
+  const nonSetupCols = props.timeColumns.filter((c) => c.key !== 'setup')
+  const currentCount = nonSetupCols.length
+  return currentCount < props.targetColumnCount ? props.targetColumnCount - currentCount : 0
+})
 </script>

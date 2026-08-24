@@ -67,6 +67,13 @@ router.get("/api/report/laminate", async (req, res) => {
   }
 
   try {
+    const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
+    const tableName = machineConfig.tableName;
+    const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
+    const selectCols = (machineConfig.columns && machineConfig.columns.length > 0)
+      ? machineConfig.columns.join(",\n          ")
+      : "*";
+
     const startDatetime = `${date_from} ${time_from}:00`;
     const endDatetime = `${date_to} ${time_to}:00`;
 
@@ -76,22 +83,10 @@ router.get("/api/report/laminate", async (req, res) => {
 
     const query = `
       SELECT 
-          [SERVER TIMESTAMP]
-          ,[Machine : Speed]
-          ,[Tunnel : Zone 1 : Temperature]
-          ,[Tunnel : Zone 2 : Temperature]
-          ,[Unwinder 1 : Tension]
-          ,[Unwinder 2 : Tension]
-          ,[Rewinder : Tension]
-          ,[Rewinder : Tension Taper]
-          ,[Coating : Inlet : Tension]
-          ,[Laminator : Nip Roll : Operator : Pressure]
-          ,[Laminator : Nip Roll : Motor : Pressure]
-          ,[Unwinder 1 : Treatment : Specific Power]
-          ,[Unwinder 2 : Corona : Specific Power]
-      FROM [KEP_LOG].[dbo].[View_1LB09_Bobst]
-      WHERE [SERVER TIMESTAMP] BETWEEN @start_dt AND @end_dt
-      ORDER BY [SERVER TIMESTAMP] ASC
+          ${selectCols}
+      FROM ${tableName}
+      WHERE ${timestampCol} BETWEEN @start_dt AND @end_dt
+      ORDER BY ${timestampCol} ASC
     `;
 
     const result = await request.query(query);
@@ -113,22 +108,10 @@ router.get("/api/report/laminate", async (req, res) => {
 
         const setupQuery = `
           SELECT TOP 1
-              [SERVER TIMESTAMP]
-              ,[Machine : Speed]
-              ,[Tunnel : Zone 1 : Temperature]
-              ,[Tunnel : Zone 2 : Temperature]
-              ,[Unwinder 1 : Tension]
-              ,[Unwinder 2 : Tension]
-              ,[Rewinder : Tension]
-              ,[Rewinder : Tension Taper]
-              ,[Coating : Inlet : Tension]
-              ,[Laminator : Nip Roll : Operator : Pressure]
-              ,[Laminator : Nip Roll : Motor : Pressure]
-              ,[Unwinder 1 : Treatment : Specific Power]
-              ,[Unwinder 2 : Corona : Specific Power]
-          FROM [KEP_LOG].[dbo].[View_1LB09_Bobst]
-          WHERE [SERVER TIMESTAMP] BETWEEN DATEADD(minute, -5, @setup_dt) AND DATEADD(minute, 5, @setup_dt)
-          ORDER BY ABS(DATEDIFF(second, @setup_dt, [SERVER TIMESTAMP])) ASC
+              ${selectCols}
+          FROM ${tableName}
+          WHERE ${timestampCol} BETWEEN DATEADD(minute, -5, @setup_dt) AND DATEADD(minute, 5, @setup_dt)
+          ORDER BY ABS(DATEDIFF(second, @setup_dt, ${timestampCol})) ASC
         `;
 
         const setupResult = await setupRequest.query(setupQuery);
@@ -141,7 +124,7 @@ router.get("/api/report/laminate", async (req, res) => {
     }
 
     console.log(
-      `Retrieved ${sqlRows.length} records from [KEP_LOG].[dbo].[View_1LB09_Bobst]. Setup row found: ${setupRow !== null}`,
+      `Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}. Setup row found: ${setupRow !== null}`,
     );
 
     const response = processSqlViewData({
