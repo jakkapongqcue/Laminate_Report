@@ -263,7 +263,7 @@ router.get("/api/report/laminate/test", (req, res) => {
 });
 
 // Mount the router under both /LMR-Back (IIS Application path) and / (local dev fallback)
-app.use("/LMR-Back", router);
+app.use("/LaminateReport-Back", router);
 app.use("/", router);
 
 // Start Express server

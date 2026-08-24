@@ -8,8 +8,8 @@ set "FRONT_SRC=%~dp0frontend\dist"
 set "BACK_SRC=%~dp0backend02"
 
 :: Define Target Paths
-set "FRONT_DST=D:\WebApp\test\front"
-set "BACK_DST=D:\WebApp\test\back"
+set "FRONT_DST=D:\WebApp\LaminateReport\Front"
+set "BACK_DST=D:\WebApp\LaminateReport\Back"
 
 echo.
 echo [1/2] Copying Frontend files...

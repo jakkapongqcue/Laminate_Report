@@ -158,3 +158,14 @@ C:\inetpub\wwwroot\LaminateReport\
 - **เช็ค Backend**: เปิดบราวเซอร์ไปที่ `http://your-server-ip/api/` หรือ `http://your-server-ip/api/machines`
 - **เช็ค Frontend**: เปิดบราวเซอร์ไปที่ `http://your-server-ip/`
 - **ล็อกการรัน Node.js**: หากมีข้อผิดพลาด เกิดขึ้นระหว่างการรัน Node.js `iisnode` จะบันทึกไฟล์ล็อกไว้ที่ `C:\inetpub\wwwroot\LaminateReport\backend02\iisnode\` ซึ่งสามารถเข้าไปเปิดดูเพื่อตรวจสอบ stack trace ได้
+
+### 7.1 หาก Node.js ไม่ทำงาน (Node not work)
+
+**วิธีตั้งค่า Environment Variable ใน Windows**
+
+1. เปิดเมนู Start แล้วพิมพ์ **Environment Variables**
+2. เลือก **Edit the system environment variables** เพื่อเปิด **System Properties**
+3. คลิก **Environment Variables…**
+4. ใน **User variables** หรือ **System variables** คลิก **New…**
+5. ตั้ง **Variable name** เป็น `NODE_SKIP_PLATFORM_CHECK` และ **Variable value** เป็น `1`
+6. คลิก **OK** ทุกหน้าต่างแล้วรีสตาร์ทคอมพิวเตอร์หรือ Terminal
