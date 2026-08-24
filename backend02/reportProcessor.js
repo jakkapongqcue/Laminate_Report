@@ -30,35 +30,20 @@ const MACHINES = [
     tableName: '[KEP_LOG].[dbo].[View_1LB09_Bobst]',
     timestampColumn: '[SERVER TIMESTAMP]',
     columns: [
-      '[SERVER TIMESTAMP]',
-      '[Machine : Speed]',
-      '[Tunnel : Zone 1 : Temperature]',
-      '[Tunnel : Zone 2 : Temperature]',
-      '[Unwinder 1 : Tension]',
-      '[Unwinder 2 : Tension]',
-      '[Rewinder : Tension]',
-      '[Rewinder : Tension Taper]',
-      '[Coating : Inlet : Tension]',
-      '[Laminator : Nip Roll : Operator : Pressure]',
-      '[Laminator : Nip Roll : Motor : Pressure]',
-      '[Unwinder 1 : Treatment : Specific Power]',
-      '[Unwinder 2 : Corona : Specific Power]',
+      '[SERVER TIMESTAMP] AS SERVER_TIMESTAMP',
+      '[Machine : Speed] AS LINE_SPEED',
+      '[Tunnel : Zone 1 : Temperature] AS TEMP_ZONE_1',
+      '[Tunnel : Zone 2 : Temperature] AS TEMP_ZONE_2',
+      '[Unwinder 1 : Tension] AS TENSION_UNWIND_1',
+      '[Unwinder 2 : Tension] AS TENSION_UNWIND_2',
+      '[Rewinder : Tension] AS TENSION_REWIND',
+      '[Rewinder : Tension Taper] AS TENSION_TAPER_REWIND',
+      '[Coating : Inlet : Tension] AS TENSION_INLET_COATING',
+      '[Laminator : Nip Roll : Operator : Pressure] AS PRESSURE_NIP_OPERATOR',
+      '[Laminator : Nip Roll : Motor : Pressure] AS PRESSURE_NIP_MOTOR',
+      '[Unwinder 1 : Treatment : Specific Power] AS CORONA_POWER_UW1',
+      '[Unwinder 2 : Corona : Specific Power] AS CORONA_POWER_UW2',
     ],
-    // Map โดยใช้ชื่อกลาง (Standard Param Key)
-    paramMapping: {
-      LINE_SPEED: 'Machine : Speed',
-      TEMP_ZONE_1: 'Tunnel : Zone 1 : Temperature',
-      TEMP_ZONE_2: 'Tunnel : Zone 2 : Temperature',
-      TENSION_UNWIND_1: 'Unwinder 1 : Tension',
-      TENSION_UNWIND_2: 'Unwinder 2 : Tension',
-      TENSION_REWIND: 'Rewinder : Tension',
-      TENSION_TAPER_REWIND: 'Rewinder : Tension Taper',
-      TENSION_INLET_COATING: 'Coating : Inlet : Tension',
-      PRESSURE_NIP_OPERATOR: 'Laminator : Nip Roll : Operator : Pressure',
-      PRESSURE_NIP_MOTOR: 'Laminator : Nip Roll : Motor : Pressure',
-      CORONA_POWER_UW1: 'Unwinder 1 : Treatment : Specific Power',
-      CORONA_POWER_UW2: 'Unwinder 2 : Corona : Specific Power',
-    },
   },
   {
     id: '2LB06_FujiKikai',
@@ -66,29 +51,17 @@ const MACHINES = [
     tableName: '[KEP_LOG].[dbo].[View_2LB06_FujiKikai]',
     timestampColumn: '[SERVER TIMESTAMP]',
     columns: [
-      '[SERVER TIMESTAMP]',
-      '[Speed.Processing Speed]',
-      '[Temp.No.1 Zone]',
-      '[Temp.No.2 Zone]',
-      '[Temp.No.3 Zone]',
-      '[Ten.Dryer]',
-      '[Ten.No.1 Unwinder]',
-      '[Ten.No.2 Unwinder]',
-      '[Ten.Rewinder]',
-      '[Rewinder Taper No.]',
+      '[SERVER TIMESTAMP] AS SERVER_TIMESTAMP',
+      '[Speed.Processing Speed] AS LINE_SPEED',
+      '[Temp.No.1 Zone] AS TEMP_ZONE_1',
+      '[Temp.No.2 Zone] AS TEMP_ZONE_2',
+      '[Temp.No.3 Zone] AS TEMP_ZONE_3',
+      '[Ten.Dryer] AS TEMP_ZONE_4',
+      '[Ten.No.1 Unwinder] AS TENSION_UNWIND_1',
+      '[Ten.No.2 Unwinder] AS TENSION_UNWIND_2',
+      '[Ten.Rewinder] AS TENSION_REWIND',
+      '[Rewinder Taper No.] AS TENSION_TAPER_REWIND',
     ],
-    // Map โดยใช้ชื่อกลาง (Standard Param Key)
-    paramMapping: {
-      LINE_SPEED: 'Speed.Processing Speed',
-      TEMP_ZONE_1: 'Temp.No.1 Zone',
-      TEMP_ZONE_2: 'Temp.No.2 Zone',
-      TEMP_ZONE_3: 'Temp.No.3 Zone',
-      TEMP_ZONE_4: 'Ten.Dryer',
-      TENSION_UNWIND_1: 'Ten.No.1 Unwinder',
-      TENSION_UNWIND_2: 'Ten.No.2 Unwinder',
-      TENSION_REWIND: 'Ten.Rewinder',
-      TENSION_TAPER_REWIND: 'Rewinder Taper No.',
-    },
   },
 ]
 
@@ -328,7 +301,7 @@ function processSqlViewData({ sqlRows, machine, dateFromStr, dateToStr, timeFrom
       let setupVal = ''
       const colValues = {}
 
-      const dbColumnName = paramMapping[p.key] || paramMapping[p.name] || paramMapping[p.param_id] || null
+      const dbColumnName = p.key
       // Index for array-based mock row fallback
       const colIdx = p.param_id
 
