@@ -34,7 +34,7 @@
           <td class="font-medium text-center">{{ row.set_point }}</td>
 
           <!-- Unit -->
-          <td class="text-center text-gray-700" style="font-size: 8.5px">
+          <td class="text-center  " style="font-size: 8.5px">
             {{ row.unit }}
           </td>
 

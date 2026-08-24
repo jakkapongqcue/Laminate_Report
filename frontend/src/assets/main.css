@@ -34,7 +34,7 @@ body {
   width: 277mm; /* 297mm − 10mm padding left/right = 277mm printable */
   height: 190mm; /* 210mm − 10mm padding top/bottom = 190mm printable  */
   margin: 0 auto 24px auto;
-  padding: 6mm 8mm 5mm 8mm;
+  padding: 6mm 8mm 6mm 8mm;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   box-sizing: border-box;
   position: relative;
@@ -52,7 +52,7 @@ body {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  font-size: 9.5px;
+  font-size: 9px;
   flex: 1; /* Stretch table to fill remaining page height       */
 }
 
@@ -66,6 +66,14 @@ body {
   box-sizing: border-box;
   overflow: hidden;
   white-space: nowrap;
+}
+
+.report-table th {
+  height: 30px !important;
+}
+
+.report-table tr {
+  height: 20px !important;
 }
 
 /* Parameter name column – left-aligned, allow some wrapping */
@@ -153,7 +161,7 @@ body {
   }
 
   .report-table {
-    font-size: 8.5px !important;
+    font-size: 9px !important;
   }
 
   .report-table th,
@@ -164,7 +172,7 @@ body {
   }
 
   .report-table th {
-    height: 36px !important;
+    height: 30px !important;
   }
 
   .report-table tr {
