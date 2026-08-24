@@ -62,6 +62,10 @@ const MACHINES = [
       "[Ten.Rewinder] AS TENSION_REWIND",
       "[Rewinder Taper No.] AS TENSION_TAPER_REWIND",
     ],
+    unitOverrides: {
+      TENSION_UNWIND_1: "N",
+      TENSION_UNWIND_2: "N",
+    },
   },
 ];
 
@@ -368,12 +372,14 @@ function processSqlViewData({ sqlRows, machine, dateFromStr, dateToStr, timeFrom
         }
       }
 
+      const unit = (machineConfig.unitOverrides && machineConfig.unitOverrides[p.key]) || p.unit;
+
       rows.push({
         key: p.key,
         param_id: p.param_id,
         name: p.name,
         set_point: "",
-        unit: p.unit,
+        unit: unit,
         setup_val: setupVal,
         values: colValues,
       });
