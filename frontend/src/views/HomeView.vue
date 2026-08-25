@@ -205,7 +205,7 @@ onMounted(() => {
 
   setInterval(() => {
     fetchMachineStatus()
-  }, 180000)
+  }, 300000) // 5 minutes
 })
 
 // keep setup_date default in sync with date_from unless user sets a different setup_date
