@@ -13,6 +13,10 @@ set "BACK_DST=D:\WebApp\LaminateReport\Back"
 
 echo.
 echo [1/2] Copying Frontend files...
+echo Building frontend...
+pushd "%~dp0frontend"
+call npm run build
+popd
 echo From: %FRONT_SRC%
 echo To:   %FRONT_DST%
 if not exist "%FRONT_DST%" mkdir "%FRONT_DST%"
