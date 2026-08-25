@@ -409,4 +409,5 @@ module.exports = {
   STANDARD_PARAMETERS,
   processSqlViewData,
   parseSqlTimestamp,
+  formatDateTimeShort,
 };

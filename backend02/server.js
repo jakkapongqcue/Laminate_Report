@@ -2,7 +2,12 @@ const express = require("express");
 const cors = require("cors");
 const config = require("./config");
 const { getPool, sql } = require("./db");
-const { MACHINES, processSqlViewData, parseSqlTimestamp } = require("./reportProcessor");
+const {
+  MACHINES,
+  processSqlViewData,
+  parseSqlTimestamp,
+  formatDateTimeShort,
+} = require("./reportProcessor");
 
 const app = express();
 
@@ -258,6 +263,46 @@ router.get("/api/report/laminate/test", (req, res) => {
 
     res.json(response);
   } catch (err) {
+    res.status(500).json({ detail: err.message });
+  }
+});
+
+// GET /api/machineStatus -> GET machine status by id, if speed > 0 online, speed = 0 offline
+//  ex = /api/machineStatus?machine=1LB09_Bobst
+router.get("/api/machineStatus", async (req, res) => {
+  const { machine } = req.query;
+  if (!machine) {
+    return res.status(400).json({ detail: "machine is required parameter." });
+  }
+
+  const pool = await getPool();
+  if (!pool) {
+    return res.status(500).json({ detail: "Database connection unavailable" });
+  }
+
+  const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
+  const tableName = machineConfig.tableName;
+  const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
+  const selectCols =
+    machineConfig.columns && machineConfig.columns.length > 0
+      ? machineConfig.columns.join(",\n          ")
+      : "*";
+  const query = `
+    SELECT TOP 1
+      ${selectCols}
+    FROM ${tableName}
+    WHERE ${timestampCol} BETWEEN DATEADD(minute, -5, GETDATE()) AND DATEADD(minute, 5, GETDATE()) 
+    ORDER BY ${timestampCol} DESC
+  `;
+
+  try {
+    const result = await pool.request().query(query);
+    const sqlRows = result.recordset;
+    const status = sqlRows[0]["LINE_SPEED"] > 0 ? 1 : 0;
+    const updateTime = formatDateTimeShort(parseSqlTimestamp(sqlRows[0]["SERVER_TIMESTAMP"]));
+    res.json({ machine, status, updateTime });
+  } catch (err) {
+    console.error(`Machine status query error: ${err.message}`);
     res.status(500).json({ detail: err.message });
   }
 });

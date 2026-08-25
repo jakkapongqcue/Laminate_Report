@@ -4,20 +4,32 @@
       <!-- Filter Controls Group -->
       <div class="grid w-full grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         <!-- Machine Selection -->
-        <div class="flex flex-col col-span-2">
+        <div class="flex flex-col col-span-2 relative">
           <label class="class_Lable">
             <Icon_machine />
             เครื่องจักร (Machine)
           </label>
           <select
+            id="Input_Machine"
             v-model="filters.machine"
             class="bg-white class_Input"
             @click.ctrl.alt="$emit('refreshMachine')"
+            @change="fetchMachineStatus()"
           >
             <option v-for="m in machines" :key="m.id" :value="m.id">
               {{ m.name }}
             </option>
           </select>
+          <div @click="focusMachineSelect()" class="absolute top-1/2 -translate-y-[46%] right-10">
+            <span
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border select-none transition-all"
+              :class="machineStatus_pillClass"
+            >
+              <span class="w-2 h-2 rounded-full animate-pulse" :class="machineStatus_lightClass">
+              </span>
+              {{ machineStatus_text }}
+            </span>
+          </div>
         </div>
 
         <!-- Hourly Step -->
@@ -133,7 +145,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
+import { defineProps, defineEmits, computed } from 'vue'
 import Icon_calendar from './icons/Icon_calendar.vue'
 import Icon_time from './icons/Icon_time.vue'
 import Icon_print from './icons/Icon_print.vue'
@@ -151,6 +163,10 @@ const props = defineProps({
   statusLoading: {
     type: Boolean,
     default: false,
+  },
+  machineStatus: {
+    type: String,
+    default: 'Loading', //'Loading', 0, 1 , 'Error'
   },
 })
 
@@ -176,6 +192,61 @@ const setShift = (shiftNum) => {
   }
   emit('search')
 }
+
+const fetchMachineStatus = async () => {
+  await emit('fetchMachineStatus')
+}
+
+const focusMachineSelect = () => {
+  const Input_Machine = document.getElementById('Input_Machine')
+  Input_Machine.showPicker()
+  Input_Machine.focus()
+}
+
+const machineStatus_pillClass = computed(() => {
+  switch (props.machineStatus) {
+    case 'Error':
+      return 'bg-red-300 text-red-950 border-red-300 duration-300'
+    case 'Loading':
+      return 'bg-gray-200 text-gray-950 border-gray-300 duration-300'
+    case 'Online':
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200 duration-300'
+    case 'Offline':
+      return 'bg-red-200 text-red-950 border-red-300 duration-300'
+    default:
+      return 'opacity-0 duration-1000'
+  }
+})
+
+const machineStatus_lightClass = computed(() => {
+  switch (props.machineStatus) {
+    case 'Error':
+      return 'bg-red-500'
+    case 'Loading':
+      return 'bg-gray-500'
+    case 'Online':
+      return 'bg-emerald-500'
+    case 'Offline':
+      return 'bg-red-500'
+    default:
+      return ''
+  }
+})
+
+const machineStatus_text = computed(() => {
+  switch (props.machineStatus) {
+    case 'Error':
+      return 'Error'
+    case 'Loading':
+      return 'Loading'
+    case 'Online':
+      return 'Online'
+    case 'Offline':
+      return 'Offline'
+    default:
+      return 'N/A'
+  }
+})
 </script>
 
 <style lang="css" scoped>

@@ -8,9 +8,11 @@
       :filters="filters"
       :machines="machines"
       :statusLoading="isLoading"
+      :machineStatus="machineStatus"
       @search="fetchReport"
       @print="printReport"
       @refreshMachine="fetchMachines"
+      @fetchMachineStatus="fetchMachineStatus"
     />
 
     <!-- Loading State Overlay -->
@@ -117,7 +119,7 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 const reportData = ref(null)
 const BACKEND_API_BASE_URL = import.meta.env.VITE_BACK_BASE_URL
-
+const machineStatus = ref('N/A') //'N/A', 'Online', 'Offline'
 const fetchMachines = async () => {
   try {
     const res = await fetch(BACKEND_API_BASE_URL + '/api/machines')
@@ -180,9 +182,30 @@ const printReport = () => {
   window.print()
 }
 
+const fetchMachineStatus = async () => {
+  machineStatus.value = 'Loading'
+  try {
+    const queryParams = new URLSearchParams({
+      machine: filters.machine,
+    })
+    const res = await fetch(BACKEND_API_BASE_URL + '/api/machineStatus?' + queryParams.toString())
+    if (res.ok) {
+      const data = await res.json()
+      machineStatus.value = data.status.toString() == '1' ? 'Online' : 'Offline'
+    }
+  } catch (err) {
+    console.warn('Could not fetch machine status:', err)
+    machineStatus.value = 'Error'
+  }
+}
 onMounted(() => {
   loadUseTestApiSetting()
   fetchMachines()
+  fetchMachineStatus()
+
+  setInterval(() => {
+    fetchMachineStatus()
+  }, 180000)
 })
 
 // keep setup_date default in sync with date_from unless user sets a different setup_date
@@ -196,15 +219,6 @@ watch(
       filters.setup_date = newVal
     }
     _lastDateFrom = newVal
-  },
-)
-
-// optional: when date_from changes, clear setup_time so user must reselect time if desired
-watch(
-  () => filters.date_from,
-  () => {
-    // do not clear setup_time automatically to avoid surprising the user; comment out if undesired
-    // filters.setup_time = "";
   },
 )
 </script>
