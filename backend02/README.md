@@ -1,95 +1,164 @@
 # Backend02 (Node.js + Express)
 
-ระบบ Backend ใหม่สำหรับ **Laminate Checking Report** พัฒนาขึ้นโดยใช้ Node.js + Express เพื่อทดแทน Python backend ตัวเดิม
+ระบบ Backend สำหรับ **Laminate Checking Report** พัฒนาโดยใช้ Node.js + Express ติดต่อฐานข้อมูล MS SQL Server ผ่านไลบรารี `mssql`
 
-## 1. จุดเด่นและการเปลี่ยนแปลง
-* **Node.js + Express**: น้ำหนักเบา สตาร์ทเร็ว ดูแลรักษาง่ายขึ้นสำหรับโปรเจค JS/TS stack
-* **ใช้ Connection Pool**: จัดการ Connection ไปยัง MS SQL Server ผ่านไลบรารี `mssql` (tedious) โดยไม่จำเป็นต้องใช้ ODBC Driver ติดตั้งแยกในระบบปฏิบัติการ
-* **ปิดใช้งาน MOCK FALLBACK**: ถอดเงื่อนไข `USE_MOCK_FALLBACK` ออกอย่างเด็ดขาด หากฐานข้อมูลหลักเชื่อมต่อไม่ได้ ระบบจะแจ้งเตือนความผิดพลาด (HTTP 500) พร้อมคำอธิบายสาเหตุทันที
-* **การจำลองข้อมูล**: มี endpoint จำลองข้อมูลแยกออกมาชัดเจนเพื่อทดสอบฟรอนต์เอนด์ได้โดยไม่ต้องมีฐานข้อมูลจริง
-* **รองรับ iisnode**: ปรับปรุงส่วนการ Listen ให้รองรับ Named Pipe จาก iisnode โดยอัตโนมัติ
+---
+
+## 1. โครงสร้างไฟล์
+
+```
+backend02/
+├── server.js           ← Entry point ของแอปพลิเคชัน (routes ทั้งหมดอยู่ที่นี่)
+├── config.js           ← โหลดค่าจาก .env และ export ออกมาใช้งาน
+├── db.js               ← จัดการ Connection Pool ของ mssql
+├── reportProcessor.js  ← Logic ประมวลผลข้อมูล / รายการเครื่องจักร (MACHINES)
+├── package.json
+├── web.config          ← ตั้งค่า iisnode และ URL Rewrite สำหรับ IIS
+└── .env                ← ข้อมูลการเชื่อมต่อ DB (ไม่ commit เข้า git)
+```
 
 ---
 
 ## 2. Endpoints
-* **GET `/`**: ตรวจสอบสถานะการเชื่อมต่อ (Health Check)
-* **GET `/api/machines`**: รายการเครื่องจักรทั้งหมด (เช่น `1LB09_Bobst`)
-* **GET `/api/report/laminate`**: ดึงข้อมูลรายงานจากฐานข้อมูลจริง KEP_LOG (ต้องการการตั้งค่าข้อมูลเชื่อมต่อใน `.env`)
-* **GET `/api/report/laminate/test`**: ดึงข้อมูลจำลอง (Synthetic Data) สำหรับใช้ในการพัฒนาและทดสอบระบบ
+
+Router mount อยู่ที่ทั้ง `/` (local dev) และ `/LaminateReport-Back` (IIS path)
+
+| Method | Path                        | คำอธิบาย                                                  | ต้องการ DB |
+| ------ | --------------------------- | --------------------------------------------------------- | ---------- |
+| GET    | `/`                         | Health Check — ตรวจสอบว่าระบบออนไลน์                      | ❌         |
+| GET    | `/api/machines`             | รายการเครื่องจักรทั้งหมด (id, name)                       | ❌         |
+| GET    | `/api/report/laminate`      | ดึงข้อมูลรายงานจากฐานข้อมูลจริง `KEP_LOG`                 | ✅         |
+| GET    | `/api/report/laminate/test` | ดึงข้อมูลจำลอง (Synthetic Data) สำหรับพัฒนา/ทดสอบ         | ❌         |
+| GET    | `/api/machineStatus`        | ตรวจสอบสถานะเครื่องจักร (online/offline จาก `LINE_SPEED`) | ✅         |
+
+### Query Parameters — `/api/report/laminate` และ `/api/report/laminate/test`
+
+| Parameter    | ค่าเริ่มต้น    | คำอธิบาย                                        |
+| ------------ | -------------- | ----------------------------------------------- |
+| `machine`    | `1LB09_Bobst`  | ID ของเครื่องจักร (ดูรายการจาก `/api/machines`) |
+| `date_from`  | **(required)** | วันที่เริ่มต้น format `YYYY-MM-DD`              |
+| `date_to`    | **(required)** | วันที่สิ้นสุด format `YYYY-MM-DD`               |
+| `time_from`  | `08:00`        | เวลาเริ่มต้น format `HH:MM`                     |
+| `time_to`    | `17:00`        | เวลาสิ้นสุด format `HH:MM`                      |
+| `hour_step`  | `1`            | ขนาด interval (ชั่วโมง)                         |
+| `setup_date` | `null`         | วันที่ของค่า Setup (ถ้าไม่ระบุใช้ `date_from`)  |
+| `setup_time` | `null`         | เวลาของค่า Setup format `HH:MM`                 |
+
+### Query Parameters — `/api/machineStatus`
+
+| Parameter | ค่าเริ่มต้น    | คำอธิบาย                                |
+| --------- | -------------- | --------------------------------------- |
+| `machine` | **(required)** | ID ของเครื่องจักรที่ต้องการตรวจสอบสถานะ |
 
 ---
 
 ## 3. วิธีการรันในเครื่องพัฒนา (Local Development)
-1. ติดตั้ง Node.js (เวอร์ชัน 18 ขึ้นไปแนะนำ)
-2. เข้ามาที่โฟลเดอร์ `backend02`
-3. ติดตั้ง npm packages:
+
+**ข้อกำหนด:** Node.js เวอร์ชัน 18 ขึ้นไป
+
+1. เข้าไปที่โฟลเดอร์ `backend02`:
+   ```bash
+   cd backend02
+   ```
+2. ติดตั้ง packages:
    ```bash
    npm install
    ```
-4. คัดลอกและตั้งค่าไฟล์ `.env` (ระบุรายละเอียดของ MS SQL Server):
+3. สร้างและตั้งค่าไฟล์ `.env`:
    ```env
    DB_SERVER=192.168.10.99
    DB_PORT=1433
    DB_NAME=KEP_LOG
    DB_USER=operation
    DB_PASSWORD=YourPassword
-   PORT=8000
+   PORT=8051
    ```
-5. รันระบบ:
+4. รันระบบ:
    ```bash
    npm start
    ```
-   หรือรันด้วยโหมดตรวจสอบความเปลี่ยนแปลง (Node.js 18+):
+   หรือรันพร้อม watch mode (Node.js 18+):
    ```bash
    node --watch server.js
    ```
+5. ทดสอบ Health Check:
+   ```
+   http://localhost:8051/
+   ```
 
 ---
 
-## 4. คู่มือการติดตั้งบน IIS (Windows Server Deploy Guide) ด้วย `iisnode`
+## 4. คู่มือการติดตั้งบน IIS ด้วย `iisnode`
 
-การรันโปรเจค Node.js ผ่าน module **iisnode** จะช่วยให้ IIS จัดการ Process ของ Node.js (เช่น การเพิ่ม Process การรีสตาร์ทเมื่อแอปพัง การจัดการ log) ได้อย่างง่ายดายโดยไม่ต้องลง NSSM
+> **iisnode** ช่วยให้ IIS จัดการ Process ของ Node.js ได้ครบ (Auto-restart, Log, Multi-process) โดยไม่ต้องลง NSSM
 
-### ข้อกำหนดเบื้องต้น
-1. ติดตั้ง **Node.js** บนเครื่องเซิร์ฟเวอร์
-2. ติดตั้ง **IIS (Internet Information Services)** บน Windows Server
-3. ติดตั้ง Extension ของ IIS 3 ตัว:
-   * **URL Rewrite**: [https://www.iis.net/downloads/microsoft/url-rewrite](https://www.iis.net/downloads/microsoft/url-rewrite)
-   * **Application Request Routing (ARR)**: [https://www.iis.net/downloads/microsoft/application-request-routing](https://www.iis.net/downloads/microsoft/application-request-routing)
-   * **iisnode module for IIS**: ดาวน์โหลดตัวติดตั้ง `iisnode-x64.msi` ได้จาก GitHub ของ [iisnode](https://github.com/tjanczuk/iisnode/releases)
+### ขั้นตอนที่ 1: เตรียมโค้ดบนเซิร์ฟเวอร์
 
----
-
-### ขั้นตอนติดตั้ง
-
-#### ขั้นตอนที่ 1: เตรียมโค้ดและติดตั้ง Dependencies
-1. คัดลอกโฟลเดอร์ `backend02` ไปยังเซิร์ฟเวอร์ เช่น `C:\inetpub\wwwroot\LaminateReport\backend02`
-2. เปิด Command Prompt ด้วยสิทธิ์ **Administrator** เข้าไปยังโฟลเดอร์นั้นแล้วรัน:
+1. คัดลอกโฟลเดอร์ `backend02` ไปยังเซิร์ฟเวอร์ เช่น `C:\webapp\LaminateReport\backend`
+2. เปิด Command Prompt ด้วยสิทธิ์ **Administrator** แล้วรัน:
    ```cmd
-   cd C:\inetpub\wwwroot\LaminateReport\backend02
+   cd C:\webapp\LaminateReport\backend
    npm install --production
    ```
-3. แก้ไขและบันทึกไฟล์ `.env` สำหรับฐานข้อมูลในโฟลเดอร์เดียวกันให้เรียบร้อย
+3. แก้ไขไฟล์ `.env` ให้ตรงกับฐานข้อมูล Production:
+   ```env
+   DB_SERVER=192.168.10.99
+   DB_PORT=1433
+   DB_NAME=KEP_LOG
+   DB_USER=operation
+   DB_PASSWORD=YourActualPassword
+   ```
+   > **หมายเหตุ**: ไม่ต้องระบุ `PORT` บน IIS เพราะ iisnode จะส่ง Named Pipe มาแทน
 
-#### ขั้นตอนที่ 2: ตั้งค่าสิทธิ์โฟลเดอร์ (Folder Permissions)
-เนื่องจาก `iisnode` จะต้องสร้างโฟลเดอร์สำหรับเก็บ log การรันระบบ (`iisnode/`) ภายในโปรเจค:
-1. คลิกขวาที่โฟลเดอร์ `backend02` -> **Properties** -> ไปที่แท็บ **Security**
-2. กด **Edit...** -> ค้นหาหรือเพิ่มกลุ่มผู้ใช้ `IIS_IUSRS` (หรือผู้ใช้ของ Application Pool ที่จะตั้งค่า เช่น `IIS AppPool\LaminateAppPool`)
-3. ให้สิทธิ์ **Read**, **Write**, **Modify** แล้วกด **OK**
+### ขั้นตอนที่ 2: ตรวจสอบไฟล์ `web.config`
 
-#### ขั้นตอนที่ 3: ลงทะเบียนแอปพลิเคชันบน IIS Manager
-1. เปิด **IIS Manager**
-2. คลิกขวาที่ **Sites** -> **Add Website...** หรือคลิกขวาที่เว็บไซต์เดิมแล้วเลือก **Add Application...**
-   * **Alias**: เช่น `backend`
-   * **Physical Path**: ชี้ไปที่ `C:\inetpub\wwwroot\LaminateReport\backend02`
-   * **Application Pool**: เลือก Application Pool ที่มี Node.js ติดตั้งอยู่ (แนะนำให้เลือก AppPool ที่ตั้งค่าการจัดการแบบ **No Managed Code**)
-3. กด **OK**
+ไฟล์ `web.config` ในโฟลเดอร์ `backend02` เตรียมไว้แล้ว ทำหน้าที่:
 
-#### ขั้นตอนที่ 4: ตรวจสอบไฟล์ `web.config`
-ในโฟลเดอร์ `backend02` มีไฟล์ `web.config` เตรียมไว้เรียบร้อยแล้ว โดยทำหน้าที่:
-1. ลงทะเบียนไฟล์ `server.js` ให้เป็น Node.js handler สำหรับ `iisnode`
-2. เปิดใช้ URL Rewrite ส่งผ่านทุก Request ไปยัง `server.js` เพื่อให้ Express ทำหน้าที่เราท์ต่อ
-3. ซ่อนโฟลเดอร์ `node_modules` และไฟล์ `.env` ไม่ให้บุคคลภายนอกเข้าถึงผ่าน HTTP
+1. ลงทะเบียน `server.js` เป็น handler ของ `iisnode`
+2. เปิด URL Rewrite ส่งทุก Request ไปยัง `server.js` ให้ Express จัดการ Routing
+3. ซ่อน `node_modules/` และ `.env` ไม่ให้เข้าถึงจากภายนอกผ่าน HTTP
 
-ทดสอบเข้าใช้งานผ่านบราวเซอร์ที่ `http://your-server-ip/backend/` (หรือตาม URL ที่ตั้ง binding ไว้ใน IIS)
-หากถูกต้อง ระบบจะแสดงข้อมูลสถานะ `online` ทันที!
+### ขั้นตอนที่ 3: ตั้งค่า IIS Manager
+
+1. **Application Pool**
+   - ชื่อ: `LaminateReportPool`
+   - .NET CLR version: **No Managed Code**
+
+2. **เว็บไซต์หลัก (Frontend)**
+   - Physical path: `C:\webapp\LaminateReport\frontend`
+   - Binding: Port 80
+
+3. **Sub-Application (Backend)**
+   - คลิกขวาที่ Site → **Add Application...**
+   - Alias: `LaminateReport-Back`
+   - Physical path: `C:\webapp\LaminateReport\backend`
+   - Application pool: `LaminateReportPool`
+
+### ขั้นตอนที่ 4: ทดสอบ
+
+เปิดบราวเซอร์แล้วเข้า:
+
+```
+http://your-server-ip/LaminateReport-Back/
+```
+
+หากระบบทำงานปกติ จะแสดงผล:
+
+```json
+{
+  "status": "online",
+  "service": "Laminate Checking Report API",
+  "version": "1.0.0"
+}
+```
+
+---
+
+## 5. Dependencies
+
+| Package   | เวอร์ชัน | การใช้งาน                              |
+| --------- | -------- | -------------------------------------- |
+| `express` | ^4.19.2  | Web Framework                          |
+| `mssql`   | ^10.0.2  | MS SQL Server Client (Connection Pool) |
+| `cors`    | ^2.8.5   | จัดการ CORS Header                     |
+| `dotenv`  | ^16.4.5  | โหลด `.env` ไฟล์                       |
