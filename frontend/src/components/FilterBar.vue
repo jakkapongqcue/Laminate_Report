@@ -20,7 +20,7 @@
               {{ m.name }}
             </option>
           </select>
-          <div @click="focusMachineSelect()" class="absolute top-1/2 -translate-y-[46%] right-10">
+          <div @click="focusMachineSelect()" class="absolute top-1/2 translate-y-[-45%] right-10">
             <span
               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border select-none transition-all"
               :class="machineStatus_pillClass"
