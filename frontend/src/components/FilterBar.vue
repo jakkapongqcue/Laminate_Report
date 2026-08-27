@@ -208,7 +208,7 @@ const machineStatus_pillClass = computed(() => {
     case 'Error':
       return 'bg-red-300 text-red-950 border-red-300 duration-300'
     case 'Loading':
-      return 'bg-gray-200 text-gray-950 border-gray-300 duration-300'
+      return '!border-none text-gray-500 animate-pulse'
     case 'Online':
       return 'bg-emerald-50 text-emerald-700 border-emerald-200 duration-300'
     case 'Offline':
@@ -223,7 +223,7 @@ const machineStatus_lightClass = computed(() => {
     case 'Error':
       return 'bg-red-500'
     case 'Loading':
-      return 'bg-gray-500'
+      return '' //bg-gray-500
     case 'Online':
       return 'bg-emerald-500'
     case 'Offline':
@@ -238,7 +238,7 @@ const machineStatus_text = computed(() => {
     case 'Error':
       return 'Error'
     case 'Loading':
-      return 'Loading'
+      return 'Status...'
     case 'Online':
       return 'Online'
     case 'Offline':
