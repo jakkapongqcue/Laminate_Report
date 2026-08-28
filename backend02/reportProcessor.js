@@ -44,6 +44,13 @@ const MACHINES = [
       "[Unwinder 1 : Treatment : Specific Power] AS CORONA_POWER_UW1",
       "[Unwinder 2 : Corona : Specific Power] AS CORONA_POWER_UW2",
     ],
+    unitOverrides: {
+      TENSION_UNWIND_1: "N",
+      TENSION_UNWIND_2: "N",
+      TENSION_REWIND: "N",
+      PRESSURE_NIP_OPERATOR: "Bar",
+      PRESSURE_NIP_MOTOR: "Bar",
+    },
   },
   {
     id: "2LB06_FujiKikai",
