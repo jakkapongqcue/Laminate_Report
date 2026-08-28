@@ -20,7 +20,11 @@
               {{ m.name }}
             </option>
           </select>
-          <div @click="focusMachineSelect()" class="absolute top-1/2 translate-y-[-45%] right-10">
+          <div
+            :title="machineStatus_time"
+            @click="focusMachineSelect()"
+            class="absolute top-1/2 translate-y-[-45%] right-10"
+          >
             <span
               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border select-none transition-all"
               :class="machineStatus_pillClass"
@@ -151,6 +155,7 @@ import Icon_time from './icons/Icon_time.vue'
 import Icon_print from './icons/Icon_print.vue'
 import Icon_search from './icons/Icon_search.vue'
 import Icon_machine from './icons/Icon_machine.vue'
+import { timeAgo } from '@/utils/timeAgo'
 const props = defineProps({
   filters: {
     type: Object,
@@ -165,8 +170,13 @@ const props = defineProps({
     default: false,
   },
   machineStatus: {
-    type: String,
-    default: 'Loading', //'Loading', 0, 1 , 'Error'
+    type: Object,
+    default: () => {
+      return {
+        status: 'Loading', // 'N/A', 'Online', 'Offline'
+        time: '',
+      }
+    },
   },
 })
 
@@ -204,7 +214,7 @@ const focusMachineSelect = () => {
 }
 
 const machineStatus_pillClass = computed(() => {
-  switch (props.machineStatus) {
+  switch (props.machineStatus.status) {
     case 'Error':
       return 'bg-red-300 text-red-950 border-red-300 duration-300'
     case 'Loading':
@@ -219,7 +229,7 @@ const machineStatus_pillClass = computed(() => {
 })
 
 const machineStatus_lightClass = computed(() => {
-  switch (props.machineStatus) {
+  switch (props.machineStatus.status) {
     case 'Error':
       return 'bg-red-500'
     case 'Loading':
@@ -234,7 +244,7 @@ const machineStatus_lightClass = computed(() => {
 })
 
 const machineStatus_text = computed(() => {
-  switch (props.machineStatus) {
+  switch (props.machineStatus.status) {
     case 'Error':
       return 'Error'
     case 'Loading':
@@ -246,6 +256,11 @@ const machineStatus_text = computed(() => {
     default:
       return 'N/A'
   }
+})
+
+const machineStatus_time = computed(() => {
+  if (props.machineStatus.status == 'Loading' || props.machineStatus.status == 'N/A') return ''
+  else return `Status: ${timeAgo(new Date(props.machineStatus.time))}`
 })
 </script>
 
