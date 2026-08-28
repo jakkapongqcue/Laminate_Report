@@ -22,6 +22,7 @@
           </select>
           <div
             :title="machineStatus_time"
+            @mouseover="machineStatus_refreshTime()"
             @click="focusMachineSelect()"
             class="absolute top-1/2 translate-y-[-45%] right-10"
           >
@@ -149,7 +150,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, computed } from 'vue'
+import { defineProps, defineEmits, computed, ref } from 'vue'
 import Icon_calendar from './icons/Icon_calendar.vue'
 import Icon_time from './icons/Icon_time.vue'
 import Icon_print from './icons/Icon_print.vue'
@@ -258,10 +259,12 @@ const machineStatus_text = computed(() => {
   }
 })
 
-const machineStatus_time = computed(() => {
-  if (props.machineStatus.status == 'Loading' || props.machineStatus.status == 'N/A') return ''
-  else return `Status: ${timeAgo(new Date(props.machineStatus.time))}`
-})
+const machineStatus_time = ref('')
+const machineStatus_refreshTime = () => {
+  if (props.machineStatus.status == 'Loading' || props.machineStatus.status == 'N/A')
+    machineStatus_time.value = ''
+  else machineStatus_time.value = `Status: ${timeAgo(new Date(props.machineStatus.time))}`
+}
 </script>
 
 <style lang="css" scoped>
