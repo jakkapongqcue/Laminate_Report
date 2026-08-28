@@ -1,6 +1,7 @@
 <template>
   <svg
     class="w-4 h-4 text-sky-600"
+    :class="cusClass"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -13,3 +14,12 @@
     ></path>
   </svg>
 </template>
+
+<script setup>
+const props = defineProps({
+  cusClass: {
+    type: String,
+    default: '',
+  },
+})
+</script>

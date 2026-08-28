@@ -9,11 +9,16 @@
       :machines="machines"
       :statusLoading="isLoading"
       :machineStatus="machineStatus"
-      @search="fetchReport"
+      :currentViewMode="viewMode"
+      @search="handleSearch"
       @print="printReport"
       @refreshMachine="fetchMachines"
       @fetchMachineStatus="fetchMachineStatus"
     />
+
+    <!-- View Mode Switcher Tab Bar (Hidden on Print) -->
+
+    <SwitchViewMode :currentViewMode="viewMode" @setViewMode="setViewMode" />
 
     <!-- Loading State Overlay -->
     <div
@@ -21,7 +26,9 @@
       class="flex flex-col items-center justify-center py-20 bg-white border border-gray-200 rounded-lg shadow no-print"
     >
       <Icon_circleLoad :cus-class="'h-10 w-10 text-sky-600 mb-3'" />
-      <p class="text-sm font-semibold text-gray-700">กำลังดึงข้อมูลรายงานจากระบบ...</p>
+      <p class="text-sm font-semibold text-gray-700">
+        กำลังดึงข้อมูล{{ viewMode === 'report' ? 'รายงาน' : 'กราฟ' }}จากระบบ...
+      </p>
       <p class="mt-1 text-xs text-gray-500">กรุณารอสักครู่</p>
     </div>
 
@@ -35,17 +42,19 @@
         <span>{{ errorMessage }}</span>
       </div>
       <button
-        @click="fetchReport"
+        @click="handleSearch"
         class="px-3 py-1 text-xs text-white bg-red-600 rounded hover:bg-red-700"
       >
         ลองใหม่
       </button>
     </div>
 
-    <!-- Report Pages Rendering Container -->
-    <div
-      class="overflow-auto"
-      v-else-if="reportData && reportData.pages && reportData.pages.length > 0"
+    <!-- ── Mode 1: Report Pages Rendering Container ────────────────── -->
+
+    <Slot_MainContainer
+      v-else-if="
+        viewMode === 'report' && reportData && reportData.pages && reportData.pages.length > 0
+      "
     >
       <div v-for="page in reportData.pages" :key="page.page_number">
         <LaminateReportSheet
@@ -57,6 +66,23 @@
           :time-to="reportData.time_to"
         />
       </div>
+    </Slot_MainContainer>
+
+    <!-- ── Mode 2: Chart Rendering Container ────────────────────────── -->
+    <div
+      v-else-if="
+        viewMode === 'chart' && chartData && chartData.parameters && chartData.parameters.length > 0
+      "
+      class="no-print"
+    >
+      <LaminateChart
+        :chart-data="chartData"
+        :machine="chartData.machine"
+        :date-from="chartData.date_from"
+        :date-to="chartData.date_to"
+        :time-from="chartData.time_from"
+        :time-to="chartData.time_to"
+      />
     </div>
 
     <!-- No Data State -->
@@ -64,13 +90,18 @@
       v-else
       class="py-16 text-center bg-white border border-gray-200 rounded-lg shadow-sm no-print"
     >
-      <Icon_report />
+      <Icon_report v-if="viewMode === 'report'" :class="'h-12 w-12 mb-2'" />
+      <Icon_chart v-else cusClass="h-12 w-12 mb-2" />
       <h3 class="text-sm font-semibold text-gray-800">
-        <div v-if="loadFristTime">กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มสร้างรายงานใหม่</div>
-        <div v-else>ไม่พบข้อมูลรายงานในช่วงเวลาดังกล่าว</div>
+        <div v-if="loadFristTime">
+          กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มสร้าง{{ viewMode === 'report' ? 'รายงาน' : 'กราฟ' }}
+        </div>
+        <div v-else>
+          ไม่พบข้อมูล{{ viewMode === 'report' ? 'รายงาน' : 'กราฟ' }}ในช่วงเวลาดังกล่าว
+        </div>
       </h3>
       <p v-if="!loadFristTime" class="mt-1 text-xs text-gray-500">
-        กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มค้นหารายงานใหม่
+        กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มค้นหาใหม่
       </p>
     </div>
   </div>
@@ -80,10 +111,14 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import FilterBar from '../components/FilterBar.vue'
 import LaminateReportSheet from '../components/LaminateReportSheet.vue'
+import LaminateChart from '../components/LaminateChart.vue'
 import AppHeadTitle from '../components/AppHeadTitle.vue'
 import Icon_circleLoad from '../components/icons/Icon_circleLoad.vue'
 import Icon_report from '../components/icons/Icon_report.vue'
+import Icon_chart from '../components/icons/Icon_chart.vue'
 import Icon_error from '../components/icons/Icon_error.vue'
+import SwitchViewMode from '../components/SwitchViewMode.vue'
+import Slot_MainContainer from '../components/Slot_MainContainer.vue'
 
 const getTodayStr = () => {
   const d = new Date()
@@ -92,6 +127,8 @@ const getTodayStr = () => {
   const day = String(d.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
+
+const viewMode = ref('report') // 'report' | 'chart'
 
 const filters = reactive({
   machine: '1LB09_Bobst',
@@ -118,11 +155,15 @@ const loadFristTime = ref(true)
 const isLoading = ref(false)
 const errorMessage = ref('')
 const reportData = ref(null)
+const chartData = ref(null)
+
 const BACKEND_API_BASE_URL = import.meta.env.VITE_BACK_BASE_URL
+
 const machineStatus = ref({
   status: 'N/A', //'N/A', 'Online', 'Offline'
   time: '',
 })
+
 const fetchMachines = async () => {
   try {
     const res = await fetch(BACKEND_API_BASE_URL + '/api/machines')
@@ -157,10 +198,8 @@ const fetchReport = async () => {
       hour_step: filters.hour_step.toString(),
     })
 
-    // Include setup_date/setup_time only if setup_time is provided (backend expects setup_time to trigger setup behavior).
     if (filters.setup_time) {
       queryParams.append('setup_time', filters.setup_time)
-      // setup_date defaults to date_from on backend, but send explicitly to be clear
       queryParams.append('setup_date', filters.setup_date || filters.date_from)
     }
 
@@ -175,9 +214,58 @@ const fetchReport = async () => {
     reportData.value = data
   } catch (err) {
     console.error('Fetch report error:', err)
-    errorMessage.value = `เกิดข้อผิดพลาดในการดึงข้อมูล: ${err.message}`
+    errorMessage.value = `เกิดข้อผิดพลาดในการดึงข้อมูลรายงาน: ${err.message}`
   } finally {
     isLoading.value = false
+  }
+}
+
+const fetchChart = async () => {
+  isLoading.value = true
+  errorMessage.value = ''
+  loadFristTime.value = false
+
+  try {
+    const queryParams = new URLSearchParams({
+      machine: filters.machine,
+      date_from: filters.date_from,
+      date_to: filters.date_to,
+      time_from: filters.time_from,
+      time_to: filters.time_to,
+    })
+
+    const path = filters.use_test_api ? '/api/chart/laminate/test' : '/api/chart/laminate'
+    const res = await fetch(`${BACKEND_API_BASE_URL}${path}?${queryParams.toString()}`)
+
+    if (!res.ok) {
+      throw new Error(`Server returned status ${res.status}`)
+    }
+
+    const data = await res.json()
+    chartData.value = data
+  } catch (err) {
+    console.error('Fetch chart error:', err)
+    errorMessage.value = `เกิดข้อผิดพลาดในการดึงข้อมูลกราฟ: ${err.message}`
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handleSearch = () => {
+  if (viewMode.value === 'report') {
+    fetchReport()
+  } else {
+    fetchChart()
+  }
+}
+
+const setViewMode = (mode) => {
+  viewMode.value = mode
+  // If switching to chart mode and chart data is not yet fetched, fetch it automatically if user had already searched once
+  if (mode === 'chart' && !chartData.value && !loadFristTime.value) {
+    fetchChart()
+  } else if (mode === 'report' && !reportData.value && !loadFristTime.value) {
+    fetchReport()
   }
 }
 
@@ -203,6 +291,7 @@ const fetchMachineStatus = async () => {
     machineStatus.value.time = ''
   }
 }
+
 onMounted(() => {
   loadUseTestApiSetting()
   fetchMachines()
@@ -214,12 +303,10 @@ onMounted(() => {
 })
 
 // keep setup_date default in sync with date_from unless user sets a different setup_date
-// import { watch } from "vue";
 let _lastDateFrom = filters.date_from
 watch(
   () => filters.date_from,
   (newVal) => {
-    // Only update setup_date automatically when it still equals the previous date_from
     if (filters.setup_date === _lastDateFrom || !filters.setup_date) {
       filters.setup_date = newVal
     }

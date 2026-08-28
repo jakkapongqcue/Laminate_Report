@@ -7,6 +7,12 @@
   .class_Input {
     @apply px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 mb-4;
   }
+  .parentView {
+    @apply px-4 py-6;
+  }
+  .slotMainContainer {
+    @apply py-6 bg-white border border-gray-200 rounded-lg shadow-sm;
+  }
 }
 
 body {
@@ -144,7 +150,12 @@ body {
   #vue-inspector-container {
     display: none !important;
   }
-
+  .parentView {
+    @apply p-0!;
+  }
+  .slotMainContainer {
+    @apply py-0! bg-red-500! border-none! rounded-none! shadow-none!;
+  }
   /* Each .report-page = exactly one printed page */
   .report-page {
     width: 100% !important;

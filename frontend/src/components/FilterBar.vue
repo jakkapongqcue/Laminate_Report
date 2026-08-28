@@ -27,7 +27,7 @@
             class="absolute top-1/2 translate-y-[-45%] right-10"
           >
             <span
-              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border select-none transition-all"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border select-none transition-all cursor-pointer"
               :class="machineStatus_pillClass"
             >
               <span class="w-2 h-2 rounded-full animate-pulse" :class="machineStatus_lightClass">
@@ -37,9 +37,12 @@
           </div>
         </div>
 
-        <!-- Hourly Step -->
+        <!-- Hourly Step (Visible on Report mode) -->
         <div class="flex flex-col col-span-1">
-          <label class="class_Lable"> <Icon_time />ช่วงเวลา (Step)</label>
+          <label class="class_Lable">
+            <Icon_time />
+            ช่วงเวลา (Step)
+          </label>
           <select v-model.number="filters.hour_step" class="class_Input">
             <option :value="1">+1 ชั่วโมง</option>
             <option :value="2">+2 ชั่วโมง</option>
@@ -66,22 +69,19 @@
         </div>
 
         <!-- Setup filter: date and time -->
-        <div class="flex flex-col self-end col-span-1" v-if="false">
-          <label class="class_Lable">
-            <Icon_calendar />
-            วันสำหรับ Set up (Setup Date)
-          </label>
-          <input type="date" v-model="filters.setup_date" class="class_Input" />
-        </div>
-
-        <div class="relative flex flex-col self-end col-span-1">
-          <label class="class_Lable">
-            <Icon_time />
+        <div class="relative flex flex-col self-end col-span-1 group">
+          <label class="class_Lable group-has-[input:disabled]:text-gray-400">
+            <Icon_time :cusClass="'group-has-[input:disabled]:text-gray-400'" />
             เวลา Set up (Setup Time)
           </label>
-          <input type="time" v-model="filters.setup_time" class="class_Input" />
-          <!-- คำเตือน: กรุณาเลือกเวลา Set up -->
+          <input
+            type="time"
+            v-model="filters.setup_time"
+            class="class_Input group-has-[input:disabled]:text-gray-400"
+            :disabled="currentViewMode === 'chart'"
+          />
           <span
+            v-if="currentViewMode === 'report'"
             class="absolute text-xs text-red-500 transition-opacity -bottom-1"
             :class="[filters.setup_time ? 'opacity-0' : 'opacity-100']"
             >คำเตือน: กรุณาเลือกเวลา Set up
@@ -112,17 +112,18 @@
         <!-- Search button -->
         <button
           @click="$emit('search')"
-          :disabled="statusLoading || !filters.setup_time"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+          :disabled="statusLoading || (currentViewMode === 'report' && !filters.setup_time)"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           <Icon_search :loading="statusLoading" :cusClass="'w-4 h-4'" />
-          ดึงข้อมูล
+          ดึงข้อมูล{{ currentViewMode === 'chart' ? 'กราฟ' : 'รายงาน' }}
         </button>
 
-        <!-- Print / Export button -->
+        <!-- Print / Export button (for Report mode) -->
         <button
+          v-if="currentViewMode === 'report'"
           @click="$emit('print')"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out cursor-pointer"
         >
           <Icon_print />
           พิมพ์รายงาน / Export PDF
@@ -135,13 +136,13 @@
       <span class="font-semibold text-gray-700">Quick Presets:</span>
       <button
         @click="setShift(1)"
-        class="px-2 py-1 transition bg-gray-100 rounded hover:bg-sky-100 hover:text-sky-700"
+        class="px-2 py-1 transition bg-gray-100 rounded hover:bg-sky-100 hover:text-sky-700 cursor-pointer"
       >
         กะเช้า (08:00 - 20:00)
       </button>
       <button
         @click="setShift(2)"
-        class="px-2 py-1 transition bg-gray-100 rounded hover:bg-sky-100 hover:text-sky-700"
+        class="px-2 py-1 transition bg-gray-100 rounded hover:bg-sky-100 hover:text-sky-700 cursor-pointer"
       >
         กะดึกข้ามวัน (20:00 - 08:00)
       </button>
@@ -157,6 +158,7 @@ import Icon_print from './icons/Icon_print.vue'
 import Icon_search from './icons/Icon_search.vue'
 import Icon_machine from './icons/Icon_machine.vue'
 import { timeAgo } from '@/utils/timeAgo'
+
 const props = defineProps({
   filters: {
     type: Object,
@@ -170,6 +172,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  currentViewMode: {
+    type: String,
+    default: 'report',
+  },
   machineStatus: {
     type: Object,
     default: () => {
@@ -181,23 +187,13 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['search', 'print'])
-const getTodayStr = (nDay = 0) => {
-  const d = new Date()
-  d.setDate(d.getDate() + nDay)
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
+const emit = defineEmits(['search', 'print', 'refreshMachine', 'fetchMachineStatus'])
 
 const setShift = (shiftNum) => {
   if (shiftNum === 1) {
     props.filters.time_from = '08:00'
     props.filters.time_to = '20:00'
   } else if (shiftNum === 2) {
-    // props.filters.date_from = getTodayStr(-1);
-    // props.filters.date_to = getTodayStr();
     props.filters.time_from = '20:00'
     props.filters.time_to = '08:00'
   }
@@ -205,13 +201,17 @@ const setShift = (shiftNum) => {
 }
 
 const fetchMachineStatus = async () => {
-  await emit('fetchMachineStatus')
+  emit('fetchMachineStatus')
 }
 
 const focusMachineSelect = () => {
   const Input_Machine = document.getElementById('Input_Machine')
-  Input_Machine.showPicker()
-  Input_Machine.focus()
+  if (Input_Machine) {
+    if (typeof Input_Machine.showPicker === 'function') {
+      Input_Machine.showPicker()
+    }
+    Input_Machine.focus()
+  }
 }
 
 const machineStatus_pillClass = computed(() => {
@@ -234,7 +234,7 @@ const machineStatus_lightClass = computed(() => {
     case 'Error':
       return 'bg-red-500'
     case 'Loading':
-      return '' //bg-gray-500
+      return ''
     case 'Online':
       return 'bg-emerald-500'
     case 'Offline':
@@ -266,12 +266,3 @@ const machineStatus_refreshTime = () => {
   else machineStatus_time.value = `Status: ${timeAgo(new Date(props.machineStatus.time))}`
 }
 </script>
-
-<style lang="css" scoped>
-/* .label {
-  @reference text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1;
-}
-.input {
-  @reference px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 mb-4;
-} ==> use main.css*/
-</style>

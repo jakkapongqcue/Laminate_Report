@@ -1,6 +1,7 @@
 <template>
   <svg
-    class="mx-auto h-12 w-12 text-gray-400 mb-3"
+    class="mx-auto text-gray-400"
+    :class="cusClass"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -13,3 +14,12 @@
     ></path>
   </svg>
 </template>
+<script setup>
+import { defineProps } from 'vue'
+defineProps({
+  cusClass: {
+    type: String,
+    default: 'h-12 w-12',
+  },
+})
+</script>

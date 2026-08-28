@@ -13,7 +13,7 @@
       }
     },
     {
-      "files": "reportProcessor.js",
+      "files": "*.js",
       "options": {
         "printWidth": 170,
         "singleQuote": false,
