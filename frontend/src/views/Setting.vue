@@ -14,14 +14,10 @@
 
     <div class="p-6 bg-white border shadow-sm border-slate-200 rounded-xl">
       <div class="space-y-5">
-        <div
-          class="flex items-center justify-between gap-4 p-4 border rounded-lg border-slate-200"
-        >
+        <div class="flex items-center justify-between gap-4 p-4 border rounded-lg border-slate-200">
           <div>
             <h2 class="text-sm font-semibold text-slate-800">Use test API</h2>
-            <p class="text-sm text-slate-500">
-              Toggle mock data for testing the report flow.
-            </p>
+            <p class="text-sm text-slate-500">Toggle mock data for testing the report flow.</p>
           </div>
 
           <button
@@ -30,14 +26,14 @@
             :aria-checked="useTestApi"
             :class="[
               'relative inline-flex h-7 w-12 items-center rounded-full transition-colors',
-              useTestApi ? 'bg-sky-600' : 'bg-slate-300'
+              useTestApi ? 'bg-sky-600' : 'bg-slate-300',
             ]"
             @click="toggleUseTestApi"
           >
             <span
               :class="[
                 'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform',
-                useTestApi ? 'translate-x-6' : 'translate-x-1'
+                useTestApi ? 'translate-x-6' : 'translate-x-1',
               ]"
             />
           </button>
@@ -48,23 +44,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted } from 'vue'
 
-const TEST_API_STORAGE_KEY = "laminate-report-use-test-api";
-const useTestApi = ref(false);
+const TEST_API_STORAGE_KEY = 'laminate-report-use-test-api'
+const useTestApi = ref(false)
 
 const loadUseTestApiSetting = () => {
-  const savedValue = localStorage.getItem(TEST_API_STORAGE_KEY);
-  useTestApi.value = savedValue === "true";
-};
+  const savedValue = localStorage.getItem(TEST_API_STORAGE_KEY)
+  useTestApi.value = savedValue === 'true'
+}
 
 const toggleUseTestApi = () => {
-  useTestApi.value = !useTestApi.value;
-  localStorage.setItem(TEST_API_STORAGE_KEY, String(useTestApi.value));
-};
+  useTestApi.value = !useTestApi.value
+  localStorage.setItem(TEST_API_STORAGE_KEY, String(useTestApi.value))
+}
 
 onMounted(() => {
-  loadUseTestApiSetting();
-});
+  loadUseTestApiSetting()
+})
 </script>
-xx

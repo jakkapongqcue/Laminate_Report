@@ -24,11 +24,16 @@
 
       <!-- Main Report Title -->
       <div class="self-center text-center">
-        <h1 class="text-base font-bold tracking-wide text-gray-900 uppercase">LAMINATE CHECKING REPORT</h1>
+        <h1 class="text-base font-bold tracking-wide text-gray-900 uppercase">
+          LAMINATE CHECKING REPORT
+        </h1>
       </div>
 
       <!-- Page Indicator -->
-      <div class="text-right text-[9px] font-semibold text-gray-700 self-center" :class="customClass">
+      <div
+        class="text-right text-[9px] font-semibold text-gray-700 self-center"
+        :class="customClass"
+      >
         Page:
         <span class="text-xs font-bold text-gray-900">{{ pageData.page_number }}</span>
         / {{ pageData.total_pages }}
@@ -65,7 +70,12 @@
       <!-- Remark line -->
       <div class="flex items-center gap-2 pb-3">
         <span class="font-bold whitespace-nowrap">Remark:</span>
-        <input type="text" v-model="remark" placeholder="" class="flex-1 border-b border-dotted border-gray-500 focus:outline-none bg-transparent px-1 text-[9px]" />
+        <input
+          type="text"
+          v-model="remark"
+          placeholder=""
+          class="flex-1 border-b border-dotted border-gray-500 focus:outline-none bg-transparent px-1 text-[9px]"
+        />
       </div>
 
       <!-- Signatures Block -->
