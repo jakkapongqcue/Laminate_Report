@@ -56,7 +56,7 @@
         viewMode === 'report' && reportData && reportData.pages && reportData.pages.length > 0
       "
     >
-      <div v-for="page in reportData.pages" :key="page.page_number">
+      <div v-for="page in reportData.pages" :key="page.page_number" class="report-wrapper">
         <LaminateReportSheet
           v-bind:page-data="page"
           :machine="reportData.machine"

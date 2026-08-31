@@ -37,8 +37,8 @@ body {
 
 .report-page {
   background: #ffffff;
-  width: 277mm; /* 297mm − 10mm padding left/right = 277mm printable */
-  height: 190mm; /* 210mm − 10mm padding top/bottom = 190mm printable  */
+  width: calc(277mm + calc(6mm * 2)); /* 297mm + padding 6mm x 2 */
+  height: calc(190mm + calc(8mm * 2)); /* 210mm + padding 8mm x 2 */
   margin: 0 auto 24px auto;
   padding: 6mm 8mm 6mm 8mm;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
@@ -154,15 +154,24 @@ body {
     @apply p-0!;
   }
   .slotMainContainer {
-    @apply py-0! bg-red-500! border-none! rounded-none! shadow-none!;
+    @apply py-0! bg-white! border-none! rounded-none! shadow-none!;
   }
   /* Each .report-page = exactly one printed page */
+
+  .report-wrapper {
+    width: 100vw !important;
+    height: 100vh !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
   .report-page {
     width: 100% !important;
     height: 100% !important;
     max-width: 100% !important;
     max-height: 100% !important;
     padding: 0 !important;
+    /* padding: 6mm 8mm 6mm 8mm; */
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;
