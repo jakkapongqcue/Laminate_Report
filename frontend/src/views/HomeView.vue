@@ -280,11 +280,9 @@ const fetchMachineStatus = async () => {
       machine: filters.machine,
     })
     const res = await fetch(BACKEND_API_BASE_URL + '/api/machineStatus?' + queryParams.toString())
-    if (res.ok) {
-      const data = await res.json()
-      machineStatus.value.status = data.status.toString() == '1' ? 'Online' : 'Offline'
-      machineStatus.value.time = data.updateTime.toString()
-    }
+    const data = await res.json()
+    machineStatus.value.status = data.status.toString() == '1' ? 'Online' : 'Offline'
+    machineStatus.value.time = data.updateTime.toString()
   } catch (err) {
     console.warn('Could not fetch machine status:', err)
     machineStatus.value.status = 'Error'
