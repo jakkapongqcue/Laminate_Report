@@ -7,7 +7,7 @@
         type="button"
         @click="$emit('setViewMode', 'report')"
         :class="[
-          'flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-all cursor-pointer',
+          'flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-all',
           currentViewMode === 'report'
             ? 'bg-white text-sky-700 shadow-sm'
             : 'text-gray-600 hover:text-gray-900',
@@ -18,10 +18,11 @@
       </button>
 
       <button
+        disabled
         type="button"
         @click="$emit('setViewMode', 'chart')"
         :class="[
-          'flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-all cursor-pointer',
+          'flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-all disabled:cursor-not-allowed',
           currentViewMode === 'chart'
             ? 'bg-white text-sky-700 shadow-sm'
             : 'text-gray-600 hover:text-gray-900',
