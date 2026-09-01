@@ -113,7 +113,7 @@
         <button
           @click="$emit('search')"
           :disabled="statusLoading || (currentViewMode === 'report' && !filters.setup_time)"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          class="inline-flex justify-center items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed w-40"
         >
           <Icon_search :loading="statusLoading" :cusClass="'w-4 h-4'" />
           ดึงข้อมูล{{ currentViewMode === 'chart' ? 'กราฟ' : 'รายงาน' }}
@@ -122,11 +122,12 @@
         <!-- Print / Export button (for Report mode) -->
         <button
           v-if="currentViewMode === 'report'"
+          :disabled="!isHaveReportData"
           @click="$emit('print')"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out cursor-pointer"
+          class="inline-flex justify-center items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed w-40"
         >
           <Icon_print />
-          พิมพ์รายงาน / Export PDF
+          พิมพ์รายงาน
         </button>
       </div>
     </div>
@@ -184,6 +185,10 @@ const props = defineProps({
         time: '',
       }
     },
+  },
+  isHaveReportData: {
+    type: Boolean,
+    default: false,
   },
 })
 

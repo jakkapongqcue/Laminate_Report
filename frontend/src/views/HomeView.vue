@@ -10,6 +10,7 @@
       :statusLoading="isLoading"
       :machineStatus="machineStatus"
       :currentViewMode="viewMode"
+      :isHaveReportData="reportData && reportData.pages && reportData.pages.length > 0"
       @search="handleSearch"
       @print="printReport"
       @refreshMachine="fetchMachines"
