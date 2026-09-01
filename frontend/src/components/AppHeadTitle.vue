@@ -4,11 +4,13 @@
   >
     <div class="flex items-center gap-3">
       <div
-        class="flex items-center justify-center w-10 h-10 font-bold text-white rounded-lg shadow bg-sky-100 icon-img"
+        class="flex flex-none w-10 h-10 font-bold text-white rounded-lg shadow bg-sky-100 icon-img"
       ></div>
       <div>
-        <h1 class="text-lg font-bold text-gray-900">Laminate Checking Report System</h1>
-        <p class="text-xs text-gray-500">
+        <h1 class="text-lg font-bold text-gray-900 leading-5 sm:leading-normal">
+          Laminate Checking Report System
+        </h1>
+        <p class="text-xs text-gray-500 hidden sm:inline-block">
           ระบบดึงข้อมูลจาก SQL Server และออกรายงานตรวจบันทึกเครื่องเคลือบ
         </p>
       </div>

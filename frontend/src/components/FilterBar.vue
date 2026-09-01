@@ -24,7 +24,7 @@
             :title="machineStatus_time"
             @mouseover="machineStatus_refreshTime()"
             @click="focusMachineSelect()"
-            class="absolute top-1/2 translate-y-[-45%] right-10"
+            class="absolute top-1/2 translate-y-[-45%] right-8"
           >
             <span
               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border select-none transition-all cursor-pointer"
@@ -38,7 +38,7 @@
         </div>
 
         <!-- Hourly Step (Visible on Report mode) -->
-        <div class="flex flex-col col-span-1">
+        <div class="flex flex-col col-span-2 md:col-span-1">
           <label class="class_Lable">
             <Icon_time />
             ช่วงเวลา (Step)
