@@ -31,6 +31,18 @@ body {
   print-color-adjust: exact !important;
 }
 
+button,
+input,
+select {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select:disabled {
+  cursor: not-allowed !important;
+}
+
 /* ─── A4 Landscape Page Shell ─────────────────────────────────────────────── */
 /* A4 Landscape: 297mm wide × 210mm tall                                       */
 /* With @page margin 6mm each side → usable width ≈ 285mm                     */

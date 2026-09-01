@@ -274,17 +274,32 @@ const printReport = () => {
   window.print()
 }
 
+let machineStatusAbortController = null
+
 const fetchMachineStatus = async () => {
+  if (machineStatusAbortController) {
+    machineStatusAbortController.abort()
+  }
+  machineStatusAbortController = new AbortController()
+
   machineStatus.value.status = 'Loading'
   try {
     const queryParams = new URLSearchParams({
       machine: filters.machine,
     })
-    const res = await fetch(BACKEND_API_BASE_URL + '/api/machineStatus?' + queryParams.toString())
+    const res = await fetch(BACKEND_API_BASE_URL + '/api/machineStatus?' + queryParams.toString(), {
+      signal: machineStatusAbortController.signal,
+    })
+    if (!res.ok) {
+      throw new Error(`Server returned status ${res.status}`)
+    }
     const data = await res.json()
     machineStatus.value.status = data.status.toString() == '1' ? 'Online' : 'Offline'
     machineStatus.value.time = data.updateTime.toString()
   } catch (err) {
+    if (err.name === 'AbortError') {
+      return
+    }
     console.warn('Could not fetch machine status:', err)
     machineStatus.value.status = 'Error'
     machineStatus.value.time = ''

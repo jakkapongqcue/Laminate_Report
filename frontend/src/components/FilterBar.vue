@@ -222,7 +222,7 @@ const focusMachineSelect = () => {
 const machineStatus_pillClass = computed(() => {
   switch (props.machineStatus.status) {
     case 'Error':
-      return 'bg-red-300 text-red-950 border-red-300 duration-300'
+      return 'bg-red-400 text-white border-red-400 duration-300'
     case 'Loading':
       return '!border-none text-gray-500 animate-pulse'
     case 'Online':
@@ -237,7 +237,7 @@ const machineStatus_pillClass = computed(() => {
 const machineStatus_lightClass = computed(() => {
   switch (props.machineStatus.status) {
     case 'Error':
-      return 'bg-red-500'
+      return 'bg-red-600'
     case 'Loading':
       return ''
     case 'Online':

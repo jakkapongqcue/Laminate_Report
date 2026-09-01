@@ -495,13 +495,13 @@ const chartOptions = computed(() => {
         },
         formatter: function (val) {
           if (!val) return ''
-          // If val is "YYYY-MM-DD HH:mm:ss", format to "HH:mm" or "DD/MM HH:mm"
+          // If val is "YYYY-MM-DD HH:mm:ss", format to "DD/MM/YYYY HH:mm"
           if (typeof val === 'string' && val.includes(' ')) {
             const parts = val.split(' ')
             const timePart = parts[1].slice(0, 5)
             const datePart = parts[0].split('-')
             if (datePart.length === 3) {
-              return `${datePart[2]}/${datePart[1]} ${timePart}`
+              return `${datePart[2]}/${datePart[1]}/${datePart[0].slice(2, 4)} ${timePart}`
             }
             return timePart
           }
@@ -553,8 +553,13 @@ const chartOptions = computed(() => {
         fontFamily: 'Sarabun, sans-serif',
       },
       x: {
-        formatter: function (val) {
-          return `🕒 เวลา: ${val} น.`
+        formatter: function (val, opts) {
+          // ดึง Label จริงจาก w.globals ตาม dataPointIndex
+          const label =
+            opts?.w?.globals?.categoryLabels?.[opts?.dataPointIndex] ||
+            opts?.w?.globals?.labels?.[opts?.dataPointIndex] ||
+            val
+          return `🕒 เวลา: ${label} น.`
         },
       },
     },
