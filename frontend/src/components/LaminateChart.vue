@@ -83,12 +83,6 @@
                   : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100',
               ]"
             >
-              <span
-                :class="[
-                  'w-2 h-2 rounded-full',
-                  selectedParamKeys.includes(p.key) ? 'bg-white' : 'bg-gray-400',
-                ]"
-              ></span>
               <span>{{ p.name }}</span>
               <span
                 :class="[
@@ -137,35 +131,6 @@
             </p>
           </div>
         </div>
-
-        <div class="flex items-center gap-2 text-xs">
-          <!-- Curve type toggle -->
-          <span class="text-gray-500 font-medium">เส้นกราฟ:</span>
-          <button
-            type="button"
-            @click="curveType = 'smooth'"
-            :class="[
-              'px-2.5 py-1 rounded border transition',
-              curveType === 'smooth'
-                ? 'bg-sky-50 border-sky-400 text-sky-700 font-semibold'
-                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
-            ]"
-          >
-            Smooth
-          </button>
-          <button
-            type="button"
-            @click="curveType = 'straight'"
-            :class="[
-              'px-2.5 py-1 rounded border transition',
-              curveType === 'straight'
-                ? 'bg-sky-50 border-sky-400 text-sky-700 font-semibold'
-                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
-            ]"
-          >
-            Straight
-          </button>
-        </div>
       </div>
 
       <!-- No parameters selected warning -->
@@ -193,59 +158,6 @@
           class="py-16 text-center text-gray-500 border border-dashed border-gray-200 rounded-lg"
         >
           <p class="text-sm font-medium">ไม่พบข้อมูลตัวเลขสำหรับพารามิเตอร์ที่เลือกในช่วงเวลานี้</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Summary Statistics Cards ─────────────────────────────────── -->
-    <div
-      v-if="selectedParamStats.length > 0"
-      class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm"
-    >
-      <div class="flex items-center gap-2 mb-3">
-        <h3 class="text-sm font-bold text-gray-800">
-          สรุปสถิติข้อมูลที่เลือก (Summary Statistics)
-        </h3>
-      </div>
-
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <div
-          v-for="stat in selectedParamStats"
-          :key="stat.key"
-          class="p-3 border border-gray-200 rounded-lg bg-slate-50 hover:bg-slate-100 transition"
-        >
-          <div class="flex items-start justify-between">
-            <div>
-              <div class="text-xs font-bold text-gray-800">{{ stat.name }}</div>
-              <div class="text-[11px] text-gray-500">หน่วย: {{ stat.unit }}</div>
-            </div>
-            <span
-              class="px-2 py-0.5 text-[10px] font-semibold text-sky-700 bg-sky-100 rounded-full"
-            >
-              {{ stat.category }}
-            </span>
-          </div>
-
-          <div class="grid grid-cols-3 gap-1 pt-2 mt-2 text-center border-t border-gray-200">
-            <div>
-              <div class="text-[10px] text-gray-500">ล่าสุด</div>
-              <div class="text-xs font-bold text-sky-700">
-                {{ stat.latest !== null ? stat.latest : '-' }}
-              </div>
-            </div>
-            <div>
-              <div class="text-[10px] text-gray-500">เฉลี่ย (Avg)</div>
-              <div class="text-xs font-bold text-emerald-700">
-                {{ stat.avg !== null ? stat.avg : '-' }}
-              </div>
-            </div>
-            <div>
-              <div class="text-[10px] text-gray-500">ต่ำ-สูง (Min/Max)</div>
-              <div class="text-xs font-bold text-gray-700">
-                {{ stat.min !== null ? stat.min : '-' }} / {{ stat.max !== null ? stat.max : '-' }}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -295,7 +207,7 @@ const INITIAL_DEFAULT_PARAMS = [
 ]
 
 const selectedParamKeys = ref([])
-const curveType = ref('smooth')
+const curveType = ref('straight')
 const saveSuccess = ref(false)
 
 // Available parameters from chartData
@@ -429,6 +341,18 @@ const selectedParamStats = computed(() => {
     }))
 })
 
+const markersSize = computed(() => {
+  if (props.chartData) {
+    const dataPoint = props.chartData.total_data_points
+    if (dataPoint > 150) return 0
+    if (dataPoint > 100) return 2
+    if (dataPoint > 50) return 3
+    if (dataPoint > 25) return 4
+    return 0
+  }
+  return 0
+})
+
 // Dynamic ApexCharts options
 const chartOptions = computed(() => {
   return {
@@ -454,15 +378,11 @@ const chartOptions = computed(() => {
           reset: true,
         },
       },
-      animations: {
-        enabled: true,
-        easing: 'easeinout',
-        speed: 400,
-      },
+      animations: { enabled: props.chartData.total_data_points < 300 },
     },
     stroke: {
       curve: curveType.value,
-      width: 2.5,
+      width: 1.5,
     },
     colors: [
       '#0284c7', // Sky 600
@@ -479,7 +399,7 @@ const chartOptions = computed(() => {
       '#d946ef', // Fuchsia 500
     ],
     markers: {
-      size: props.chartData && props.chartData.total_data_points > 50 ? 2 : 4,
+      size: 0,
       hover: {
         size: 6,
       },
@@ -564,18 +484,18 @@ const chartOptions = computed(() => {
       },
     },
     grid: {
-      borderColor: '#e2e8f0',
-      strokeDashArray: 3,
-      xaxis: {
-        lines: {
-          show: true,
-        },
-      },
-      yaxis: {
-        lines: {
-          show: true,
-        },
-      },
+      // borderColor: '#e2e8f0',
+      // strokeDashArray: 3,
+      // xaxis: {
+      //   lines: {
+      //     show: true,
+      //   },
+      // },
+      // yaxis: {
+      //   lines: {
+      //     show: true,
+      //   },
+      // },
     },
   }
 })
