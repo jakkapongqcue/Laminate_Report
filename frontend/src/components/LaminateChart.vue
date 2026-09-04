@@ -41,7 +41,7 @@
           <button
             type="button"
             @click="saveAsDefaultParams"
-            class="inline-flex items-center gap-1 px-3 py-1 font-medium text-white transition rounded shadow-sm bg-sky-600 hover:bg-sky-700"
+            class="inline-flex justify-center items-center gap-1 px-3 py-1 font-medium text-white transition rounded shadow-sm bg-sky-600 hover:bg-sky-700 w-32"
           >
             <svg
               v-if="saveSuccess"
