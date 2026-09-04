@@ -31,10 +31,7 @@
       </div>
 
       <!-- Page Indicator -->
-      <div
-        class="text-right text-[9px] font-semibold text-gray-700 self-center w-20"
-        :class="customClass"
-      >
+      <div class="text-right text-[9px] font-semibold text-gray-700 self-center w-20">
         Page:
         <span class="text-xs font-bold text-gray-900">{{ pageData.page_number }}</span>
         / {{ pageData.total_pages }}

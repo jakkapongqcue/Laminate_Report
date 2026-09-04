@@ -8,7 +8,7 @@
           <th style="width: 160px; min-width: 160px">Setting Parameter</th>
 
           <!-- Column 2: Set Point -->
-          <th style="width: 68px; min-width: 68px" class="font-bold bg-gray-50">Set Point (PS)</th>
+          <th style="width: 68px; min-width: 68px" class="font-bold">Set Point (PS)</th>
 
           <!-- Column 3: Diagonal Time / Unit header -->
           <th class="diagonal-cell" style="width: 48px; min-width: 48px; height: 36px">
@@ -17,12 +17,12 @@
           </th>
 
           <!-- Dynamic time columns -->
-          <th v-for="col in timeColumns" :key="col.key" class="font-bold text-center bg-gray-50">
+          <th v-for="col in timeColumns" :key="col.key" class="font-bold text-center ">
             <span class="whitespace-pre-wrap">{{ col.label }}</span>
           </th>
 
           <!-- Filler columns to always show 14 slots -->
-          <th v-for="n in fillerColumnCount" :key="'fill-hdr-' + n" class="bg-gray-50" style="min-width: 42px">น.</th>
+          <th v-for="n in fillerColumnCount" :key="'fill-hdr-' + n" class="" style="min-width: 42px">น.</th>
         </tr>
       </thead>
       <tbody>

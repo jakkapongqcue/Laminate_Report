@@ -263,11 +263,16 @@ const handleSearch = () => {
 const setViewMode = (mode) => {
   viewMode.value = mode
   // If switching to chart mode and chart data is not yet fetched, fetch it automatically if user had already searched once
+  clearErrorMessage()
   if (mode === 'chart' && !chartData.value && !loadFristTime.value) {
     fetchChart()
   } else if (mode === 'report' && !reportData.value && !loadFristTime.value) {
     fetchReport()
   }
+}
+
+const clearErrorMessage = () => {
+  errorMessage.value = ''
 }
 
 const printReport = () => {
@@ -313,7 +318,7 @@ onMounted(() => {
 
   setInterval(() => {
     fetchMachineStatus()
-  }, 300000) // 5 minutes
+  }, 300000) // 5 minutes (5 * 60 * 1000)
 })
 
 // keep setup_date default in sync with date_from unless user sets a different setup_date

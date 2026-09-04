@@ -18,7 +18,7 @@
       </button>
 
       <button
-        :disabled="true"
+        :disabled="false"
         type="button"
         @click="$emit('setViewMode', 'chart')"
         :class="[
