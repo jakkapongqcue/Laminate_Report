@@ -382,7 +382,7 @@ const chartOptions = computed(() => {
     },
     stroke: {
       curve: curveType.value,
-      width: 1.5,
+      width: 2,
     },
     colors: [
       '#0284c7', // Sky 600
@@ -515,3 +515,9 @@ onMounted(() => {
   loadDefaults()
 })
 </script>
+
+<style lang="css" scoped>
+:deep(div.vue-apexcharts > div > svg.apexcharts-svg.apexcharts-zoomable) {
+  overflow: visible !important;
+}
+</style>
