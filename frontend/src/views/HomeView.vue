@@ -139,9 +139,6 @@ const filters = reactive({
   time_to: '17:00',
   hour_step: 1,
   use_test_api: false,
-  // setup filter: default date same as date_from, time empty (user must select)
-  setup_date: getTodayStr(),
-  setup_time: '',
 })
 
 const loadUseTestApiSetting = () => {
@@ -180,11 +177,6 @@ const fetchMachines = async () => {
 }
 
 const fetchReport = async () => {
-  if (!filters.setup_time) {
-    errorMessage.value = 'กรุณาเลือกเวลา Set up ก่อนกดค้นหา'
-    return
-  }
-
   isLoading.value = true
   errorMessage.value = ''
   loadFristTime.value = false
@@ -198,11 +190,6 @@ const fetchReport = async () => {
       time_to: filters.time_to,
       hour_step: filters.hour_step.toString(),
     })
-
-    if (filters.setup_time) {
-      queryParams.append('setup_time', filters.setup_time)
-      queryParams.append('setup_date', filters.setup_date || filters.date_from)
-    }
 
     const path = filters.use_test_api ? '/api/report/laminate/test' : '/api/report/laminate'
     const res = await fetch(`${BACKEND_API_BASE_URL}${path}?${queryParams.toString()}`)
@@ -321,15 +308,4 @@ onMounted(() => {
   }, 300000) // 5 minutes (5 * 60 * 1000)
 })
 
-// keep setup_date default in sync with date_from unless user sets a different setup_date
-let _lastDateFrom = filters.date_from
-watch(
-  () => filters.date_from,
-  (newVal) => {
-    if (filters.setup_date === _lastDateFrom || !filters.setup_date) {
-      filters.setup_date = newVal
-    }
-    _lastDateFrom = newVal
-  },
-)
 </script>

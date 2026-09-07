@@ -11,7 +11,7 @@ const {
   extractValueFromRow,
 } = require("./common");
 
-function processSqlViewData({ sqlRows, machine, dateFromStr, dateToStr, timeFromStr, timeToStr, hourStep = 1, setupTargetDt = null, setupRow = null }) {
+function processSqlViewData({ sqlRows, machine, dateFromStr, dateToStr, timeFromStr, timeToStr, hourStep = 1 }) {
   const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
 
   // Build a timestamp mapping list
@@ -30,6 +30,11 @@ function processSqlViewData({ sqlRows, machine, dateFromStr, dateToStr, timeFrom
 
   // Sort timestamps ASC
   timestampList.sort((a, b) => a.dtObj.getTime() - b.dtObj.getTime());
+
+  // Automatically pick the first (earliest) record in the retrieved results as the Setup row
+  const firstRecord = timestampList.length > 0 ? timestampList[0] : null;
+  const setupRow = firstRecord ? firstRecord.row : null;
+  const setupDisplayDt = firstRecord ? firstRecord.dtObj : null;
 
   // Helper to find nearest row
   const MATCH_TOLERANCE_MS = MATCH_TOLERANCE_MINUTES * 60 * 1000;
@@ -79,9 +84,10 @@ function processSqlViewData({ sqlRows, machine, dateFromStr, dateToStr, timeFrom
     endDt.setDate(endDt.getDate() + 1);
   }
 
-  // Generate target hourly checkpoints
+  // Generate target hourly checkpoints (starts from startDt + hourStep since startDt is shown in Set up column)
   const allTimestamps = [];
   let currDt = new Date(startDt.getTime());
+  currDt.setHours(currDt.getHours() + hourStep);
   while (currDt <= endDt) {
     allTimestamps.push(new Date(currDt.getTime()));
     currDt.setHours(currDt.getHours() + hourStep);
@@ -122,35 +128,21 @@ function processSqlViewData({ sqlRows, machine, dateFromStr, dateToStr, timeFrom
     const formattedDateTh = formatDateThai(dtObj);
 
     const timeCols = [];
-    const includeSetup = setupTargetDt !== null && setupTargetDt !== undefined;
-    let setupDisplayDt = null;
 
-    if (includeSetup) {
-      const rawSetupTs = extractTimestampFromRow(setupRow);
-      if (rawSetupTs !== null && rawSetupTs !== undefined) {
-        setupDisplayDt = parseSqlTimestamp(rawSetupTs);
-        if (!setupDisplayDt || isNaN(setupDisplayDt.getTime())) {
-          setupDisplayDt = setupTargetDt;
-        }
-      } else {
-        setupDisplayDt = setupTargetDt;
-      }
-
-      let setupLabel, setupFullDt;
-      if (idx === 1) {
-        setupLabel = setupDisplayDt ? `Set up \n${formatTimeThai(setupDisplayDt)}` : "Set up";
-        setupFullDt = setupDisplayDt ? formatDateTimeShort(setupDisplayDt) : `${chunk.dateKey} Set up`;
-      } else {
-        setupLabel = "Set up";
-        setupFullDt = `${chunk.dateKey} Set up`;
-      }
-
-      timeCols.push({
-        key: "setup",
-        label: setupLabel,
-        full_datetime: setupFullDt,
-      });
+    let setupLabel, setupFullDt;
+    if (idx === 1) {
+      setupLabel = setupDisplayDt ? `Set up \n${formatTimeThai(setupDisplayDt)}` : "Set up";
+      setupFullDt = setupDisplayDt ? formatDateTimeShort(setupDisplayDt) : `${chunk.dateKey} Set up`;
+    } else {
+      setupLabel = "Set up";
+      setupFullDt = `${chunk.dateKey} Set up`;
     }
+
+    timeCols.push({
+      key: "setup",
+      label: setupLabel,
+      full_datetime: setupFullDt,
+    });
 
     for (const dt of chunk.timestamps) {
       const { bestActualDt } = findNearestRow(dt);
@@ -176,32 +168,10 @@ function processSqlViewData({ sqlRows, machine, dateFromStr, dateToStr, timeFrom
       // Index for array-based mock row fallback
       const colIdx = p.param_id;
 
-      if (idx === 1 && includeSetup && dbColumnName) {
-        if (setupRow) {
-          const rawVal = extractValueFromRow(setupRow, dbColumnName, colIdx);
-          if (rawVal !== null && rawVal !== undefined) {
-            setupVal = formatReadingValue(rawVal);
-          }
-        } else {
-          // Find nearest row in timestampList within ±5 minutes (300000ms)
-          let bestRow = null;
-          let bestDelta = 5 * 60 * 1000;
-          for (const item of timestampList) {
-            const delta = Math.abs(item.dtObj.getTime() - setupTargetDt.getTime());
-            if (delta <= bestDelta) {
-              bestDelta = delta;
-              bestRow = item.row;
-            } else if (item.dtObj.getTime() > setupTargetDt.getTime() + 5 * 60 * 1000) {
-              break;
-            }
-          }
-
-          if (bestRow) {
-            const rawVal = extractValueFromRow(bestRow, dbColumnName, colIdx);
-            if (rawVal !== null && rawVal !== undefined) {
-              setupVal = formatReadingValue(rawVal);
-            }
-          }
+      if (idx === 1 && setupRow && dbColumnName) {
+        const rawVal = extractValueFromRow(setupRow, dbColumnName, colIdx);
+        if (rawVal !== null && rawVal !== undefined) {
+          setupVal = formatReadingValue(rawVal);
         }
       }
 

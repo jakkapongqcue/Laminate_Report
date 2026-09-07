@@ -41,8 +41,6 @@ Router mount อยู่ที่ทั้ง `/` (local dev) และ `/Lamin
 | `time_from`  | `08:00`        | เวลาเริ่มต้น format `HH:MM`                     |
 | `time_to`    | `17:00`        | เวลาสิ้นสุด format `HH:MM`                      |
 | `hour_step`  | `1`            | ขนาด interval (ชั่วโมง)                         |
-| `setup_date` | `null`         | วันที่ของค่า Setup (ถ้าไม่ระบุใช้ `date_from`)  |
-| `setup_time` | `null`         | เวลาของค่า Setup format `HH:MM`                 |
 
 ### Query Parameters — `/api/machineStatus`
 

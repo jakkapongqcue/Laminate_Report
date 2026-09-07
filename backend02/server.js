@@ -39,7 +39,7 @@ router.get("/api/machines", (req, res) => {
 
 // GET /api/report/laminate -> Query SQL Server database for Report Sheet
 router.get("/api/report/laminate", async (req, res) => {
-  const { machine = "1LB09_Bobst", date_from, date_to, time_from = "08:00", time_to = "17:00", hour_step = 1, setup_date = null, setup_time = null } = req.query;
+  const { machine = "1LB09_Bobst", date_from, date_to, time_from = "08:00", time_to = "17:00", hour_step = 1 } = req.query;
 
   if (!date_from || !date_to) {
     return res.status(400).json({
@@ -78,38 +78,7 @@ router.get("/api/report/laminate", async (req, res) => {
     const result = await request.query(query);
     const sqlRows = result.recordset;
 
-    let setupRow = null;
-    let setupTargetDt = null;
-
-    if (setup_time) {
-      const setupDateUse = setup_date || date_from;
-      const [y, m, d] = setupDateUse.split("-").map(Number);
-      const [hr, min] = setup_time.split(":").map(Number);
-      setupTargetDt = new Date(y, m - 1, d, hr, min, 0, 0);
-
-      if (!isNaN(setupTargetDt.getTime())) {
-        const setupRequest = pool.request();
-        const setupDatetimeStr = `${setupDateUse} ${setup_time}:00`;
-        setupRequest.input("setup_dt", sql.VarChar, setupDatetimeStr);
-
-        const setupQuery = `
-          SELECT TOP 1
-              ${selectCols}
-          FROM ${tableName}
-          WHERE ${timestampCol} BETWEEN DATEADD(minute, -5, @setup_dt) AND DATEADD(minute, 5, @setup_dt)
-          ORDER BY ABS(DATEDIFF(second, @setup_dt, ${timestampCol})) ASC
-        `;
-
-        const setupResult = await setupRequest.query(setupQuery);
-        if (setupResult.recordset.length > 0) {
-          setupRow = setupResult.recordset[0];
-        }
-      } else {
-        setupTargetDt = null;
-      }
-    }
-
-    console.log(`Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}. Setup row found: ${setupRow !== null}`);
+    console.log(`Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}.`);
 
     const response = processSqlViewData({
       sqlRows,
@@ -119,8 +88,6 @@ router.get("/api/report/laminate", async (req, res) => {
       timeFromStr: time_from,
       timeToStr: time_to,
       hourStep: parseInt(hour_step),
-      setupTargetDt,
-      setupRow,
     });
 
     res.json(response);
@@ -134,7 +101,7 @@ router.get("/api/report/laminate", async (req, res) => {
 
 // GET /api/report/laminate/test -> Query synthetic mock data for Report Sheet
 router.get("/api/report/laminate/test", (req, res) => {
-  const { machine = "1LB09_Bobst", date_from, date_to, time_from = "08:00", time_to = "17:00", hour_step = 1, setup_date = null, setup_time = null } = req.query;
+  const { machine = "1LB09_Bobst", date_from, date_to, time_from = "08:00", time_to = "17:00", hour_step = 1 } = req.query;
 
   if (!date_from || !date_to) {
     return res.status(400).json({
@@ -180,37 +147,6 @@ router.get("/api/report/laminate/test", (req, res) => {
       sqlRows.push(row);
     }
 
-    let setupRow = null;
-    let setupTargetDt = null;
-
-    if (setup_time) {
-      const setupDateUse = setup_date || date_from;
-      const [y, m, d] = setupDateUse.split("-").map(Number);
-      const [hr, min] = setup_time.split(":").map(Number);
-      setupTargetDt = new Date(y, m - 1, d, hr, min, 0, 0);
-
-      if (!isNaN(setupTargetDt.getTime())) {
-        let bestRow = null;
-        let bestDelta = 5 * 60 * 1000;
-        for (const tsRow of sqlRows) {
-          const tsDt = parseSqlTimestamp(tsRow[0]);
-          if (!tsDt) continue;
-          const delta = Math.abs(tsDt.getTime() - setupTargetDt.getTime());
-          if (delta <= bestDelta) {
-            bestDelta = delta;
-            bestRow = tsRow;
-          } else if (tsDt.getTime() > setupTargetDt.getTime() + 5 * 60 * 1000) {
-            break;
-          }
-        }
-        if (bestRow) {
-          setupRow = bestRow;
-        }
-      } else {
-        setupTargetDt = null;
-      }
-    }
-
     const response = processSqlViewData({
       sqlRows,
       machine,
@@ -219,8 +155,6 @@ router.get("/api/report/laminate/test", (req, res) => {
       timeFromStr: time_from,
       timeToStr: time_to,
       hourStep: parsedHourStep,
-      setupTargetDt,
-      setupRow,
     });
 
     res.json(response);

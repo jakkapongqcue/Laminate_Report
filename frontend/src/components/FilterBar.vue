@@ -54,7 +54,7 @@
         <div class="flex flex-col self-end col-span-1 col-start-1">
           <label class="class_Lable">
             <Icon_calendar />
-            วันที่เริ่มต้น (From Date)
+            วันที่เริ่มต้น
           </label>
           <input type="date" v-model="filters.date_from" class="class_Input" />
         </div>
@@ -63,35 +63,15 @@
         <div class="flex flex-col self-end col-span-1">
           <label class="class_Lable">
             <Icon_time />
-            เวลาเริ่มต้น (From Time)
+            เวลาม้วนแรกที่ทำการผลิต
           </label>
           <input type="time" v-model="filters.time_from" class="class_Input" />
-        </div>
-
-        <!-- Setup filter: date and time -->
-        <div class="relative flex flex-col self-end col-span-1 group">
-          <label class="class_Lable group-has-[input:disabled]:text-gray-400">
-            <Icon_time :cusClass="'group-has-[input:disabled]:text-gray-400'" />
-            เวลา Set up (Setup Time)
-          </label>
-          <input
-            type="time"
-            v-model="filters.setup_time"
-            class="class_Input group-has-[input:disabled]:text-gray-400"
-            :disabled="currentViewMode === 'chart'"
-          />
-          <span
-            v-if="currentViewMode === 'report'"
-            class="absolute text-xs text-red-500 transition-opacity -bottom-1"
-            :class="[filters.setup_time ? 'opacity-0' : 'opacity-100']"
-            >คำเตือน: กรุณาเลือกเวลา Set up
-          </span>
         </div>
 
         <div class="flex flex-col col-span-1 col-start-1">
           <label class="class_Lable">
             <Icon_calendar />
-            วันที่สิ้นสุด (To Date)
+            วันที่สิ้นสุด
           </label>
           <input type="date" v-model="filters.date_to" class="class_Input" />
         </div>
@@ -99,7 +79,7 @@
         <div class="flex flex-col col-span-1">
           <label class="class_Lable">
             <Icon_time />
-            เวลาสิ้นสุด (To Time)
+            เวลาสิ้นสุด
           </label>
           <input type="time" v-model="filters.time_to" class="class_Input" />
         </div>
@@ -112,7 +92,7 @@
         <!-- Search button -->
         <button
           @click="$emit('search')"
-          :disabled="statusLoading || (currentViewMode === 'report' && !filters.setup_time)"
+          :disabled="statusLoading"
           class="inline-flex justify-center items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed w-40"
         >
           <Icon_search :loading="statusLoading" :cusClass="'w-4 h-4'" />
