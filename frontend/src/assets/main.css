@@ -79,22 +79,21 @@ select:disabled {
 
 .report-table th,
 .report-table td {
-  border: 0.5px solid #000000;
+  border: 0.5px solid #000000 !important;
   padding: 1px 2px;
   text-align: center;
   vertical-align: middle;
-  height: 20px;
   box-sizing: border-box;
   overflow: hidden;
   white-space: nowrap;
 }
 
 .report-table th {
-  height: 30px !important;
+  height: 28px !important;
 }
 
 .report-table tr {
-  height: 20px !important;
+  height: 18px !important;
 }
 
 /* Parameter name column – left-aligned, allow some wrapping */
@@ -193,24 +192,5 @@ select:disabled {
     overflow: hidden !important;
     page-break-after: always;
     break-after: page;
-  }
-
-  .report-table {
-    font-size: 9px !important;
-  }
-
-  .report-table th,
-  .report-table td {
-    border: 0.5px solid #000000 !important;
-    height: 18px !important;
-    padding: 1px !important;
-  }
-
-  .report-table th {
-    height: 30px !important;
-  }
-
-  .report-table tr {
-    height: 20px !important;
   }
 }

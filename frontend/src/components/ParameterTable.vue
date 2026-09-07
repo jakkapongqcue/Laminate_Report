@@ -5,7 +5,7 @@
       <thead>
         <tr>
           <!-- Column 1: Parameter name -->
-          <th style="width: 160px; min-width: 160px">Setting Parameter</th>
+          <th style="width: 230px; min-width: 230px">Setting Parameter</th>
 
           <!-- Column 2: Set Point -->
           <th style="width: 68px; min-width: 68px" class="font-bold">Set Point (PS)</th>

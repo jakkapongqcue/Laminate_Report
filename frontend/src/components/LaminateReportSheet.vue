@@ -64,7 +64,7 @@
     <!-- ── Footer ──────────────────────────────────────────────────────── -->
     <div class="text-[9px] pt-4">
       <!-- Remark line -->
-      <div class="flex items-center gap-2 pb-3">
+      <!-- <div class="flex items-center gap-2 pb-3">
         <span class="font-bold whitespace-nowrap">Remark:</span>
         <input
           type="text"
@@ -72,7 +72,7 @@
           placeholder=""
           class="flex-1 border-b border-dotted border-gray-500 focus:outline-none bg-transparent px-1 text-[9px]"
         />
-      </div>
+      </div> -->
 
       <!-- Signatures Block -->
       <div class="flex items-center">

@@ -15,7 +15,7 @@
     {
       "files": "*.js",
       "options": {
-        "printWidth": 170,
+        "printWidth": 190,
         "singleQuote": false,
         "semi": true
       }
