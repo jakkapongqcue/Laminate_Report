@@ -132,7 +132,7 @@ const getTodayStr = () => {
 const viewMode = ref('report') // 'report' | 'chart'
 
 const filters = reactive({
-  machine: '1LB09_Bobst',
+  machine: '1LB09',
   date_from: getTodayStr(),
   date_to: getTodayStr(),
   time_from: '08:00',
@@ -307,5 +307,4 @@ onMounted(() => {
     fetchMachineStatus()
   }, 300000) // 5 minutes (5 * 60 * 1000)
 })
-
 </script>

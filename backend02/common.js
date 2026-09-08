@@ -32,7 +32,7 @@ const STANDARD_PARAMETERS = [
 
 const MACHINES = [
   {
-    id: "1LB09_Bobst",
+    id: "1LB09",
     name: "1LB09 Bobst",
     tableName: "[KEP_LOG].[dbo].[View_1LB09_Bobst]",
     timestampColumn: "[SERVER TIMESTAMP]",
@@ -73,7 +73,7 @@ const MACHINES = [
     },
   },
   {
-    id: "2LB06_FujiKikai",
+    id: "2LB06",
     name: "2LB06 Fuji Kikai",
     tableName: "[KEP_LOG].[dbo].[View_2LB06_FujiKikai]",
     timestampColumn: "[SERVER TIMESTAMP]",
