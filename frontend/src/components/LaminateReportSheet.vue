@@ -1,7 +1,7 @@
 <template>
   <div class="report-page">
     <!-- ── Report Header ───────────────────────────────────────────────── -->
-    <div class="flex items-start justify-between pb-1 mb-1 border-b border-gray-400">
+    <div class="flex items-start justify-between pb-1">
       <!-- Company Logo & Brand -->
       <div class="flex items-center">
         <!-- <div
@@ -39,20 +39,18 @@
     </div>
 
     <!-- ── Metadata Row ─────────────────────────────────────────────────── -->
-    <div class="flex gap-4 text-[9px] mb-1 font-medium">
+    <div class="flex gap-2 text-[9px] mb-1 font-medium">
       <div class="flex items-center gap-1">
         <span class="font-bold">เครื่องเคลือบ:</span>
-        <span class="px-1 py-0.5 rounded border border-gray-300 font-semibold">{{ machine }}</span>
+        <span class="px-1 py-0.5 rounded font-semibold">{{ machine }}</span>
       </div>
       <div class="flex items-center gap-1">
         <span class="font-bold">วันที่:</span>
-        <span class="px-1 py-0.5 rounded border border-gray-300"> {{ pageData.date_str }}</span>
-        <span class="px-1 py-0.5 rounded border border-gray-300"> {{ timeFrom }}</span>
-      </div>
-      <span class="font-bold self-center">ถึง</span>
-      <div class="flex items-center gap-1">
-        <span class="px-1 py-0.5 rounded border border-gray-300"> {{ formatDate(dateTo) }}</span>
-        <span class="px-1 py-0.5 rounded border border-gray-300"> {{ timeTo }}</span>
+        <span class="px-1 py-0.5 rounded"> {{ formatDate(dateFrom) }}</span>
+        <span class="px-1 py-0.5 rounded"> {{ formatTime(timeFrom) }}</span>
+        <span class="font-bold self-center">ถึง</span>
+        <span v-if="dateFrom !== dateTo" class="px-1 py-0.5 rounded">{{ formatDate(dateTo) }}</span>
+        <span class="px-1 py-0.5 rounded"> {{ formatTime(timeTo) }}</span>
       </div>
     </div>
 
@@ -122,6 +120,10 @@ function formatDate(dateStr) {
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const year = d.getFullYear()
   return `${day}/${month}/${year}`
+}
+
+function formatTime(timeStr) {
+  return timeStr + ' น.'
 }
 
 const props = defineProps({

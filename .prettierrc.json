@@ -13,7 +13,23 @@
       }
     },
     {
-      "files": "*.js",
+      "files": "reportProcessor.js",
+      "options": {
+        "printWidth": 100,
+        "singleQuote": false,
+        "semi": true
+      }
+    },
+    {
+      "files": "chartProcessor.js",
+      "options": {
+        "printWidth": 100,
+        "singleQuote": false,
+        "semi": true
+      }
+    },
+    {
+      "files": "common.js",
       "options": {
         "printWidth": 190,
         "singleQuote": false,

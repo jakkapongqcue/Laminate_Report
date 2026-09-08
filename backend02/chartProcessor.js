@@ -22,6 +22,7 @@ function processSqlChartData({
   stepMinutes = null,
 }) {
   const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
+  const machineName = machineConfig.name;
 
   // 1. Build sorted record list with valid timestamps
   const records = [];
@@ -114,7 +115,7 @@ function processSqlChartData({
   }
 
   return {
-    machine,
+    machine: machineName,
     date_from: dateFromStr,
     date_to: dateToStr,
     time_from: timeFromStr,

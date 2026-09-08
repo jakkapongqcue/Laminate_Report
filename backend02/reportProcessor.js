@@ -11,8 +11,17 @@ const {
   extractValueFromRow,
 } = require("./common");
 
-function processSqlViewData({ sqlRows, machine, dateFromStr, dateToStr, timeFromStr, timeToStr, hourStep = 1 }) {
+function processSqlViewData({
+  sqlRows,
+  machine,
+  dateFromStr,
+  dateToStr,
+  timeFromStr,
+  timeToStr,
+  hourStep = 1,
+}) {
   const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
+  const machineName = machineConfig.name;
 
   // Build a timestamp mapping list
   const timestampList = [];
@@ -132,7 +141,9 @@ function processSqlViewData({ sqlRows, machine, dateFromStr, dateToStr, timeFrom
     let setupLabel, setupFullDt;
     if (idx === 1) {
       setupLabel = setupDisplayDt ? `Set up \n${formatTimeThai(setupDisplayDt)}` : "Set up";
-      setupFullDt = setupDisplayDt ? formatDateTimeShort(setupDisplayDt) : `${chunk.dateKey} Set up`;
+      setupFullDt = setupDisplayDt
+        ? formatDateTimeShort(setupDisplayDt)
+        : `${chunk.dateKey} Set up`;
     } else {
       setupLabel = "Set up";
       setupFullDt = `${chunk.dateKey} Set up`;
@@ -233,7 +244,7 @@ function processSqlViewData({ sqlRows, machine, dateFromStr, dateToStr, timeFrom
   }
 
   return {
-    machine,
+    machine: machineName,
     date_from: dateFromStr,
     date_to: dateToStr,
     time_from: timeFromStr,
