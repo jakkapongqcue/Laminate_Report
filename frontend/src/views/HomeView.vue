@@ -52,7 +52,7 @@
 
     <!-- ── Mode 1: Report Pages Rendering Container ────────────────── -->
 
-    <Slot_MainContainer
+    <div class="slotMainContainer"
       v-else-if="
         viewMode === 'report' && reportData && reportData.pages && reportData.pages.length > 0
       "
@@ -67,7 +67,7 @@
           :time-to="reportData.time_to"
         />
       </div>
-    </Slot_MainContainer>
+    </div>
 
     <!-- ── Mode 2: Chart Rendering Container ────────────────────────── -->
     <div
