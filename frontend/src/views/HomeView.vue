@@ -119,7 +119,6 @@ import Icon_report from '../components/icons/Icon_report.vue'
 import Icon_chart from '../components/icons/Icon_chart.vue'
 import Icon_error from '../components/icons/Icon_error.vue'
 import SwitchViewMode from '../components/SwitchViewMode.vue'
-import Slot_MainContainer from '../components/Slot_MainContainer.vue'
 
 const getTodayStr = () => {
   const d = new Date()
