@@ -40,7 +40,7 @@
 
           <!-- Value cells for each time column -->
           <td v-for="col in timeColumns" :key="col.key" class="font-medium text-center">
-            <span v-if="col.key === 'setup'" class="w-full font-semibold text-center"">{{ row.setup_val }}</span>
+            <span v-if="col.key === 'setup'" class="w-full font-semibold text-center">{{ row.setup_val }}</span>
             <span v-else>{{ row.values[col.key] || '' }}</span>
           </td>
 

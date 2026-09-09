@@ -52,7 +52,7 @@
 
     <!-- ── Mode 1: Report Pages Rendering Container ────────────────── -->
 
-    <div class="slotMainContainer"
+    <Slot_MainContainer
       v-else-if="
         viewMode === 'report' && reportData && reportData.pages && reportData.pages.length > 0
       "
@@ -67,7 +67,7 @@
           :time-to="reportData.time_to"
         />
       </div>
-    </div>
+    </Slot_MainContainer>
 
     <!-- ── Mode 2: Chart Rendering Container ────────────────────────── -->
     <div
@@ -109,7 +109,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import FilterBar from '../components/FilterBar.vue'
 import LaminateReportSheet from '../components/LaminateReportSheet.vue'
 import LaminateChart from '../components/LaminateChart.vue'
@@ -119,6 +119,7 @@ import Icon_report from '../components/icons/Icon_report.vue'
 import Icon_chart from '../components/icons/Icon_chart.vue'
 import Icon_error from '../components/icons/Icon_error.vue'
 import SwitchViewMode from '../components/SwitchViewMode.vue'
+import Slot_MainContainer from '../components/Slot_MainContainer.vue'
 
 const getTodayStr = () => {
   const d = new Date()
