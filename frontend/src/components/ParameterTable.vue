@@ -17,12 +17,19 @@
           </th>
 
           <!-- Dynamic time columns -->
-          <th v-for="col in timeColumns" :key="col.key" class="font-bold text-center ">
+          <th v-for="col in timeColumns" :key="col.key" class="font-bold text-center">
             <span class="whitespace-pre-wrap">{{ col.label }}</span>
           </th>
 
           <!-- Filler columns to always show 14 slots -->
-          <th v-for="n in fillerColumnCount" :key="'fill-hdr-' + n" class="" style="min-width: 42px">น.</th>
+          <th
+            v-for="n in fillerColumnCount"
+            :key="'fill-hdr-' + n"
+            class=""
+            style="min-width: 42px"
+          >
+            น.
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -34,13 +41,20 @@
           <td class="font-medium text-center">{{ row.set_point }}</td>
 
           <!-- Unit -->
-          <td class="text-center  " style="font-size: 8.5px">
+          <td class="text-center" style="font-size: 8.5px">
             {{ row.unit }}
           </td>
 
           <!-- Value cells for each time column -->
-          <td v-for="col in timeColumns" :key="col.key" class="font-medium text-center">
-            <span v-if="col.key === 'setup'" class="w-full font-semibold text-center"">{{ row.setup_val }}</span>
+          <td
+            v-for="col in timeColumns"
+            :key="col.key"
+            class="font-medium text-center"
+            :class="getCellClass(row, col.key === 'setup' ? row.setup_val : row.values[col.key])"
+          >
+            <span v-if="col.key === 'setup'" class="w-full font-semibold text-center">{{
+              row.setup_val
+            }}</span>
             <span v-else>{{ row.values[col.key] || '' }}</span>
           </td>
 
@@ -53,7 +67,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   timeColumns: {
@@ -71,6 +85,61 @@ const props = defineProps({
     default: 13,
   },
 })
+
+function parseRange(setPointStr) {
+  if (!setPointStr || typeof setPointStr !== 'string') return null
+  const cleaned = setPointStr.trim()
+  if (!cleaned) return null
+
+  // Matches "180-200", "180 - 200", "180~200"
+  const rangeMatch = cleaned.match(/^(\d+(?:\.\d+)?)\s*[-~至ถึง]\s*(\d+(?:\.\d+)?)$/)
+  if (rangeMatch) {
+    const min = parseFloat(rangeMatch[1])
+    const max = parseFloat(rangeMatch[2])
+    return { min: Math.min(min, max), max: Math.max(min, max) }
+  }
+
+  // Matches single number e.g. "180"
+  const singleMatch = cleaned.match(/^(\d+(?:\.\d+)?)$/)
+  if (singleMatch) {
+    const val = parseFloat(singleMatch[1])
+    return { min: val, max: val }
+  }
+
+  return null
+}
+
+function getCellClass(row, rawVal) {
+  // Only check for Line Speed
+  if (!row || (row.key !== 'LINE_SPEED' && !row.name?.toLowerCase().includes('line speed'))) {
+    return ''
+  }
+
+  if (rawVal === undefined || rawVal === null || String(rawVal).trim() === '') {
+    return ''
+  }
+
+  const numVal = parseFloat(rawVal)
+  if (isNaN(numVal)) {
+    return ''
+  }
+
+  // When machine is running (> 0), highlight if out of bounds (< min or > max)
+  // if (numVal <= 0) {
+  //   return ''
+  // }
+
+  const range = parseRange(row.set_point)
+  if (!range) {
+    return ''
+  }
+
+  if (numVal < range.min || numVal > range.max) {
+    return 'bg-red-100 text-red-600 font-bold'
+  }
+
+  return ''
+}
 
 const fillerColumnCount = computed(() => {
   // Exclude 'setup' column from counting toward the 14 visible time columns

@@ -19,6 +19,7 @@ function processSqlViewData({
   timeFromStr,
   timeToStr,
   hourStep = 1,
+  setPointMap = {},
 }) {
   const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
   const machineName = machineConfig.name;
@@ -222,12 +223,19 @@ function processSqlViewData({
 
       const unit = (machineConfig.unitOverrides && machineConfig.unitOverrides[p.key]) || p.unit;
 
+      let setPointVal = "";
+      if (setPointMap && setPointMap[p.key] !== undefined && setPointMap[p.key] !== null) {
+        setPointVal = formatReadingValue(setPointMap[p.key]);
+      } else if (p.set_point) {
+        setPointVal = String(p.set_point);
+      }
+
       rows.push({
         key: p.key,
         param_id: p.param_id,
         name: p.name,
         category: p.category,
-        set_point: "",
+        set_point: setPointVal,
         unit: unit,
         setup_val: setupVal,
         values: colValues,

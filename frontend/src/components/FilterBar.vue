@@ -37,6 +37,40 @@
           </div>
         </div>
 
+        <!-- Item FG -->
+        <div class="flex flex-col col-span-2">
+          <label class="class_Lable">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-3.5 h-3.5 inline-block text-gray-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+              />
+            </svg>
+            Item FG <span class="text-rose-500 font-bold">*</span>
+          </label>
+          <input
+            type="text"
+            @focus="
+              props.filters.item_fg.toUpperCase().slice(0, 3) === 'FG' &&
+              props.filters.item_fg.lenght() > 3
+                ? ''
+                : (props.filters.item_fg = 'FGF0165010103602')
+            "
+            v-model.trim="filters.item_fg"
+            placeholder="ระบุ Item FG (เช่น FGF0165010103602)"
+            class="class_Input font-mono uppercase"
+            required
+          />
+        </div>
+
         <!-- Hourly Step (Visible on Report mode) -->
         <div class="flex flex-col col-span-2 md:col-span-1">
           <label class="class_Lable">
@@ -92,7 +126,8 @@
         <!-- Search button -->
         <button
           @click="$emit('search')"
-          :disabled="statusLoading"
+          :disabled="statusLoading || !filters.item_fg"
+          :title="!filters.item_fg ? 'กรุณาระบุ Item FG ก่อนดึงข้อมูล' : ''"
           class="inline-flex justify-center items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed w-40"
         >
           <Icon_search :loading="statusLoading" :cusClass="'w-4 h-4'" />

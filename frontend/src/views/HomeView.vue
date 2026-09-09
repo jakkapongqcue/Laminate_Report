@@ -133,6 +133,7 @@ const viewMode = ref('report') // 'report' | 'chart'
 
 const filters = reactive({
   machine: '1LB09',
+  item_fg: '',
   date_from: getTodayStr(),
   date_to: getTodayStr(),
   time_from: '08:00',
@@ -177,6 +178,11 @@ const fetchMachines = async () => {
 }
 
 const fetchReport = async () => {
+  if (!filters.item_fg) {
+    errorMessage.value = 'กรุณาระบุ Item FG ก่อนดึงข้อมูลรายงาน'
+    return
+  }
+
   isLoading.value = true
   errorMessage.value = ''
   loadFristTime.value = false
@@ -189,6 +195,7 @@ const fetchReport = async () => {
       time_from: filters.time_from,
       time_to: filters.time_to,
       hour_step: filters.hour_step.toString(),
+      item_fg: filters.item_fg,
     })
 
     const path = filters.use_test_api ? '/api/report/laminate/test' : '/api/report/laminate'

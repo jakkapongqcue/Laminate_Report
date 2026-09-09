@@ -41,6 +41,10 @@
     <!-- ── Metadata Row ─────────────────────────────────────────────────── -->
     <div class="flex gap-2 text-[9px] mb-1 font-medium">
       <div class="flex items-center gap-1">
+        <span class="font-bold">FG Code:</span>
+        <span class="px-1 py-0.5 rounded font-semibold">{{ }}</span>
+      </div>
+      <div class="flex items-center gap-1">
         <span class="font-bold">เครื่องเคลือบ:</span>
         <span class="px-1 py-0.5 rounded font-semibold">{{ machine }}</span>
       </div>

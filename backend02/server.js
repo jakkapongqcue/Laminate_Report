@@ -1,8 +1,14 @@
 const express = require("express");
 const cors = require("cors");
 const config = require("./config");
-const { getPool, sql } = require("./db");
-const { MACHINES, parseSqlTimestamp, formatDateTimeShort, formatDateTimeFull } = require("./common");
+const { getPool, getAxPool, sql } = require("./db");
+const {
+  MACHINES,
+  parseSqlTimestamp,
+  formatDateTimeShort,
+  formatDateTimeFull,
+  AX_SPEC_COLUMNS,
+} = require("./common");
 const { processSqlViewData } = require("./reportProcessor");
 const { processSqlChartData } = require("./chartProcessor");
 
@@ -39,7 +45,15 @@ router.get("/api/machines", (req, res) => {
 
 // GET /api/report/laminate -> Query SQL Server database for Report Sheet
 router.get("/api/report/laminate", async (req, res) => {
-  const { machine = "1LB09_Bobst", date_from, date_to, time_from = "08:00", time_to = "17:00", hour_step = 1 } = req.query;
+  const {
+    machine = "1LB09_Bobst",
+    date_from,
+    date_to,
+    time_from = "08:00",
+    time_to = "17:00",
+    hour_step = 1,
+    item_fg = null,
+  } = req.query;
 
   if (!date_from || !date_to) {
     return res.status(400).json({
@@ -50,7 +64,8 @@ router.get("/api/report/laminate", async (req, res) => {
   const pool = await getPool();
   if (!pool) {
     return res.status(500).json({
-      detail: "ไม่สามารถเชื่อมต่อฐานข้อมูล MS SQL Server (192.168.10.99) กรุณาตรวจสอบ DB_PASSWORD ในไฟล์ backend02/.env",
+      detail:
+        "ไม่สามารถเชื่อมต่อฐานข้อมูล MS SQL Server (192.168.10.99) กรุณาตรวจสอบ DB_PASSWORD ในไฟล์ backend02/.env",
     });
   }
 
@@ -58,7 +73,10 @@ router.get("/api/report/laminate", async (req, res) => {
     const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
     const tableName = machineConfig.tableName;
     const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
-    const selectCols = machineConfig.columns && machineConfig.columns.length > 0 ? machineConfig.columns.join(",\n          ") : "*";
+    const selectCols =
+      machineConfig.columns && machineConfig.columns.length > 0
+        ? machineConfig.columns.join(",\n          ")
+        : "*";
 
     const startDatetime = `${date_from} ${time_from}:00`;
     const endDatetime = `${date_to} ${time_to}:00`;
@@ -80,6 +98,39 @@ router.get("/api/report/laminate", async (req, res) => {
 
     console.log(`Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}.`);
 
+    // Fetch Set Point (PS) from AXDB if item_fg is provided
+    let setPointMap = {};
+    if (item_fg) {
+      try {
+        const axPool = await getAxPool();
+        if (axPool) {
+          const axMachineId = machineConfig.axMachineId;
+          const axRequest = axPool.request();
+          axRequest.input("item_fg", sql.VarChar, String(item_fg).trim());
+          axRequest.input("ax_machine", sql.VarChar, axMachineId);
+
+          const axQuery = `
+            SELECT TOP 1
+              ${AX_SPEC_COLUMNS.join(",\n              ")}
+            FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] ps
+            WHERE ps.ITEMFG = @item_fg AND ps.MACHINE = @ax_machine
+            ORDER BY ps.RECID DESC
+          `;
+          const axResult = await axRequest.query(axQuery);
+          if (axResult.recordset && axResult.recordset.length > 0) {
+            setPointMap = axResult.recordset[0];
+            console.log(`Retrieved Set Point (PS) for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}`);
+          } else {
+            console.log(
+              `No Set Point record found in AX for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}`,
+            );
+          }
+        }
+      } catch (axErr) {
+        console.warn(`Could not query AXDB for Set Point: ${axErr.message}`);
+      }
+    }
+
     const response = processSqlViewData({
       sqlRows,
       machine,
@@ -88,6 +139,7 @@ router.get("/api/report/laminate", async (req, res) => {
       timeFromStr: time_from,
       timeToStr: time_to,
       hourStep: parseInt(hour_step),
+      setPointMap,
     });
 
     res.json(response);
@@ -101,7 +153,15 @@ router.get("/api/report/laminate", async (req, res) => {
 
 // GET /api/report/laminate/test -> Query synthetic mock data for Report Sheet
 router.get("/api/report/laminate/test", (req, res) => {
-  const { machine = "1LB09_Bobst", date_from, date_to, time_from = "08:00", time_to = "17:00", hour_step = 1 } = req.query;
+  const {
+    machine = "1LB09_Bobst",
+    date_from,
+    date_to,
+    time_from = "08:00",
+    time_to = "17:00",
+    hour_step = 1,
+    item_fg = null,
+  } = req.query;
 
   if (!date_from || !date_to) {
     return res.status(400).json({
@@ -147,6 +207,22 @@ router.get("/api/report/laminate/test", (req, res) => {
       sqlRows.push(row);
     }
 
+    const setPointMap = {};
+    if (item_fg) {
+      setPointMap["LINE_SPEED"] = "250";
+      setPointMap["TEMP_ZONE_1"] = "70";
+      setPointMap["TEMP_ZONE_2"] = "80";
+      setPointMap["TEMP_ZONE_3"] = "85";
+      setPointMap["TEMP_ZONE_4"] = "85";
+      setPointMap["TENSION_UNWIND_1"] = "55";
+      setPointMap["TENSION_UNWIND_2"] = "45";
+      setPointMap["TENSION_REWIND"] = "60";
+      setPointMap["TENSION_TAPER_REWIND"] = "65";
+      setPointMap["PRESSURE_NIP_OPERATOR"] = "4.0";
+      setPointMap["PRESSURE_NIP_MOTOR"] = "4.0";
+      setPointMap["CORONA_POWER_UW1"] = "25";
+    }
+
     const response = processSqlViewData({
       sqlRows,
       machine,
@@ -155,6 +231,7 @@ router.get("/api/report/laminate/test", (req, res) => {
       timeFromStr: time_from,
       timeToStr: time_to,
       hourStep: parsedHourStep,
+      setPointMap,
     });
 
     res.json(response);
@@ -165,7 +242,14 @@ router.get("/api/report/laminate/test", (req, res) => {
 
 // GET /api/chart/laminate -> Query SQL Server database for Line Chart time series
 router.get("/api/chart/laminate", async (req, res) => {
-  const { machine = "1LB09_Bobst", date_from, date_to, time_from = "08:00", time_to = "17:00", step_minutes = null } = req.query;
+  const {
+    machine = "1LB09_Bobst",
+    date_from,
+    date_to,
+    time_from = "08:00",
+    time_to = "17:00",
+    step_minutes = null,
+  } = req.query;
 
   if (!date_from || !date_to) {
     return res.status(400).json({
@@ -176,7 +260,8 @@ router.get("/api/chart/laminate", async (req, res) => {
   const pool = await getPool();
   if (!pool) {
     return res.status(500).json({
-      detail: "ไม่สามารถเชื่อมต่อฐานข้อมูล MS SQL Server (192.168.10.99) กรุณาตรวจสอบ DB_PASSWORD ในไฟล์ backend02/.env",
+      detail:
+        "ไม่สามารถเชื่อมต่อฐานข้อมูล MS SQL Server (192.168.10.99) กรุณาตรวจสอบ DB_PASSWORD ในไฟล์ backend02/.env",
     });
   }
 
@@ -184,7 +269,10 @@ router.get("/api/chart/laminate", async (req, res) => {
     const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
     const tableName = machineConfig.tableName;
     const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
-    const selectCols = machineConfig.columns && machineConfig.columns.length > 0 ? machineConfig.columns.join(",\n          ") : "*";
+    const selectCols =
+      machineConfig.columns && machineConfig.columns.length > 0
+        ? machineConfig.columns.join(",\n          ")
+        : "*";
 
     const startDatetime = `${date_from} ${time_from}:00`;
     const endDatetime = `${date_to} ${time_to}:00`;
@@ -204,7 +292,9 @@ router.get("/api/chart/laminate", async (req, res) => {
     const result = await request.query(query);
     const sqlRows = result.recordset;
 
-    console.log(`[Chart API] Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}.`);
+    console.log(
+      `[Chart API] Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}.`,
+    );
 
     const parsedStep = step_minutes ? parseInt(step_minutes) : null;
     const response = processSqlChartData({
@@ -228,7 +318,14 @@ router.get("/api/chart/laminate", async (req, res) => {
 
 // GET /api/chart/laminate/test -> Query synthetic mock data for Line Chart
 router.get("/api/chart/laminate/test", (req, res) => {
-  const { machine = "1LB09_Bobst", date_from, date_to, time_from = "08:00", time_to = "17:00", step_minutes = 15 } = req.query;
+  const {
+    machine = "1LB09_Bobst",
+    date_from,
+    date_to,
+    time_from = "08:00",
+    time_to = "17:00",
+    step_minutes = 15,
+  } = req.query;
 
   if (!date_from || !date_to) {
     return res.status(400).json({
@@ -331,7 +428,9 @@ router.get("/api/machineStatus", async (req, res) => {
   const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
   const tableName = machineConfig.tableName;
   const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
-  const speedCol = machineConfig.columns?.find((c) => c.includes("AS LINE_SPEED")) || "[Machine : Speed] AS LINE_SPEED";
+  const speedCol =
+    machineConfig.columns?.find((c) => c.includes("AS LINE_SPEED")) ||
+    "[Machine : Speed] AS LINE_SPEED";
 
   // 2. Optimized query: Only select necessary columns with a time window (last 24h)
   const fastQuery = `
