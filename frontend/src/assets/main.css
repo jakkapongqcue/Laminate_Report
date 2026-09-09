@@ -48,12 +48,14 @@ select:disabled {
 /* With @page margin 6mm each side → usable width ≈ 285mm                     */
 
 .report-wrapper {
-  overflow: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 .report-page {
   background: #ffffff;
-  width: calc(277mm + calc(6mm * 2)); /* 297mm + padding 6mm x 2 */
-  height: calc(190mm + calc(8mm * 2)); /* 210mm + padding 8mm x 2 */
+  width: 289mm; /*= 297mm + padding 6mm x 2 */
+  height: 206mm; /*= 210mm + padding 8mm x 2 */
   margin: 8px auto 24px auto;
   padding: 6mm 8mm 6mm 8mm;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
