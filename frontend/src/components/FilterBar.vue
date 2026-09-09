@@ -37,23 +37,23 @@
           </div>
         </div>
 
-        <!-- Item FG -->
-        <div class="flex flex-col col-span-2">
+        <!-- Hourly Step (Visible on Report mode) -->
+        <div class="flex flex-col col-span-2 md:col-span-1">
           <label class="class_Lable">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-3.5 h-3.5 inline-block text-gray-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-              />
-            </svg>
+            <Icon_time />
+            ช่วงเวลา (Step)
+          </label>
+          <select v-model.number="filters.hour_step" class="class_Input">
+            <option :value="1">+1 ชั่วโมง</option>
+            <option :value="2">+2 ชั่วโมง</option>
+            <option :value="4">+4 ชั่วโมง</option>
+          </select>
+        </div>
+
+        <!-- Item FG -->
+        <div class="flex flex-col col-span-2 col-start-1">
+          <label class="class_Lable">
+            <Icon_finishGood />
             Item FG <span class="text-rose-500 font-bold">*</span>
           </label>
           <input
@@ -69,19 +69,6 @@
             class="class_Input font-mono uppercase"
             required
           />
-        </div>
-
-        <!-- Hourly Step (Visible on Report mode) -->
-        <div class="flex flex-col col-span-2 md:col-span-1">
-          <label class="class_Lable">
-            <Icon_time />
-            ช่วงเวลา (Step)
-          </label>
-          <select v-model.number="filters.hour_step" class="class_Input">
-            <option :value="1">+1 ชั่วโมง</option>
-            <option :value="2">+2 ชั่วโมง</option>
-            <option :value="4">+4 ชั่วโมง</option>
-          </select>
         </div>
 
         <!-- Date Range -->
@@ -173,6 +160,7 @@ import Icon_time from './icons/Icon_time.vue'
 import Icon_print from './icons/Icon_print.vue'
 import Icon_search from './icons/Icon_search.vue'
 import Icon_machine from './icons/Icon_machine.vue'
+import Icon_finishGood from './icons/Icon_finishGood.vue'
 import { timeAgo } from '@/utils/timeAgo'
 
 const props = defineProps({
