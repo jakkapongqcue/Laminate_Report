@@ -6,8 +6,25 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
+      redirect: '/laminate',
+    },
+    {
+      path: '/laminate',
+      name: 'laminate',
       component: HomeView,
+      props: { processType: 'Laminate' },
+    },
+    {
+      path: '/printing',
+      name: 'printing',
+      component: HomeView,
+      props: { processType: 'Printing' },
+    },
+    {
+      path: '/blownfilm',
+      name: 'blownfilm',
+      component: HomeView,
+      props: { processType: 'BlownFilm' },
     },
     {
       path: '/setting',

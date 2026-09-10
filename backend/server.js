@@ -1,14 +1,21 @@
 const express = require("express");
 const cors = require("cors");
 const config = require("./config");
-const { getPool, getAxPool, sql } = require("./db");
+const { getPool, getAxPool, getAxLastError, sql } = require("./db");
 const {
   MACHINES,
   parseSqlTimestamp,
   formatDateTimeShort,
   formatDateTimeFull,
-  AX_SPEC_COLUMNS,
+  AX_PS_COLUMNS,
 } = require("./common");
+const {
+  PROCESS_LIST,
+  ALL_MACHINES,
+  getMachinesByProcess,
+  findMachine,
+  getProcess,
+} = require("./processes");
 const { processSqlViewData } = require("./reportProcessor");
 const { processSqlChartData } = require("./chartProcessor");
 
@@ -33,19 +40,34 @@ const router = express.Router();
 router.get("/", (req, res) => {
   res.json({
     status: "online",
-    service: "Laminate Checking Report API",
-    version: "1.0.0",
+    service: "Production Checking Report API",
+    version: "2.0.0",
   });
 });
 
-// GET /api/machines -> list of machines
+// GET /api/processes -> list of available process types
+router.get("/api/processes", (req, res) => {
+  res.json(PROCESS_LIST);
+});
+
+// GET /api/machines -> list of machines (filtered by processType if provided)
 router.get("/api/machines", (req, res) => {
-  res.json(MACHINES.map((m) => ({ id: m.id, name: m.name })));
+  const { processType } = req.query;
+  const machines = processType ? getMachinesByProcess(processType) : ALL_MACHINES;
+  res.json(
+    machines.map((m) => ({
+      id: m.id,
+      name: m.name,
+      brand: m.brand,
+      isMES: m.isMES,
+      processType: m.processType,
+    }))
+  );
 });
 
 // GET /api/checkItemFG -> Check if Item FG and Machine ID exist in AX DB
 router.get("/api/checkItemFG", async (req, res) => {
-  const { machine, item_fg, use_test_api } = req.query;
+  const { machine, item_fg, processType } = req.query;
 
   if (!item_fg || !item_fg.trim()) {
     return res.status(400).json({
@@ -54,30 +76,22 @@ router.get("/api/checkItemFG", async (req, res) => {
     });
   }
 
-  const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
-  const axMachineId = machineConfig.axMachineId;
+  const machineConfig =
+    findMachine(machine) ||
+    (processType ? getMachinesByProcess(processType)[0] : ALL_MACHINES[0]);
+  const axMachineId = machineConfig ? machineConfig.axMachineId : machine;
   const cleanItemFg = String(item_fg).trim();
-
-  // Test mode fallback
-  if (use_test_api === "true" || use_test_api === true) {
-    const isMockValid = cleanItemFg.toUpperCase().startsWith("FG");
-    return res.json({
-      exists: isMockValid,
-      item_fg: cleanItemFg,
-      machine: axMachineId,
-      message: isMockValid
-        ? `พบข้อมูล Item FG: ${cleanItemFg} สำหรับเครื่องจักร ${axMachineId} ในระบบ AX (โหมดจำลอง)`
-        : `ไม่พบข้อมูล Item FG: ${cleanItemFg} สำหรับเครื่องจักร ${axMachineId} ในระบบ AX (โหมดจำลอง)`,
-    });
-  }
 
   try {
     const axPool = await getAxPool();
     if (!axPool) {
-      return res.status(503).json({
+      const dbErr = getAxLastError() || "ไม่สามารถติดต่อฐานข้อมูล AX ได้";
+      return res.json({
         exists: false,
-        message:
-          "ไม่สามารถเชื่อมต่อฐานข้อมูล AXDB ได้ในขณะนี้ กรุณาตรวจสอบ AX_DB_PASSWORD ในไฟล์ .env",
+        dbError: true,
+        item_fg: cleanItemFg,
+        machine: axMachineId,
+        message: `ไม่สามารถเชื่อมต่อ AX (${config.AX_DB_SERVER}): ${dbErr}`,
       });
     }
 
@@ -107,8 +121,11 @@ router.get("/api/checkItemFG", async (req, res) => {
     });
   } catch (err) {
     console.error(`Check Item FG Error: ${err.message}`);
-    return res.status(500).json({
+    return res.json({
       exists: false,
+      dbError: true,
+      item_fg: cleanItemFg,
+      machine: axMachineId,
       message: `เกิดข้อผิดพลาดในการตรวจสอบฐานข้อมูล AX: ${err.message}`,
     });
   }
@@ -182,7 +199,7 @@ router.get("/api/report/laminate", async (req, res) => {
 
           const axQuery = `
             SELECT TOP 1
-              ${AX_SPEC_COLUMNS.join(",\n              ")}
+              ${AX_PS_COLUMNS.join(",\n              ")}
             FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] ps
             WHERE ps.ITEMFG = @item_fg AND ps.MACHINE = @ax_machine
             ORDER BY ps.RECID DESC
@@ -220,96 +237,6 @@ router.get("/api/report/laminate", async (req, res) => {
     res.status(500).json({
       detail: `เกิดข้อผิดพลาดในการดึงข้อมูลจาก SQL Server: ${err.message}`,
     });
-  }
-});
-
-// GET /api/report/laminate/test -> Query synthetic mock data for Report Sheet
-router.get("/api/report/laminate/test", (req, res) => {
-  const {
-    machine = "1LB09_Bobst",
-    date_from,
-    date_to,
-    time_from = "08:00",
-    time_to = "17:00",
-    hour_step = 1,
-    item_fg = null,
-  } = req.query;
-
-  if (!date_from || !date_to) {
-    return res.status(400).json({
-      detail: "date_from and date_to are required parameters.",
-    });
-  }
-
-  try {
-    const [yearFrom, monthFrom, dayFrom] = date_from.split("-").map(Number);
-    const [hourFrom, minFrom] = time_from.split(":").map(Number);
-    const startDt = new Date(yearFrom, monthFrom - 1, dayFrom, hourFrom, minFrom, 0, 0);
-
-    const [yearTo, monthTo, dayTo] = date_to.split("-").map(Number);
-    const [hourTo, minTo] = time_to.split(":").map(Number);
-    let endDt = new Date(yearTo, monthTo - 1, dayTo, hourTo, minTo, 0, 0);
-
-    if (isNaN(startDt.getTime()) || isNaN(endDt.getTime())) {
-      return res.status(400).json({
-        detail: "Invalid date/time format. Use YYYY-MM-DD and HH:MM",
-      });
-    }
-
-    if (endDt <= startDt) {
-      endDt.setDate(endDt.getDate() + 1);
-    }
-
-    const timestamps = [];
-    let curr = new Date(startDt.getTime());
-    const parsedHourStep = parseInt(hour_step);
-    while (curr <= endDt) {
-      timestamps.push(new Date(curr.getTime()));
-      curr.setHours(curr.getHours() + parsedHourStep);
-    }
-
-    const sqlRows = [];
-    for (let i = 0; i < timestamps.length; i++) {
-      const tsStr = formatDateTimeFull(timestamps[i]);
-      const base = 100 + i * 3;
-      const row = [tsStr];
-      for (let j = 0; j < 12; j++) {
-        row.push(base + j);
-      }
-      sqlRows.push(row);
-    }
-
-    const setPointMap = {};
-    if (item_fg) {
-      setPointMap["LINE_SPEED"] = "250";
-      setPointMap["TEMP_ZONE_1"] = "70";
-      setPointMap["TEMP_ZONE_2"] = "80";
-      setPointMap["TEMP_ZONE_3"] = "85";
-      setPointMap["TEMP_ZONE_4"] = "85";
-      setPointMap["TENSION_UNWIND_1"] = "55";
-      setPointMap["TENSION_UNWIND_2"] = "45";
-      setPointMap["TENSION_REWIND"] = "60";
-      setPointMap["TENSION_TAPER_REWIND"] = "65";
-      setPointMap["PRESSURE_NIP_OPERATOR"] = "4.0";
-      setPointMap["PRESSURE_NIP_MOTOR"] = "4.0";
-      setPointMap["CORONA_POWER_UW1"] = "25";
-    }
-
-    const response = processSqlViewData({
-      sqlRows,
-      machine,
-      dateFromStr: date_from,
-      dateToStr: date_to,
-      timeFromStr: time_from,
-      timeToStr: time_to,
-      hourStep: parsedHourStep,
-      setPointMap,
-      itemFg: item_fg,
-    });
-
-    res.json(response);
-  } catch (err) {
-    res.status(500).json({ detail: err.message });
   }
 });
 
@@ -386,91 +313,6 @@ router.get("/api/chart/laminate", async (req, res) => {
     res.status(500).json({
       detail: `เกิดข้อผิดพลาดในการดึงข้อมูลกราฟจาก SQL Server: ${err.message}`,
     });
-  }
-});
-
-// GET /api/chart/laminate/test -> Query synthetic mock data for Line Chart
-router.get("/api/chart/laminate/test", (req, res) => {
-  const {
-    machine = "1LB09_Bobst",
-    date_from,
-    date_to,
-    time_from = "08:00",
-    time_to = "17:00",
-    step_minutes = 15,
-  } = req.query;
-
-  if (!date_from || !date_to) {
-    return res.status(400).json({
-      detail: "date_from and date_to are required parameters.",
-    });
-  }
-
-  try {
-    const [yearFrom, monthFrom, dayFrom] = date_from.split("-").map(Number);
-    const [hourFrom, minFrom] = time_from.split(":").map(Number);
-    const startDt = new Date(yearFrom, monthFrom - 1, dayFrom, hourFrom, minFrom, 0, 0);
-
-    const [yearTo, monthTo, dayTo] = date_to.split("-").map(Number);
-    const [hourTo, minTo] = time_to.split(":").map(Number);
-    let endDt = new Date(yearTo, monthTo - 1, dayTo, hourTo, minTo, 0, 0);
-
-    if (isNaN(startDt.getTime()) || isNaN(endDt.getTime())) {
-      return res.status(400).json({
-        detail: "Invalid date/time format. Use YYYY-MM-DD and HH:MM",
-      });
-    }
-
-    if (endDt <= startDt) {
-      endDt.setDate(endDt.getDate() + 1);
-    }
-
-    const stepMin = parseInt(step_minutes) || 15;
-    const timestamps = [];
-    let curr = new Date(startDt.getTime());
-    while (curr <= endDt) {
-      timestamps.push(new Date(curr.getTime()));
-      curr.setMinutes(curr.getMinutes() + stepMin);
-    }
-
-    const sqlRows = [];
-    for (let i = 0; i < timestamps.length; i++) {
-      const tsStr = formatDateTimeFull(timestamps[i]);
-      // Generate realistic mock data patterns with some slight wave/variance
-      const sinWave = Math.sin(i / 3);
-      const cosWave = Math.cos(i / 2);
-
-      const row = {
-        SERVER_TIMESTAMP: tsStr,
-        LINE_SPEED: Math.round((120 + sinWave * 15 + (i % 5)) * 10) / 10,
-        TEMP_ZONE_1: Math.round((80 + cosWave * 3 + (i % 3) * 0.5) * 10) / 10,
-        TEMP_ZONE_2: Math.round((85 + sinWave * 4 + (i % 2) * 0.5) * 10) / 10,
-        TENSION_UNWIND_1: Math.round((25 + sinWave * 2) * 10) / 10,
-        TENSION_UNWIND_2: Math.round((28 + cosWave * 2) * 10) / 10,
-        TENSION_REWIND: Math.round((30 + sinWave * 3) * 10) / 10,
-        TENSION_TAPER_REWIND: Math.round((15 + cosWave * 1.5) * 10) / 10,
-        TENSION_INLET_COATING: Math.round((18 + sinWave * 2) * 10) / 10,
-        PRESSURE_NIP_OPERATOR: Math.round((3.5 + cosWave * 0.2) * 10) / 10,
-        PRESSURE_NIP_MOTOR: Math.round((3.6 + sinWave * 0.2) * 10) / 10,
-        CORONA_POWER_UW1: Math.round(1500 + sinWave * 100),
-        CORONA_POWER_UW2: Math.round(1600 + cosWave * 120),
-      };
-      sqlRows.push(row);
-    }
-
-    const response = processSqlChartData({
-      sqlRows,
-      machine,
-      dateFromStr: date_from,
-      dateToStr: date_to,
-      timeFromStr: time_from,
-      timeToStr: time_to,
-      stepMinutes: null,
-    });
-
-    res.json(response);
-  } catch (err) {
-    res.status(500).json({ detail: err.message });
   }
 });
 

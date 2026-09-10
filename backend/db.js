@@ -58,6 +58,8 @@ async function getPool() {
   }
 }
 
+let lastAxError = null;
+
 async function getAxPool() {
   if (axPool && axPool.connected) {
     return axPool;
@@ -72,17 +74,24 @@ async function getAxPool() {
     }
     axPool = new sql.ConnectionPool(axDbConfig);
     await axPool.connect();
+    lastAxError = null;
     console.log(`Successfully connected to AX SQL Server at ${config.AX_DB_SERVER}:${config.AX_DB_PORT}`);
     return axPool;
   } catch (err) {
     console.error(`AX Database connection failed: ${err.message}`);
+    lastAxError = err.message;
     axPool = null;
     return null;
   }
 }
 
+function getAxLastError() {
+  return lastAxError;
+}
+
 module.exports = {
   getPool,
   getAxPool,
+  getAxLastError,
   sql
 };

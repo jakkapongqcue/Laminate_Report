@@ -23,15 +23,17 @@ backend/
 
 Router mount อยู่ที่ทั้ง `/` (local dev) และ `/LaminateReport-Back` (IIS path)
 
-| Method | Path                        | คำอธิบาย                                                  | ต้องการ DB |
-| ------ | --------------------------- | --------------------------------------------------------- | ---------- |
-| GET    | `/`                         | Health Check — ตรวจสอบว่าระบบออนไลน์                      | ❌         |
-| GET    | `/api/machines`             | รายการเครื่องจักรทั้งหมด (id, name)                       | ❌         |
-| GET    | `/api/report/laminate`      | ดึงข้อมูลรายงานจากฐานข้อมูลจริง `KEP_LOG`                 | ✅         |
-| GET    | `/api/report/laminate/test` | ดึงข้อมูลจำลอง (Synthetic Data) สำหรับพัฒนา/ทดสอบ         | ❌         |
-| GET    | `/api/machineStatus`        | ตรวจสอบสถานะเครื่องจักร (online/offline จาก `LINE_SPEED`) | ✅         |
+| Method | Path                   | คำอธิบาย                                                  | ต้องการ DB |
+| ------ | ---------------------- | --------------------------------------------------------- | ---------- |
+| GET    | `/`                    | Health Check — ตรวจสอบว่าระบบออนไลน์                      | ❌         |
+| GET    | `/api/processes`       | รายการประเภทกระบวนการ (Laminate, Printing, BlownFilm)     | ❌         |
+| GET    | `/api/machines`        | รายการเครื่องจักรทั้งหมด หรือกรองตาม `?processType=`      | ❌         |
+| GET    | `/api/checkItemFG`     | ตรวจสอบรหัส Item FG และเครื่องจักรในฐานข้อมูล AX          | ✅         |
+| GET    | `/api/report/laminate` | ดึงข้อมูลรายงานจากฐานข้อมูลจริง `KEP_LOG`                 | ✅         |
+| GET    | `/api/chart/laminate`  | ดึงข้อมูลกราฟ Time Series จากฐานข้อมูลจริง `KEP_LOG`      | ✅         |
+| GET    | `/api/machineStatus`   | ตรวจสอบสถานะเครื่องจักร (online/offline จาก `LINE_SPEED`) | ✅         |
 
-### Query Parameters — `/api/report/laminate` และ `/api/report/laminate/test`
+### Query Parameters — `/api/report/laminate`
 
 | Parameter   | ค่าเริ่มต้น    | คำอธิบาย                                        |
 | ----------- | -------------- | ----------------------------------------------- |

@@ -30,77 +30,13 @@ const STANDARD_PARAMETERS = [
   { key: "CORONA_POWER_UW2", param_id: 29, name: "Corona Specific Power (UW2)", category: "Corona", set_point: "", unit: "Watt", type: "numeric" },
 ];
 
-const MACHINES = [
-  {
-    id: "1LB09",
-    name: "1LB09 Bobst",
-    axMachineId: "1LB-09",
-    tableName: "[KEP_LOG].[dbo].[View_1LB09_Bobst]",
-    timestampColumn: "[SERVER TIMESTAMP]",
-    columns: [
-      "[SERVER TIMESTAMP] AS SERVER_TIMESTAMP",
-      "[Machine : Speed] AS LINE_SPEED",
-      "[Tunnel : Zone 1 : Temperature] AS TEMP_ZONE_1",
-      "[Tunnel : Zone 2 : Temperature] AS TEMP_ZONE_2",
-      "[Coating 1- Metering and blade roller- Water- Temperature] AS TEMP_COATING_FM_BR_WR",
-      "[Laminator : Hot Roll : Water Temperature] AS TEMP_LAMINATOR_HOT_ROLL",
-      "[Unwinder 1 : Tension] AS TENSION_UNWIND_1",
-      "[Unwinder 2 : Tension] AS TENSION_UNWIND_2",
-      "[Rewinder : Tension] AS TENSION_REWIND",
-      "[Rewinder : Tension Taper] AS TENSION_TAPER_REWIND",
-      "[Coating : Rotogravure Trolley : CoatingRoll : Nip : Operator : Pressure] AS PRESSURE_COATING_GR_OP",
-      "[Coating : Rotogravure Trolley : CoatingRoll : Nip : Motor : Pressure] AS PRESSURE_COATING_GR_MO",
-      "[Coating : SI Transfer Roll : Operator : Pressure] AS PRESSURE_COATING_FR_OP",
-      "[Coating : SI Transfer Roll : Motor : Pressure] AS PRESSURE_COATING_FR_MO",
-      "[Coating : Inlet : Tension] AS TENSION_INLET_COATING",
-      "[Coating : Outlet : Tension] AS TENSION_OUTLET_COATING",
-      "[Unwinder 2 : Infeed ( D.g ) - Tension] AS TENSION_UNWIND2_INFEED",
-      "[Laminator : Nip Roll : Operator : Pressure] AS PRESSURE_NIP_OPERATOR",
-      "[Laminator : Nip Roll : Motor : Pressure] AS PRESSURE_NIP_MOTOR",
-      "[Coating : Rotogravure Trolley : Smoothing Roll Speed] AS SMOOTHING_ROLL",
-      "[Unwinder 1 : Treatment : Specific Power] AS CORONA_POWER_UW1",
-      "[Unwinder 2 : Corona : Specific Power] AS CORONA_POWER_UW2",
-    ],
-    unitOverrides: {
-      TENSION_UNWIND_1: "N",
-      TENSION_UNWIND_2: "N",
-      TENSION_REWIND: "N",
-      PRESSURE_NIP_OPERATOR: "Bar",
-      PRESSURE_NIP_MOTOR: "Bar",
-      PRESSURE_COATING_GR_OP: "Bar",
-      PRESSURE_COATING_GR_MO: "Bar",
-      PRESSURE_COATING_FR_OP: "Bar",
-      PRESSURE_COATING_FR_MO: "Bar",
-    },
-  },
-  {
-    id: "2LB06",
-    name: "2LB06 Fuji Kikai",
-    axMachineId: "2LB-06",
-    tableName: "[KEP_LOG].[dbo].[View_2LB06_FujiKikai]",
-    timestampColumn: "[SERVER TIMESTAMP]",
-    columns: [
-      "[SERVER TIMESTAMP] AS SERVER_TIMESTAMP",
-      "[Speed.Processing Speed] AS LINE_SPEED",
-      "[Temp.No.1 Zone] AS TEMP_ZONE_1",
-      "[Temp.No.2 Zone] AS TEMP_ZONE_2",
-      "[Temp.No.3 Zone] AS TEMP_ZONE_3",
-      "[Ten.Dryer] AS TEMP_ZONE_4",
-      "[Ten.No.1 Unwinder] AS TENSION_UNWIND_1",
-      "[Ten.No.2 Unwinder] AS TENSION_UNWIND_2",
-      "[Ten.Rewinder] AS TENSION_REWIND",
-      "[Rewinder Taper No.] AS TENSION_TAPER_REWIND",
-    ],
-    unitOverrides: {
-      TENSION_UNWIND_1: "N",
-      TENSION_UNWIND_2: "N",
-    },
-  },
-];
+const { ALL_MACHINES } = require("./processes");
+
+const MACHINES = ALL_MACHINES;
 
 // Mapping columns from [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] to STANDARD_PARAMETERS keys
 // You can adjust/modify column aliases below:
-const AX_SPEC_COLUMNS = [
+const AX_PS_COLUMNS = [
   "[SPEED1] AS LINE_SPEED",
   "[TEMPZONE11] AS TEMP_ZONE_1",
   "[TEMPZONE21] AS TEMP_ZONE_2",
@@ -129,7 +65,7 @@ const AX_SPEC_COLUMNS = [
   "[CORONATREAT21] AS CORONA_OUTSIDE",
   "[CORONA] AS CORONA_POWER_UW1",
   "[CORONA2] AS CORONA_POWER_UW2",
-];
+];  
 
 const MATCH_TOLERANCE_MINUTES = 30;
 
@@ -237,5 +173,5 @@ module.exports = {
   parseNumericValue,
   extractTimestampFromRow,
   extractValueFromRow,
-  AX_SPEC_COLUMNS,
+  AX_PS_COLUMNS,
 };

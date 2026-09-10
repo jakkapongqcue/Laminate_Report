@@ -1,0 +1,56 @@
+const PRINTING_MACHINES = [
+  {
+    id: "1PG06",
+    name: "1PG-06 Caida",
+    brand: "Caida",
+    isMES: true,
+    processType: "Printing",
+    axMachineId: "1PG-06",
+    tableName: "[KEP_LOG].[dbo].[View_1PG06_Caida]",
+    columns: [],
+  },
+  {
+    id: "1PG07",
+    name: "1PG-07 Caida",
+    brand: "Caida",
+    isMES: true,
+    processType: "Printing",
+    axMachineId: "1PG-07",
+    tableName: "[KEP_LOG].[dbo].[View_1PG07_Caida]",
+    columns: [],
+  },
+  {
+    id: "2PG05",
+    name: "2PG-05 Beiren",
+    brand: "Beiren",
+    isMES: false,
+    processType: "Printing",
+    axMachineId: "2PG-05",
+    tableName: null,
+    columns: [],
+  },
+  {
+    id: "PT03",
+    name: "PT-03 Xinda",
+    brand: "Xinda",
+    isMES: false,
+    processType: "Printing",
+    axMachineId: "PT-03",
+    tableName: null,
+    columns: [],
+  },
+  {
+    id: "PT04",
+    name: "PT-04 Beiren",
+    brand: "Beiren",
+    isMES: true,
+    processType: "Printing",
+    axMachineId: "PT-04",
+    tableName: "[KEP_LOG].[dbo].[View_PT04_Beiren]",
+    columns: [],
+  },
+];
+
+module.exports = {
+  PRINTING_MACHINES,
+};

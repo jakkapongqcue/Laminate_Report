@@ -62,7 +62,7 @@
       "
     >
       <div v-for="page in reportData.pages" :key="page.page_number" class="report-wrapper">
-        <LaminateReportSheet
+        <Laminate_ReportSheet
           v-bind:page-data="page"
           :machine="reportData.machine"
           :item-fg="reportData.item_fg || filters.item_fg"
@@ -81,7 +81,7 @@
       "
       class="no-print"
     >
-      <LaminateChart
+      <Laminate_Chart
         :chart-data="chartData"
         :machine="chartData.machine"
         :date-from="chartData.date_from"
@@ -114,10 +114,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import FilterBar from '../components/FilterBar.vue'
-import LaminateReportSheet from '../components/LaminateReportSheet.vue'
-import LaminateChart from '../components/LaminateChart.vue'
+import Laminate_ReportSheet from '../components/Laminate_ReportSheet.vue'
+import Laminate_Chart from '../components/Laminate_Chart.vue'
 import AppHeadTitle from '../components/AppHeadTitle.vue'
 import Icon_circleLoad from '../components/icons/Icon_circleLoad.vue'
 import Icon_report from '../components/icons/Icon_report.vue'
@@ -125,6 +126,21 @@ import Icon_chart from '../components/icons/Icon_chart.vue'
 import Icon_error from '../components/icons/Icon_error.vue'
 import SwitchViewMode from '../components/SwitchViewMode.vue'
 import Slot_MainContainer from '../components/Slot_MainContainer.vue'
+
+const route = useRoute()
+const props = defineProps({
+  processType: {
+    type: String,
+    default: 'Laminate',
+  },
+})
+
+const activeProcessType = computed(() => {
+  if (props.processType) return props.processType
+  if (route.path === '/printing') return 'Printing'
+  if (route.path === '/blownfilm') return 'BlownFilm'
+  return 'Laminate'
+})
 
 const getTodayStr = () => {
   const d = new Date()
@@ -144,15 +160,7 @@ const filters = reactive({
   time_from: '08:00',
   time_to: '17:00',
   hour_step: 1,
-  use_test_api: false,
 })
-
-const loadUseTestApiSetting = () => {
-  const savedValue = localStorage.getItem('laminate-report-use-test-api')
-  if (savedValue !== null) {
-    filters.use_test_api = savedValue === 'true'
-  }
-}
 
 const machines = ref([])
 const loadFristTime = ref(true)
@@ -228,7 +236,7 @@ const checkItemFGwithMachine = async () => {
     const queryParams = new URLSearchParams({
       machine: filters.machine,
       item_fg: cleanItemFg,
-      use_test_api: filters.use_test_api ? 'true' : 'false',
+      processType: activeProcessType.value,
     })
 
     const res = await fetch(`${BACKEND_API_BASE_URL}/api/checkItemFG?${queryParams.toString()}`)
@@ -266,13 +274,20 @@ const checkItemFGwithMachine = async () => {
   }
 }
 
-const fetchMachines = async () => {
+const fetchMachines = async (procType = activeProcessType.value) => {
   try {
-    const res = await fetch(BACKEND_API_BASE_URL + '/api/machines')
+    const query = procType ? `?processType=${encodeURIComponent(procType)}` : ''
+    const res = await fetch(`${BACKEND_API_BASE_URL}/api/machines${query}`)
     if (res.ok) {
       const data = await res.json()
       if (data && data.length > 0) {
         machines.value = data
+        // Select first available machine with MES if current selection is not valid or has no MES
+        const currentMatch = data.find((m) => m.id === filters.machine)
+        if (!currentMatch || currentMatch.isMES === false) {
+          const firstMes = data.find((m) => m.isMES !== false)
+          filters.machine = firstMes ? firstMes.id : data[0].id
+        }
       }
     }
   } catch (err) {
@@ -280,7 +295,29 @@ const fetchMachines = async () => {
   }
 }
 
+watch(
+  () => activeProcessType.value,
+  async (newType) => {
+    reportData.value = null
+    chartData.value = null
+    loadFristTime.value = true
+    errorMessage.value = ''
+    clearItemFgStatus()
+    await fetchMachines(newType)
+    fetchMachineStatus()
+  }
+)
+
+const currentMachineObj = computed(() => {
+  return machines.value.find((m) => m.id === filters.machine) || null
+})
+
 const fetchReport = async () => {
+  if (activeProcessType.value !== 'Laminate') {
+    errorMessage.value = `ระบบรายงานสำหรับกระบวนการ ${activeProcessType.value} (${currentMachineObj.value?.name || filters.machine}) อยู่ระหว่างการพัฒนาระบบ`
+    return
+  }
+
   if (!filters.item_fg) {
     errorMessage.value = 'กรุณาระบุ Item FG ก่อนดึงข้อมูลรายงาน'
     return
@@ -301,7 +338,7 @@ const fetchReport = async () => {
       item_fg: filters.item_fg,
     })
 
-    const path = filters.use_test_api ? '/api/report/laminate/test' : '/api/report/laminate'
+    const path = '/api/report/laminate'
     const res = await fetch(`${BACKEND_API_BASE_URL}${path}?${queryParams.toString()}`)
 
     if (!res.ok) {
@@ -319,6 +356,11 @@ const fetchReport = async () => {
 }
 
 const fetchChart = async () => {
+  if (activeProcessType.value !== 'Laminate') {
+    errorMessage.value = `ระบบกราฟสำหรับกระบวนการ ${activeProcessType.value} (${currentMachineObj.value?.name || filters.machine}) อยู่ระหว่างการพัฒนาระบบ`
+    return
+  }
+
   isLoading.value = true
   errorMessage.value = ''
   loadFristTime.value = false
@@ -332,7 +374,7 @@ const fetchChart = async () => {
       time_to: filters.time_to,
     })
 
-    const path = filters.use_test_api ? '/api/chart/laminate/test' : '/api/chart/laminate'
+    const path = '/api/chart/laminate'
     const res = await fetch(`${BACKEND_API_BASE_URL}${path}?${queryParams.toString()}`)
 
     if (!res.ok) {
@@ -409,7 +451,6 @@ const fetchMachineStatus = async () => {
 }
 
 onMounted(() => {
-  loadUseTestApiSetting()
   fetchMachines()
   fetchMachineStatus()
 

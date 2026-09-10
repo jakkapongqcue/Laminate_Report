@@ -16,11 +16,18 @@
             @click.ctrl.alt="$emit('refreshMachine')"
             @change="handleMachineChange()"
           >
-            <option v-for="m in machines" :key="m.id" :value="m.id">
-              {{ m.name }}
+            <option
+              v-for="m in machines"
+              :key="m.id"
+              :value="m.id"
+              :disabled="m.isMES === false"
+              :class="{ 'text-gray-400 bg-gray-50': m.isMES === false }"
+            >
+              {{ m.name }}{{ m.isMES === false ? ' &nbsp;(No MES)' : '' }}
             </option>
           </select>
           <div
+            v-if="false"
             :title="machineStatus_time"
             @mouseover="machineStatus_refreshTime()"
             @click="focusMachineSelect()"
@@ -75,7 +82,7 @@
                   @click="focusInputItemFG()"
                 >
                   <span
-                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border select-none transition-all shadow-sm"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border select-none transition-all"
                     :class="itemFgPillClass"
                   >
                     <!-- Checking Pulse Dot -->

@@ -124,11 +124,6 @@ function getCellClass(row, rawVal) {
     return ''
   }
 
-  // When machine is running (> 0), highlight if out of bounds (< min or > max)
-  // if (numVal <= 0) {
-  //   return ''
-  // }
-
   const range = parseRange(row.set_point)
   if (!range) {
     return ''

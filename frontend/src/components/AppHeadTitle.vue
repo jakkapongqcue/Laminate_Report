@@ -1,23 +1,213 @@
 <template>
   <div
-    class="flex items-center justify-between p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-sm no-print"
+    class="flex flex-wrap items-center justify-between gap-4 p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-sm no-print"
   >
     <div class="flex items-center gap-3">
       <div
         class="flex flex-none w-10 h-10 font-bold text-white rounded-lg shadow bg-sky-100 icon-img"
       ></div>
       <div>
-        <h1 class="text-lg font-bold text-gray-900 leading-5 sm:leading-normal">
-          Laminate Checking Report System
-        </h1>
+        <div class="flex items-center gap-2">
+          <h1 class="text-lg font-bold text-gray-900 leading-5 sm:leading-normal">
+            {{ currentProcess.title }}
+          </h1>
+        </div>
         <p class="text-xs text-gray-500 hidden sm:inline-block">
-          ระบบดึงข้อมูลจาก SQL Server และออกรายงานตรวจบันทึกเครื่องเคลือบ
+          {{ currentProcess.subtitle }}
         </p>
       </div>
     </div>
-    <router-link to="/setting" class="text-white"> .</router-link>
+
+    <!-- Right Controls: Process Type Dropdown & Setting -->
+    <div class="flex items-center ml-auto">
+      <!-- Process Type Dropdown -->
+      <div class="relative" ref="dropdownRef">
+        <button
+          type="button"
+          @click="isDropdownOpen = !isDropdownOpen"
+          class="inline-flex items-center gap-2.5 px-3 py-2 text-xs sm:text-sm font-semibold text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 transition"
+        >
+          <!-- Active Process Icon -->
+          <div
+            class="flex items-center justify-center w-6 h-6 rounded text-white p-4"
+            :class="currentProcess.bgIconClass"
+          >
+            <div v-if="currentProcess.id === 'laminate'">
+              <Icon_process_laminate />
+            </div>
+            <div v-else-if="currentProcess.id === 'printing'">
+              <Icon_process_printing />
+            </div>
+            <div v-else>
+              <Icon_process_blowfilm />
+            </div>
+          </div>
+
+          <span class="text-gray-900 font-bold w-20">{{ currentProcess.name }}</span>
+          <!-- <span class="text-xs text-gray-500 hidden sm:inline">({{ currentProcess.nameTh }})</span> -->
+
+          <svg
+            class="w-4 h-4 text-gray-400 transition-transform duration-200"
+            :class="{ 'rotate-180': isDropdownOpen }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <transition
+          enter-active-class="transition duration-150 ease-out"
+          enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100"
+          leave-active-class="transition duration-100 ease-in"
+          leave-from-class="opacity-100 scale-100"
+          leave-to-class="opacity-0 scale-95"
+        >
+          <div
+            v-if="isDropdownOpen"
+            class="absolute right-0 z-50 w-64 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl py-1 text-sm overflow-hidden"
+          >
+            <div
+              class="px-3.5 py-2 text-[11px] font-bold text-gray-400 tracking-wider bg-gray-50 border-b border-gray-100"
+            >
+              เลือกกระบวนการ (Process Type)
+            </div>
+            <div class="p-1 space-y-0.5">
+              <button
+                v-for="proc in processes"
+                :key="proc.id"
+                type="button"
+                @click="switchProcess(proc)"
+                class="flex items-center justify-between w-full px-3 py-2 text-left rounded-lg transition"
+                :class="
+                  proc.route === route.path
+                    ? 'bg-sky-50 font-semibold text-sky-900'
+                    : 'text-gray-700 hover:bg-gray-100'
+                "
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="flex items-center justify-center w-8 h-8 rounded-lg text-white"
+                    :class="proc.bgIconClass"
+                  >
+                    <div v-if="proc.id === 'laminate'">
+                      <Icon_process_laminate />
+                    </div>
+                    <div v-else-if="proc.id === 'printing'">
+                      <Icon_process_printing />
+                    </div>
+                    <div v-else>
+                      <Icon_process_blowfilm />
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-sm leading-tight font-medium">{{ proc.name }}</div>
+                    <div class="text-xs text-gray-500">{{ proc.nameTh }}</div>
+                  </div>
+                </div>
+                <span v-if="proc.route === route.path" class="text-sky-600 font-bold text-sm"
+                  >✓
+                </span>
+              </button>
+            </div>
+          </div>
+        </transition>
+      </div>
+
+      <!-- <router-link
+        to="/setting"
+        class="text-gray-400 hover:text-gray-600 text-xs px-1 w-0.5"
+        title="การตั้งค่า"
+      >
+      </router-link> -->
+    </div>
   </div>
 </template>
+
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import Icon_process_blowfilm from '../components/icons/Icon_process_blowfilm.vue'
+import Icon_process_printing from '../components/icons/Icon_process_printing.vue'
+import Icon_process_laminate from '../components/icons/Icon_process_laminate.vue'
+
+const router = useRouter()
+const route = useRoute()
+
+const isDropdownOpen = ref(false)
+const dropdownRef = ref(null)
+
+const processes = [
+  {
+    id: 'printing',
+    processType: 'Printing',
+    name: 'Printing',
+    nameTh: 'เครื่องพิมพ์',
+    route: '/printing',
+    title: 'Printing Checking Report System',
+    subtitle: 'ระบบดึงข้อมูลจาก SQL Server และออกรายงานตรวจบันทึกเครื่องพิมพ์',
+    badgeClass: 'bg-purple-100 text-purple-800 border border-purple-200',
+    bgIconClass: 'bg-purple-600',
+  },
+  {
+    id: 'laminate',
+    processType: 'Laminate',
+    name: 'Laminate',
+    nameTh: 'เครื่องเคลือบ',
+    route: '/laminate',
+    title: 'Laminate Checking Report System',
+    subtitle: 'ระบบดึงข้อมูลจาก SQL Server และออกรายงานตรวจบันทึกเครื่องเคลือบ',
+    badgeClass: 'bg-sky-100 text-sky-800 border border-sky-200',
+    bgIconClass: 'bg-sky-600',
+  },
+
+  {
+    id: 'blownfilm',
+    processType: 'BlownFilm',
+    name: 'BlownFilm',
+    nameTh: 'เครื่องเป่าฟิล์ม',
+    route: '/blownfilm',
+    title: 'Blown Film Checking Report System',
+    subtitle: 'ระบบดึงข้อมูลจาก SQL Server และออกรายงานตรวจบันทึกเครื่องเป่าฟิล์ม',
+    badgeClass: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+    bgIconClass: 'bg-emerald-600',
+  },
+]
+
+const currentProcess = computed(() => {
+  const found = processes.find((p) => p.route === route.path)
+  return found || processes[0]
+})
+
+const switchProcess = (proc) => {
+  isDropdownOpen.value = false
+  if (route.path !== proc.route) {
+    router.push(proc.route)
+  }
+}
+
+const handleClickOutside = (event) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+    isDropdownOpen.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', handleClickOutside)
+})
+</script>
 
 <style lang="css" scoped>
 .icon-img {
