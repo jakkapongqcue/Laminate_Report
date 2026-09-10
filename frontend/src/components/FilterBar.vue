@@ -128,17 +128,43 @@
                 </div>
               </transition>
             </div>
+          </div>
 
-            <!-- <button
-              type="button"
-              @click="$emit('checkItemFGwithMachine')"
-              :disabled="!filters.item_fg || isCheckingItemFg"
-              class="h-[38px] w-28 shrink-0 justify-center px-2.5 py-1 text-xs font-medium text-white bg-sky-600 rounded hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 shadow-sm"
-              title="ตรวจสอบข้อมูล Item FG ในระบบ AX"
+          <!-- ProdPool Standard Radio Selection (When multiple pools found for Item FG) -->
+          <div
+            v-if="prodPools && prodPools.length > 1"
+            class="flex flex-wrap items-center gap-x-4 gap-y-1.5 -mt-2 mb-3 px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs"
+          >
+            <span class="font-semibold text-gray-700">รอบการเคลือบ (Pass):</span>
+            <label
+              v-for="p in prodPools"
+              :key="p.poolId"
+              class="inline-flex items-center gap-1.5 cursor-pointer text-gray-700 hover:text-sky-700 font-medium"
             >
-              <Icon_checking :isChecking="isCheckingItemFg" />
-              <span>{{ isCheckingItemFg ? 'กำลังตรวจ...' : 'ตรวจสอบ' }}</span>
-            </button> -->
+              <input
+                type="radio"
+                name="prodPoolSelect"
+                :value="p.poolId"
+                v-model="filters.prod_pool"
+                class="w-3.5 h-3.5 text-sky-600 border-gray-300 focus:ring-sky-500 cursor-pointer"
+              />
+              <span>{{ p.name }}</span>
+              <span v-if="p.revId" class="text-[11px] self-end leading-3 text-gray-400 font-mono"
+                >(Rev.{{ p.revId }})</span
+              >
+            </label>
+          </div>
+
+          <!-- Single Pool Info Indicator -->
+          <div
+            v-else-if="prodPools && prodPools.length === 1"
+            class="flex items-center gap-1.5 -mt-2 mb-3 text-xs text-gray-500"
+          >
+            <span>รอบการผลิต:</span>
+            <span class="font-semibold text-gray-800">{{ prodPools[0].name }}</span>
+            <span v-if="prodPools[0].revId" class="text-[11px] self-end leading-3 text-gray-400 font-mono"
+              >(Rev.{{ prodPools[0].revId }})</span
+            >
           </div>
         </div>
 
@@ -291,6 +317,10 @@ const props = defineProps({
       text: '',
       message: '',
     }),
+  },
+  prodPools: {
+    type: Array,
+    default: () => [],
   },
 })
 

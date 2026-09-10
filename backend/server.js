@@ -100,21 +100,53 @@ router.get("/api/checkItemFG", async (req, res) => {
     axRequest.input("ax_machine", sql.VarChar, axMachineId);
 
     const axQuery = `
-      SELECT TOP 1 [ITEMFG], [MACHINE], [ITEMID]
-      FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] ps
-      WHERE ps.ITEMFG = @item_fg AND ps.MACHINE = @ax_machine
-      ORDER BY ps.RECID DESC
+      SELECT 
+        a.ITEMFG, 
+        a.MACHINE, 
+        a.ITEMID, 
+        bi.PRODPOOLID, 
+        a.REVID, 
+        a.RECID
+      FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] a
+      LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] bi ON bi.ITEMID = a.ITEMID
+      WHERE a.ITEMFG = @item_fg AND a.MACHINE = @ax_machine
+      ORDER BY a.REVID DESC, a.RECID DESC
     `;
 
     const axResult = await axRequest.query(axQuery);
-    const exists = axResult.recordset && axResult.recordset.length > 0;
-    const record = exists ? axResult.recordset[0] : null;
+    const records = axResult.recordset || [];
+    const exists = records.length > 0;
+
+    // Group unique PRODPOOLID with their latest REVID (first encountered is highest REVID)
+    const poolMap = new Map();
+    for (const row of records) {
+      const poolId = row.PRODPOOLID || "Default";
+      if (!poolMap.has(poolId)) {
+        const name =
+          poolId === "Laminate1"
+            ? "Laminate 1"
+            : poolId === "Laminate2"
+              ? "Laminate 2"
+              : poolId;
+        poolMap.set(poolId, {
+          poolId,
+          name,
+          revId: row.REVID,
+          itemId: row.ITEMID,
+        });
+      }
+    }
+    const prodPools = Array.from(poolMap.values());
+    const defaultPool = prodPools.length > 0 ? prodPools[0].poolId : null;
+    const firstRecord = exists ? records[0] : null;
 
     return res.json({
       exists,
       item_fg: cleanItemFg,
       machine: axMachineId,
-      itemId: record ? record.ITEMID : null,
+      itemId: firstRecord ? firstRecord.ITEMID : null,
+      prodPools,
+      defaultPool,
       message: exists
         ? `พบข้อมูล Item FG: ${cleanItemFg} สำหรับเครื่องจักร ${axMachineId} ในระบบ AX`
         : `ไม่พบข้อมูล Item FG: ${cleanItemFg} สำหรับเครื่องจักร ${axMachineId} ในระบบ AX`,
@@ -141,6 +173,7 @@ router.get("/api/report/laminate", async (req, res) => {
     time_to = "17:00",
     hour_step = 1,
     item_fg = null,
+    prod_pool = null,
   } = req.query;
 
   if (!date_from || !date_to) {
@@ -193,24 +226,35 @@ router.get("/api/report/laminate", async (req, res) => {
         const axPool = await getAxPool();
         if (axPool) {
           const axMachineId = machineConfig.axMachineId;
+          const cleanProdPool =
+            prod_pool && String(prod_pool).trim() ? String(prod_pool).trim() : null;
+
           const axRequest = axPool.request();
           axRequest.input("item_fg", sql.VarChar, String(item_fg).trim());
           axRequest.input("ax_machine", sql.VarChar, axMachineId);
+          if (cleanProdPool) {
+            axRequest.input("prod_pool", sql.VarChar, cleanProdPool);
+          }
 
           const axQuery = `
             SELECT TOP 1
               ${AX_PS_COLUMNS.join(",\n              ")}
-            FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] ps
-            WHERE ps.ITEMFG = @item_fg AND ps.MACHINE = @ax_machine
-            ORDER BY ps.RECID DESC
+            FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] a
+            LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] bi ON bi.ITEMID = a.ITEMID
+            WHERE a.ITEMFG = @item_fg 
+              AND a.MACHINE = @ax_machine
+              ${cleanProdPool ? "AND bi.PRODPOOLID = @prod_pool" : ""}
+            ORDER BY a.REVID DESC, a.RECID DESC
           `;
           const axResult = await axRequest.query(axQuery);
           if (axResult.recordset && axResult.recordset.length > 0) {
             setPointMap = axResult.recordset[0];
-            console.log(`Retrieved Set Point (PS) for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}`);
+            console.log(
+              `Retrieved Set Point (PS) for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}, POOL: ${cleanProdPool || "ANY"}`
+            );
           } else {
             console.log(
-              `No Set Point record found in AX for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}`,
+              `No Set Point record found in AX for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}, POOL: ${cleanProdPool || "ANY"}`
             );
           }
         }

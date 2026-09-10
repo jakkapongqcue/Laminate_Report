@@ -13,6 +13,7 @@
       :machineStatus="machineStatus"
       :currentViewMode="viewMode"
       :isHaveReportData="reportData && reportData.pages && reportData.pages.length > 0"
+      :prodPools="prodPools"
       @search="handleSearch"
       @print="printReport"
       @refreshMachine="fetchMachines"
@@ -155,6 +156,7 @@ const viewMode = ref('report') // 'report' | 'chart'
 const filters = reactive({
   machine: '1LB09',
   item_fg: '',
+  prod_pool: '',
   date_from: getTodayStr(),
   date_to: getTodayStr(),
   time_from: '08:00',
@@ -162,6 +164,7 @@ const filters = reactive({
   hour_step: 1,
 })
 
+const prodPools = ref([])
 const machines = ref([])
 const loadFristTime = ref(true)
 const isLoading = ref(false)
@@ -193,6 +196,8 @@ const clearItemFgStatus = () => {
   }
   itemFgStatus.show = false
   itemFgStatus.status = 'idle'
+  prodPools.value = []
+  filters.prod_pool = ''
 }
 
 const showItemFgStatus = ({ status = '', text = '', message = '', duration = 0 }) => {
@@ -248,12 +253,20 @@ const checkItemFGwithMachine = async () => {
     }
 
     if (data.exists) {
+      prodPools.value = data.prodPools || []
+      if (data.defaultPool) {
+        filters.prod_pool = data.defaultPool
+      } else if (data.prodPools && data.prodPools.length > 0) {
+        filters.prod_pool = data.prodPools[0].poolId
+      }
       showItemFgStatus({
         status: 'found',
         text: 'มีข้อมูล PS ในระบบ',
         message: data.message,
       })
     } else {
+      prodPools.value = []
+      filters.prod_pool = ''
       showItemFgStatus({
         status: 'not_found',
         text: 'ไม่พบข้อมูล PS ในระบบ',
@@ -337,6 +350,10 @@ const fetchReport = async () => {
       hour_step: filters.hour_step.toString(),
       item_fg: filters.item_fg,
     })
+
+    if (filters.prod_pool) {
+      queryParams.append('prod_pool', filters.prod_pool)
+    }
 
     const path = '/api/report/laminate'
     const res = await fetch(`${BACKEND_API_BASE_URL}${path}?${queryParams.toString()}`)
