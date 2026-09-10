@@ -42,7 +42,7 @@
     <div class="flex gap-2 text-[9px] mb-1 font-medium">
       <div class="flex items-center gap-1">
         <span class="font-bold">FG Code:</span>
-        <span class="px-1 py-0.5 rounded font-semibold">{{ }}</span>
+        <span class="px-1 py-0.5 rounded font-semibold">{{ itemFg || '-' }}</span>
       </div>
       <div class="flex items-center gap-1">
         <span class="font-bold">เครื่องเคลือบ:</span>
@@ -138,6 +138,10 @@ const props = defineProps({
   machine: {
     type: String,
     default: '1LB09_Bobst',
+  },
+  itemFg: {
+    type: String,
+    default: '',
   },
   dateFrom: {
     type: String,

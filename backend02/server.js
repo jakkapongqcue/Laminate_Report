@@ -43,6 +43,77 @@ router.get("/api/machines", (req, res) => {
   res.json(MACHINES.map((m) => ({ id: m.id, name: m.name })));
 });
 
+// GET /api/checkItemFG -> Check if Item FG and Machine ID exist in AX DB
+router.get("/api/checkItemFG", async (req, res) => {
+  const { machine, item_fg, use_test_api } = req.query;
+
+  if (!item_fg || !item_fg.trim()) {
+    return res.status(400).json({
+      exists: false,
+      message: "กรุณาระบุ Item FG ที่ต้องการตรวจสอบ",
+    });
+  }
+
+  const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
+  const axMachineId = machineConfig.axMachineId;
+  const cleanItemFg = String(item_fg).trim();
+
+  // Test mode fallback
+  if (use_test_api === "true" || use_test_api === true) {
+    const isMockValid = cleanItemFg.toUpperCase().startsWith("FG");
+    return res.json({
+      exists: isMockValid,
+      item_fg: cleanItemFg,
+      machine: axMachineId,
+      message: isMockValid
+        ? `พบข้อมูล Item FG: ${cleanItemFg} สำหรับเครื่องจักร ${axMachineId} ในระบบ AX (โหมดจำลอง)`
+        : `ไม่พบข้อมูล Item FG: ${cleanItemFg} สำหรับเครื่องจักร ${axMachineId} ในระบบ AX (โหมดจำลอง)`,
+    });
+  }
+
+  try {
+    const axPool = await getAxPool();
+    if (!axPool) {
+      return res.status(503).json({
+        exists: false,
+        message:
+          "ไม่สามารถเชื่อมต่อฐานข้อมูล AXDB ได้ในขณะนี้ กรุณาตรวจสอบ AX_DB_PASSWORD ในไฟล์ .env",
+      });
+    }
+
+    const axRequest = axPool.request();
+    axRequest.input("item_fg", sql.VarChar, cleanItemFg);
+    axRequest.input("ax_machine", sql.VarChar, axMachineId);
+
+    const axQuery = `
+      SELECT TOP 1 [ITEMFG], [MACHINE], [ITEMID]
+      FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] ps
+      WHERE ps.ITEMFG = @item_fg AND ps.MACHINE = @ax_machine
+      ORDER BY ps.RECID DESC
+    `;
+
+    const axResult = await axRequest.query(axQuery);
+    const exists = axResult.recordset && axResult.recordset.length > 0;
+    const record = exists ? axResult.recordset[0] : null;
+
+    return res.json({
+      exists,
+      item_fg: cleanItemFg,
+      machine: axMachineId,
+      itemId: record ? record.ITEMID : null,
+      message: exists
+        ? `พบข้อมูล Item FG: ${cleanItemFg} สำหรับเครื่องจักร ${axMachineId} ในระบบ AX`
+        : `ไม่พบข้อมูล Item FG: ${cleanItemFg} สำหรับเครื่องจักร ${axMachineId} ในระบบ AX`,
+    });
+  } catch (err) {
+    console.error(`Check Item FG Error: ${err.message}`);
+    return res.status(500).json({
+      exists: false,
+      message: `เกิดข้อผิดพลาดในการตรวจสอบฐานข้อมูล AX: ${err.message}`,
+    });
+  }
+});
+
 // GET /api/report/laminate -> Query SQL Server database for Report Sheet
 router.get("/api/report/laminate", async (req, res) => {
   const {
@@ -140,6 +211,7 @@ router.get("/api/report/laminate", async (req, res) => {
       timeToStr: time_to,
       hourStep: parseInt(hour_step),
       setPointMap,
+      itemFg: item_fg,
     });
 
     res.json(response);
@@ -232,6 +304,7 @@ router.get("/api/report/laminate/test", (req, res) => {
       timeToStr: time_to,
       hourStep: parsedHourStep,
       setPointMap,
+      itemFg: item_fg,
     });
 
     res.json(response);

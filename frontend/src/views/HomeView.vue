@@ -8,6 +8,8 @@
       :filters="filters"
       :machines="machines"
       :statusLoading="isLoading"
+      :isCheckingItemFg="isCheckingItemFg"
+      :itemFgStatus="itemFgStatus"
       :machineStatus="machineStatus"
       :currentViewMode="viewMode"
       :isHaveReportData="reportData && reportData.pages && reportData.pages.length > 0"
@@ -15,6 +17,8 @@
       @print="printReport"
       @refreshMachine="fetchMachines"
       @fetchMachineStatus="fetchMachineStatus"
+      @checkItemFGwithMachine="checkItemFGwithMachine"
+      @clearItemFgStatus="clearItemFgStatus"
     />
 
     <!-- View Mode Switcher Tab Bar (Hidden on Print) -->
@@ -61,6 +65,7 @@
         <LaminateReportSheet
           v-bind:page-data="page"
           :machine="reportData.machine"
+          :item-fg="reportData.item_fg || filters.item_fg"
           :date-from="reportData.date_from"
           :date-to="reportData.date_to"
           :time-from="reportData.time_from"
@@ -162,6 +167,104 @@ const machineStatus = ref({
   status: 'N/A', //'N/A', 'Online', 'Offline'
   time: '',
 })
+
+const isCheckingItemFg = ref(false)
+
+const itemFgStatus = reactive({
+  show: false,
+  status: 'idle', // 'idle' | 'checking' | 'found' | 'not_found'
+  text: '',
+  message: '',
+  timer: null,
+})
+
+const clearItemFgStatus = () => {
+  if (itemFgStatus.timer) {
+    clearTimeout(itemFgStatus.timer)
+    itemFgStatus.timer = null
+  }
+  itemFgStatus.show = false
+  itemFgStatus.status = 'idle'
+}
+
+const showItemFgStatus = ({ status = '', text = '', message = '', duration = 0 }) => {
+  if (itemFgStatus.timer) {
+    clearTimeout(itemFgStatus.timer)
+    itemFgStatus.timer = null
+  }
+  itemFgStatus.status = status
+  itemFgStatus.text = text
+  itemFgStatus.message = message
+  itemFgStatus.show = true
+
+  if (duration > 0) {
+    itemFgStatus.timer = setTimeout(() => {
+      itemFgStatus.show = false
+    }, duration)
+  }
+}
+
+const checkItemFGwithMachine = async () => {
+  const cleanItemFg = (filters.item_fg || '').trim()
+  if (!cleanItemFg) {
+    showItemFgStatus({
+      status: 'not_found',
+      text: 'ระบุ Item FG',
+      message: 'โปรดกรอกรหัส Item FG ก่อนทำการตรวจสอบ',
+      duration: 3500,
+    })
+    return
+  }
+
+  isCheckingItemFg.value = true
+  showItemFgStatus({
+    status: 'checking',
+    text: 'กำลังตรวจ...',
+    message: 'กำลังตรวจสอบข้อมูลกับระบบ AX...',
+    duration: 0,
+  })
+
+  try {
+    const queryParams = new URLSearchParams({
+      machine: filters.machine,
+      item_fg: cleanItemFg,
+      use_test_api: filters.use_test_api ? 'true' : 'false',
+    })
+
+    const res = await fetch(`${BACKEND_API_BASE_URL}/api/checkItemFG?${queryParams.toString()}`)
+    const data = await res.json()
+
+    // Ensure user hasn't changed input while request was in-flight
+    if ((filters.item_fg || '').trim() !== cleanItemFg) {
+      return
+    }
+
+    if (data.exists) {
+      showItemFgStatus({
+        status: 'found',
+        text: 'มีข้อมูล PS ในระบบ',
+        message: data.message,
+      })
+    } else {
+      showItemFgStatus({
+        status: 'not_found',
+        text: 'ไม่พบข้อมูล PS ในระบบ',
+        message: data.message,
+      })
+    }
+  } catch (err) {
+    console.error('Check Item FG error:', err)
+    if ((filters.item_fg || '').trim() === cleanItemFg) {
+      showItemFgStatus({
+        status: 'not_found',
+        text: 'เกิดข้อผิดพลาด',
+        message: `ไม่สามารถตรวจสอบข้อมูลกับเซิร์ฟเวอร์ได้: ${err.message}`,
+      })
+    }
+  } finally {
+    isCheckingItemFg.value = false
+  }
+}
 
 const fetchMachines = async () => {
   try {

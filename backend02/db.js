@@ -49,7 +49,7 @@ async function getPool() {
     }
     pool = new sql.ConnectionPool(kepLogDbConfig);
     await pool.connect();
-    console.log(`Successfully connected to SQL Server at ${config.DB_SERVER}:${config.DB_PORT}`);
+    console.log(`Successfully connected to SQL Server at ${config.KEPLOG_DB_SERVER}:${config.KEPLOG_DB_PORT}`);
     return pool;
   } catch (err) {
     console.error(`Database connection failed: ${err.message}`);
