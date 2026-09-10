@@ -136,7 +136,7 @@ router.get("/api/report/laminate", async (req, res) => {
   if (!pool) {
     return res.status(500).json({
       detail:
-        "ไม่สามารถเชื่อมต่อฐานข้อมูล MS SQL Server (192.168.10.99) กรุณาตรวจสอบ DB_PASSWORD ในไฟล์ backend02/.env",
+        "ไม่สามารถเชื่อมต่อฐานข้อมูล MS SQL Server (192.168.10.99) กรุณาตรวจสอบ DB_PASSWORD ในไฟล์ backend/.env",
     });
   }
 
@@ -334,7 +334,7 @@ router.get("/api/chart/laminate", async (req, res) => {
   if (!pool) {
     return res.status(500).json({
       detail:
-        "ไม่สามารถเชื่อมต่อฐานข้อมูล MS SQL Server (192.168.10.99) กรุณาตรวจสอบ DB_PASSWORD ในไฟล์ backend02/.env",
+        "ไม่สามารถเชื่อมต่อฐานข้อมูล MS SQL Server (192.168.10.99) กรุณาตรวจสอบ DB_PASSWORD ในไฟล์ backend/.env",
     });
   }
 

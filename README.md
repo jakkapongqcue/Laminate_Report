@@ -39,9 +39,9 @@ C:\webapp\LaminateReport\
 
 ---
 
-## 3. ขั้นตอนติดตั้ง Backend (`backend02`)
+## 3. ขั้นตอนติดตั้ง Backend (`backend`)
 
-1. คัดลอกโฟลเดอร์ `backend02/` ไปไว้ที่เซิร์ฟเวอร์ เช่น `C:\webapp\LaminateReport\backend`
+1. คัดลอกโฟลเดอร์ `backend/` ไปไว้ที่เซิร์ฟเวอร์ เช่น `C:\webapp\LaminateReport\backend`
 2. เปิด Command Prompt ด้วยสิทธิ์ **Administrator** เพื่อติดตั้ง dependencies:
 
    ```cmd

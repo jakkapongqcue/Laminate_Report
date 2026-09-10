@@ -1,4 +1,4 @@
-# Backend02 (Node.js + Express)
+# backend (Node.js + Express)
 
 ระบบ Backend สำหรับ **Laminate Checking Report** พัฒนาโดยใช้ Node.js + Express ติดต่อฐานข้อมูล MS SQL Server ผ่านไลบรารี `mssql`
 
@@ -7,7 +7,7 @@
 ## 1. โครงสร้างไฟล์
 
 ```
-backend02/
+backend/
 ├── server.js           ← Entry point ของแอปพลิเคชัน (routes ทั้งหมดอยู่ที่นี่)
 ├── config.js           ← โหลดค่าจาก .env และ export ออกมาใช้งาน
 ├── db.js               ← จัดการ Connection Pool ของ mssql
@@ -33,14 +33,14 @@ Router mount อยู่ที่ทั้ง `/` (local dev) และ `/Lamin
 
 ### Query Parameters — `/api/report/laminate` และ `/api/report/laminate/test`
 
-| Parameter    | ค่าเริ่มต้น    | คำอธิบาย                                        |
-| ------------ | -------------- | ----------------------------------------------- |
-| `machine`    | `1LB09_Bobst`  | ID ของเครื่องจักร (ดูรายการจาก `/api/machines`) |
-| `date_from`  | **(required)** | วันที่เริ่มต้น format `YYYY-MM-DD`              |
-| `date_to`    | **(required)** | วันที่สิ้นสุด format `YYYY-MM-DD`               |
-| `time_from`  | `08:00`        | เวลาเริ่มต้น format `HH:MM`                     |
-| `time_to`    | `17:00`        | เวลาสิ้นสุด format `HH:MM`                      |
-| `hour_step`  | `1`            | ขนาด interval (ชั่วโมง)                         |
+| Parameter   | ค่าเริ่มต้น    | คำอธิบาย                                        |
+| ----------- | -------------- | ----------------------------------------------- |
+| `machine`   | `1LB09_Bobst`  | ID ของเครื่องจักร (ดูรายการจาก `/api/machines`) |
+| `date_from` | **(required)** | วันที่เริ่มต้น format `YYYY-MM-DD`              |
+| `date_to`   | **(required)** | วันที่สิ้นสุด format `YYYY-MM-DD`               |
+| `time_from` | `08:00`        | เวลาเริ่มต้น format `HH:MM`                     |
+| `time_to`   | `17:00`        | เวลาสิ้นสุด format `HH:MM`                      |
+| `hour_step` | `1`            | ขนาด interval (ชั่วโมง)                         |
 
 ### Query Parameters — `/api/machineStatus`
 
@@ -54,9 +54,9 @@ Router mount อยู่ที่ทั้ง `/` (local dev) และ `/Lamin
 
 **ข้อกำหนด:** Node.js เวอร์ชัน 18 ขึ้นไป
 
-1. เข้าไปที่โฟลเดอร์ `backend02`:
+1. เข้าไปที่โฟลเดอร์ `backend`:
    ```bash
-   cd backend02
+   cd backend
    ```
 2. ติดตั้ง packages:
    ```bash
@@ -92,7 +92,7 @@ Router mount อยู่ที่ทั้ง `/` (local dev) และ `/Lamin
 
 ### ขั้นตอนที่ 1: เตรียมโค้ดบนเซิร์ฟเวอร์
 
-1. คัดลอกโฟลเดอร์ `backend02` ไปยังเซิร์ฟเวอร์ เช่น `C:\webapp\LaminateReport\backend`
+1. คัดลอกโฟลเดอร์ `backend` ไปยังเซิร์ฟเวอร์ เช่น `C:\webapp\LaminateReport\backend`
 2. เปิด Command Prompt ด้วยสิทธิ์ **Administrator** แล้วรัน:
    ```cmd
    cd C:\webapp\LaminateReport\backend
@@ -110,7 +110,7 @@ Router mount อยู่ที่ทั้ง `/` (local dev) และ `/Lamin
 
 ### ขั้นตอนที่ 2: ตรวจสอบไฟล์ `web.config`
 
-ไฟล์ `web.config` ในโฟลเดอร์ `backend02` เตรียมไว้แล้ว ทำหน้าที่:
+ไฟล์ `web.config` ในโฟลเดอร์ `backend` เตรียมไว้แล้ว ทำหน้าที่:
 
 1. ลงทะเบียน `server.js` เป็น handler ของ `iisnode`
 2. เปิด URL Rewrite ส่งทุก Request ไปยัง `server.js` ให้ Express จัดการ Routing

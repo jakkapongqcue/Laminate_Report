@@ -5,7 +5,7 @@ echo ===================================================
 
 :: Define Source Paths (relative to script location)
 set "FRONT_SRC=%~dp0frontend\dist"
-set "BACK_SRC=%~dp0backend02"
+set "BACK_SRC=%~dp0backend"
 
 :: Define Target Paths
 set "FRONT_DST=\\webserver\d$\WebApp\LaminateReport\Front"
