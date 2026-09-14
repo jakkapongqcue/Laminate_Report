@@ -135,7 +135,7 @@
             v-if="prodPools && prodPools.length > 1"
             class="flex flex-wrap items-center gap-x-4 gap-y-1.5 -mt-2 mb-3 px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs"
           >
-            <span class="font-semibold text-gray-700">รอบการเคลือบ (Pass):</span>
+            <span class="font-semibold text-gray-700">รอบการเคลือบ:</span>
             <label
               v-for="p in prodPools"
               :key="p.poolId"
@@ -439,7 +439,7 @@ const autoInputFGPrefix = () => {
 }
 
 const handleDblClickExample = () => {
-  props.filters.item_fg = 'FGF0165010103602'
+  props.filters.item_fg = 'FGF0001020180101'
   emit('checkItemFGwithMachine')
 }
 
