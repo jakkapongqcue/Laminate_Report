@@ -1,6 +1,6 @@
 const STANDARD_PARAMETERS = [
   { key: "LINE_SPEED", param_id: 1, name: "Line Speed", category: "Speed", set_point: "", unit: "m/min", type: "numeric" },
-  { key: "SPICE_SPEED", param_id: 2, name: "Spice Speed", category: "Speed", set_point: "", unit: "m/min", type: "numeric" },
+  { key: "SPILCE_SPEED", param_id: 2, name: "Splice Speed", category: "Speed", set_point: "", unit: "m/min", type: "numeric" },
   { key: "TEMP_ZONE_1", param_id: 3, name: "Temp No. 1", category: "Temperature", set_point: "", unit: "°C", type: "numeric" },
   { key: "TEMP_ZONE_2", param_id: 4, name: "Temp No. 2", category: "Temperature", set_point: "", unit: "°C", type: "numeric" },
   { key: "TEMP_ZONE_3", param_id: 5, name: "Temp No. 3", category: "Temperature", set_point: "", unit: "°C", type: "numeric" },
