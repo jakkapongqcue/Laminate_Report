@@ -49,6 +49,16 @@ const PRINTING_MACHINES = [
     tableName: "[KEP_LOG].[dbo].[View_PT04_Beiren]",
     columns: [],
   },
+  {
+    id: "PT08",
+    name: "PT-08 Altima",
+    brand: "Altima",
+    isMES: true,
+    processType: "Printing",
+    axMachineId: "PT-08",
+    tableName: "[KEP_LOG].[dbo].[View_PT08_Altima]",
+    columns: [],
+  },
 ];
 
 module.exports = {
