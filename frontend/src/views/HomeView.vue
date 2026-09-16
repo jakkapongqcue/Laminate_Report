@@ -315,7 +315,7 @@ watch(
     clearItemFgStatus()
     await fetchMachines(newType)
     // fetchMachineStatus()
-  }
+  },
 )
 
 const currentMachineObj = computed(() => {
