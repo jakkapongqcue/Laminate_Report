@@ -43,7 +43,14 @@
             </div>
           </div>
 
-          <span class="text-gray-900 font-bold w-20">{{ currentProcess.name }}</span>
+          <span class="text-gray-900 font-bold">{{ currentProcess.name }}</span>
+          <span
+            v-if="currentProcessStats.text"
+            class="inline-flex items-center px-1.5 py-0.5 text-[11px] font-bold rounded border select-none"
+            :class="currentProcess.badgeClass"
+          >
+            {{ currentProcessStats.text }}
+          </span>
           <!-- <span class="text-xs text-gray-500 hidden sm:inline">({{ currentProcess.nameTh }})</span> -->
 
           <svg
@@ -109,7 +116,16 @@
                     </div>
                   </div>
                   <div>
-                    <div class="text-sm leading-tight font-medium">{{ proc.name }}</div>
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-sm leading-tight font-medium">{{ proc.name }}</span>
+                      <span
+                        v-if="getNumberOfIsMES(proc.processType).text"
+                        class="text-[10px] font-bold px-1.5 py-0.2 rounded border select-none"
+                        :class="proc.badgeClass"
+                      >
+                        {{ getNumberOfIsMES(proc.processType).text }}
+                      </span>
+                    </div>
                     <div class="text-xs text-gray-500">{{ proc.nameTh }}</div>
                   </div>
                 </div>
@@ -194,6 +210,51 @@ const switchProcess = (proc) => {
   }
 }
 
+const props = defineProps({
+  machines: {
+    type: Array,
+    default: () => [],
+  },
+})
+
+const BACKEND_API_BASE_URL = import.meta.env.VITE_BACK_BASE_URL || ''
+const allMachines = ref([])
+
+const fetchAllMachines = async () => {
+  try {
+    const res = await fetch(`${BACKEND_API_BASE_URL}/api/machines`)
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data)) {
+        allMachines.value = data
+      }
+    }
+  } catch (err) {
+    console.warn('Could not fetch machines list in AppHeadTitle:', err)
+  }
+}
+
+const getNumberOfIsMES = (processType) => {
+  const matchType = (processType || '').toLowerCase()
+  let list = allMachines.value.filter((m) => (m.processType || '').toLowerCase() === matchType)
+
+  if (list.length === 0 && (currentProcess.value.processType || '').toLowerCase() === matchType) {
+    list = props.machines || []
+  }
+
+  const total = list.length
+  const mes = list.filter((m) => m.isMES === true || m.isMES === 'true' || m.isMES === 1).length
+  return {
+    mes,
+    total,
+    text: total > 0 ? `${mes}/${total}` : '',
+  }
+}
+
+const currentProcessStats = computed(() => {
+  return getNumberOfIsMES(currentProcess.value.processType)
+})
+
 const handleClickOutside = (event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
     isDropdownOpen.value = false
@@ -201,6 +262,7 @@ const handleClickOutside = (event) => {
 }
 
 onMounted(() => {
+  fetchAllMachines()
   window.addEventListener('click', handleClickOutside)
 })
 

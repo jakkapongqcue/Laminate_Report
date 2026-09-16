@@ -48,7 +48,7 @@
         <div class="flex flex-col col-span-2 relative">
           <label class="class_Lable">
             <Icon_finishGood />
-            Item FG <span class="text-rose-500 font-bold">*</span>
+            Item FG
           </label>
           <div class="flex items-center gap-x-2 mb-4">
             <div class="relative flex-1">
@@ -162,7 +162,9 @@
           >
             <span>รอบการผลิต:</span>
             <span class="font-semibold text-gray-800">{{ prodPools[0].name }}</span>
-            <span v-if="prodPools[0].revId" class="text-[11px] self-end leading-3 text-gray-400 font-mono"
+            <span
+              v-if="prodPools[0].revId"
+              class="text-[11px] self-end leading-3 text-gray-400 font-mono"
               >(Rev.{{ prodPools[0].revId }})</span
             >
           </div>
@@ -223,7 +225,7 @@
         <!-- Search button -->
         <button
           @click="$emit('search')"
-          :disabled="statusLoading || !filters.item_fg"
+          :disabled="statusLoading"
           :title="!filters.item_fg ? 'กรุณาระบุ Item FG ก่อนดึงข้อมูล' : ''"
           class="inline-flex justify-center items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed w-40"
         >

@@ -1,39 +1,36 @@
 {
   "$schema": "https://json.schemastore.org/prettierrc",
-  "semi": false,
-  "singleQuote": true,
   "printWidth": 100,
   "overrides": [
     {
+      "files": "*.vue",
+      "options": {
+        "singleQuote": true,
+        "semi": false
+      }
+    },
+    {
       "files": "server.js",
       "options": {
-        "printWidth": 100,
-        "singleQuote": false,
-        "semi": true
+        "printWidth": 100
       }
     },
     {
       "files": "reportProcessor.js",
       "options": {
-        "printWidth": 100,
-        "singleQuote": false,
-        "semi": true
+        "printWidth": 100
       }
     },
     {
       "files": "chartProcessor.js",
       "options": {
-        "printWidth": 100,
-        "singleQuote": false,
-        "semi": true
+        "printWidth": 100
       }
     },
     {
       "files": "common.js",
       "options": {
-        "printWidth": 190,
-        "singleQuote": false,
-        "semi": true
+        "printWidth": 190
       }
     }
   ]

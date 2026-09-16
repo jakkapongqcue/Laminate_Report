@@ -34,6 +34,19 @@ echo From: %BACK_SRC%
 echo To:   %BACK_DST%
 if not exist "%BACK_DST%" mkdir "%BACK_DST%"
 
+:: --- Delete all files/folders in BACK_DST, excluding node_modules and .env ---
+echo Cleaning backend destination (excluding node_modules and .env)...
+for /F "delims=" %%I in ('dir /B "%BACK_DST%" 2^>nul') do (
+    if /I not "%%I"==".env" if /I not "%%I"=="node_modules" (
+        if exist "%BACK_DST%\%%I\" (
+            rd /S /Q "%BACK_DST%\%%I" >nul 2>&1
+        ) else (
+            del /F /Q "%BACK_DST%\%%I" >nul 2>&1
+        )
+    )
+)
+echo Backend destination cleaned.
+
 :: Copy .env ONLY if it does not already exist in target (to prevent overwriting database credentials)
 if not exist "%BACK_DST%\.env" (
     if exist "%BACK_SRC%\.env" (

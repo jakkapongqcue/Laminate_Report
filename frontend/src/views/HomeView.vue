@@ -1,7 +1,7 @@
 <template>
   <div class="mx-auto" style="max-width: 297mm">
     <!-- App Header Title (Hidden on Print) -->
-    <AppHeadTitle />
+    <AppHeadTitle :machines="machines" />
 
     <!-- Filter Controls Bar -->
     <FilterBar
@@ -107,9 +107,6 @@
           ไม่พบข้อมูล{{ viewMode === 'report' ? 'รายงาน' : 'กราฟ' }}ในช่วงเวลาดังกล่าว
         </div>
       </h3>
-      <p v-if="!loadFristTime" class="mt-1 text-xs text-gray-500">
-        กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มค้นหาใหม่
-      </p>
     </div>
   </div>
 </template>
@@ -317,7 +314,7 @@ watch(
     errorMessage.value = ''
     clearItemFgStatus()
     await fetchMachines(newType)
-    fetchMachineStatus()
+    // fetchMachineStatus()
   }
 )
 
@@ -331,10 +328,10 @@ const fetchReport = async () => {
     return
   }
 
-  if (!filters.item_fg) {
-    errorMessage.value = 'กรุณาระบุ Item FG ก่อนดึงข้อมูลรายงาน'
-    return
-  }
+  // if (!filters.item_fg) {
+  //   errorMessage.value = 'กรุณาระบุ Item FG ก่อนดึงข้อมูลรายงาน'
+  //   return
+  // }
 
   isLoading.value = true
   errorMessage.value = ''
@@ -469,10 +466,10 @@ const fetchMachineStatus = async () => {
 
 onMounted(() => {
   fetchMachines()
-  fetchMachineStatus()
+  // fetchMachineStatus()
 
-  setInterval(() => {
-    fetchMachineStatus()
-  }, 300000) // 5 minutes (5 * 60 * 1000)
+  // setInterval(() => {
+  //   fetchMachineStatus()
+  // }, 300000) // 5 minutes (5 * 60 * 1000)
 })
 </script>

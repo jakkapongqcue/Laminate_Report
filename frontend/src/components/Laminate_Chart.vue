@@ -165,7 +165,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
 
 const props = defineProps({
@@ -513,7 +513,13 @@ watch(
 
 onMounted(() => {
   loadDefaults()
+  // document.title = 'Laminate Chart | Machine Report'
 })
+
+// onUnmounted(() => {
+//   // Restore to the route-level title when navigating away
+//   document.title = 'Machine Report'
+// })
 </script>
 
 <style lang="css" scoped>

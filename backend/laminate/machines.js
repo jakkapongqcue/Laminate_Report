@@ -1,7 +1,7 @@
 const LAMINATE_MACHINES = [
   {
     id: "1LB09",
-    name: "1LB09 Bobst",
+    name: "1LB-09 Bobst",
     brand: "Bobst",
     isMES: true,
     processType: "Laminate",
@@ -48,7 +48,7 @@ const LAMINATE_MACHINES = [
     id: "LB10",
     name: "LB-10 Bobst",
     brand: "Bobst",
-    isMES: false,
+    isMES: true,
     processType: "Laminate",
     axMachineId: "LB-10",
     tableName: null,
@@ -67,7 +67,7 @@ const LAMINATE_MACHINES = [
   },
   {
     id: "2LB06",
-    name: "2LB06 Fuji Kikai",
+    name: "2LB-06 Fuji Kikai",
     brand: "FujiKikai",
     isMES: true,
     processType: "Laminate",
