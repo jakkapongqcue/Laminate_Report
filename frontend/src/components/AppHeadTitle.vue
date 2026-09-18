@@ -45,9 +45,7 @@
             </div>
           </div>
 
-          <span class="text-gray-900 font-bold hidden sm:inline-block">{{
-            currentProcess.name
-          }}</span>
+          <span class="text-gray-900 font-bold">{{ currentProcess.name }}</span>
           <span
             v-if="currentProcessStats.text"
             class="items-center px-1.5 py-0.5 text-[11px] font-bold rounded border select-none hidden sm:inline-block"
