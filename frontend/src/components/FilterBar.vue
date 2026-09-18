@@ -1,10 +1,10 @@
 <template>
-  <div class="p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-md no-print">
+  <div class="no-print mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-md">
     <div class="flex flex-wrap items-end justify-between gap-4">
       <!-- Filter Controls Group -->
       <div class="grid w-full grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         <!-- Machine Selection -->
-        <div class="class_InputGroup flex flex-col col-span-2">
+        <div class="class_InputGroup col-span-2 flex flex-col">
           <label class="class_Lable">
             <Icon_machine />
             เครื่องจักร (Machine)
@@ -13,18 +13,12 @@
             <select
               id="Input_Machine"
               v-model="filters.machine"
-              class="bg-white class_Input w-full"
+              class="class_Input w-full bg-white"
               @click.ctrl.alt="$emit('refreshMachine')"
               @change="handleMachineChange()"
             >
-              <option
-                v-for="m in machines"
-                :key="m.id"
-                :value="m.id"
-                :disabled="m.isMES === false"
-                :class="{ 'text-gray-400 bg-gray-50': m.isMES === false }"
-              >
-                {{ m.name }}{{ m.isMES === false ? ' (No MES)' : '' }}
+              <option v-for="m in machines" :key="m.id" :value="m.id" :disabled="m.isMES === false" :class="{ 'bg-gray-50 text-gray-400': m.isMES === false }">
+                {{ m.name }}{{ m.isMES === false ? " (No MES)" : "" }}
               </option>
             </select>
             <!-- <Pill_MachineStatus
@@ -49,7 +43,7 @@
         />
 
         <!-- Date Range -->
-        <div class="class_InputGroup flex flex-col self-end col-span-1 col-start-1">
+        <div class="class_InputGroup col-span-1 col-start-1 flex flex-col self-end">
           <label class="class_Lable">
             <Icon_calendar />
             วันที่เริ่มต้น
@@ -58,7 +52,7 @@
         </div>
 
         <!-- Time Range -->
-        <div class="class_InputGroup flex flex-col self-end col-span-1">
+        <div class="class_InputGroup col-span-1 flex flex-col self-end">
           <label class="class_Lable">
             <Icon_time />
             เวลาม้วนแรกที่ทำการผลิต
@@ -67,7 +61,7 @@
         </div>
 
         <!-- Hourly Step (Visible on Report mode) -->
-        <div class="class_InputGroup flex flex-col col-span-2 lg:col-span-1">
+        <div class="class_InputGroup col-span-2 flex flex-col lg:col-span-1">
           <label class="class_Lable">
             <Icon_time />
             ช่วงเวลา (Step)
@@ -79,7 +73,7 @@
           </select>
         </div>
 
-        <div class="class_InputGroup flex flex-col col-span-1 col-start-1">
+        <div class="class_InputGroup col-span-1 col-start-1 flex flex-col">
           <label class="class_Lable">
             <Icon_calendar />
             วันที่สิ้นสุด
@@ -87,7 +81,7 @@
           <input type="date" v-model="filters.date_to" class="class_Input" />
         </div>
 
-        <div class="class_InputGroup flex flex-col col-span-1">
+        <div class="class_InputGroup col-span-1 flex flex-col">
           <label class="class_Lable">
             <Icon_time />
             เวลาสิ้นสุด
@@ -97,18 +91,16 @@
       </div>
 
       <!-- Action Buttons -->
-      <div
-        class="grid grid-cols-2 md:flex items-center w-full gap-2 pt-3 text-xs text-gray-500 border-t border-gray-100"
-      >
+      <div class="grid w-full grid-cols-2 items-center gap-2 border-t border-gray-100 pt-3 text-xs text-gray-500 md:flex">
         <!-- Search button -->
         <button
           @click="$emit('search')"
           :disabled="statusLoading"
           :title="!filters.item_fg ? 'กรุณาระบุ Item FG ก่อนดึงข้อมูล' : ''"
-          class="inline-flex justify-center items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-40"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sky-600 px-5 py-2.5 text-sm font-medium text-white shadow transition duration-150 ease-in-out hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50 md:w-40"
         >
           <Icon_search :loading="statusLoading" :cusClass="'w-4 h-4'" />
-          ดึงข้อมูล{{ currentViewMode === 'chart' ? 'กราฟ' : 'รายงาน' }}
+          ดึงข้อมูล{{ currentViewMode === "chart" ? "กราฟ" : "รายงาน" }}
         </button>
 
         <!-- Print / Export button (for Report mode) -->
@@ -116,7 +108,7 @@
           v-if="currentViewMode === 'report'"
           :disabled="!isHaveReportData"
           @click="$emit('print')"
-          class="inline-flex justify-center items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md shadow transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-40"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow transition duration-150 ease-in-out hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 md:w-40"
         >
           <Icon_print />
           พิมพ์รายงาน
@@ -125,18 +117,10 @@
     </div>
 
     <!-- Presets bar -->
-    <div class="flex items-center gap-2 pt-3 mt-3 text-xs text-gray-500 border-t border-gray-100">
+    <div class="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3 text-xs text-gray-500">
       <span class="font-semibold text-gray-700">Quick Presets:</span>
-      <button
-        @click="setShift(1)"
-        class="px-2 py-1 transition bg-gray-100 rounded hover:bg-sky-100 hover:text-sky-700 cursor-pointer"
-      >
-        กะเช้า (08:00 - 20:00)
-      </button>
-      <button
-        @click="setShift(2)"
-        class="px-2 py-1 transition bg-gray-100 rounded hover:bg-sky-100 hover:text-sky-700 cursor-pointer"
-      >
+      <button @click="setShift(1)" class="cursor-pointer rounded bg-gray-100 px-2 py-1 transition hover:bg-sky-100 hover:text-sky-700">กะเช้า (08:00 - 20:00)</button>
+      <button @click="setShift(2)" class="cursor-pointer rounded bg-gray-100 px-2 py-1 transition hover:bg-sky-100 hover:text-sky-700">
         กะดึกข้ามวัน (20:00 - 08:00)
       </button>
     </div>
@@ -144,15 +128,15 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, computed, ref } from 'vue'
-import Icon_calendar from './icons/Icon_calendar.vue'
-import Icon_time from './icons/Icon_time.vue'
-import Icon_print from './icons/Icon_print.vue'
-import Icon_search from './icons/Icon_search.vue'
-import Icon_machine from './icons/Icon_machine.vue'
+import { defineProps, defineEmits, computed, ref } from "vue"
+import Icon_calendar from "./icons/Icon_calendar.vue"
+import Icon_time from "./icons/Icon_time.vue"
+import Icon_print from "./icons/Icon_print.vue"
+import Icon_search from "./icons/Icon_search.vue"
+import Icon_machine from "./icons/Icon_machine.vue"
 
-import Filter_ItemFG from '@/components/Filter_ItemFG.vue'
-import Pill_MachineStatus from '@/components/Pill_MachineStatus.vue'
+import Filter_ItemFG from "@/components/Filter_ItemFG.vue"
+import Pill_MachineStatus from "@/components/Pill_MachineStatus.vue"
 
 const props = defineProps({
   filters: {
@@ -169,14 +153,14 @@ const props = defineProps({
   },
   currentViewMode: {
     type: String,
-    default: 'report',
+    default: "report",
   },
   machineStatus: {
     type: Object,
     default: () => {
       return {
-        status: 'Loading', // 'N/A', 'Online', 'Offline'
-        time: '',
+        status: "Loading", // 'N/A', 'Online', 'Offline'
+        time: "",
       }
     },
   },
@@ -192,9 +176,9 @@ const props = defineProps({
     type: Object,
     default: () => ({
       show: false,
-      status: 'idle',
-      text: '',
-      message: '',
+      status: "idle",
+      text: "",
+      message: "",
     }),
   },
   prodPools: {
@@ -208,32 +192,32 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
-  'search',
-  'print',
-  'refreshMachine',
-  'fetchMachineStatus',
-  'checkItemFGwithMachine',
-  'searchItemFGwithMachine',
-  'selectItemFgFromSearch',
-  'clearItemFgSearchResults',
-  'clearItemFgStatus',
+  "search",
+  "print",
+  "refreshMachine",
+  "fetchMachineStatus",
+  "checkItemFGwithMachine",
+  "searchItemFGwithMachine",
+  "selectItemFgFromSearch",
+  "clearItemFgSearchResults",
+  "clearItemFgStatus",
 ])
 
 const setShift = (shiftNum) => {
   if (shiftNum === 1) {
-    props.filters.time_from = '08:00'
-    props.filters.time_to = '20:00'
+    props.filters.time_from = "08:00"
+    props.filters.time_to = "20:00"
   } else if (shiftNum === 2) {
-    props.filters.time_from = '20:00'
-    props.filters.time_to = '08:00'
+    props.filters.time_from = "20:00"
+    props.filters.time_to = "08:00"
   }
-  emit('search')
+  emit("search")
 }
 
 const handleMachineChange = () => {
-  emit('fetchMachineStatus')
+  emit("fetchMachineStatus")
   if (props.filters.item_fg && props.filters.item_fg.length > 4) {
-    emit('checkItemFGwithMachine')
+    emit("checkItemFGwithMachine")
   }
 }
 </script>
