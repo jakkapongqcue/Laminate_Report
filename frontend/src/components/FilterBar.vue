@@ -27,7 +27,10 @@
                 {{ m.name }}{{ m.isMES === false ? ' (No MES)' : '' }}
               </option>
             </select>
-            <Pill_MachineStatus :machineStatus="machineStatus" />
+            <!-- <Pill_MachineStatus
+              :machineStatus="machineStatus"
+              @fetchMachineStatus="$emit('fetchMachineStatus')"
+            /> -->
           </div>
         </div>
 
@@ -229,7 +232,7 @@ const setShift = (shiftNum) => {
 
 const handleMachineChange = () => {
   emit('fetchMachineStatus')
-  if (props.filters.item_fg && props.filters.item_fg.length > 3) {
+  if (props.filters.item_fg && props.filters.item_fg.length > 4) {
     emit('checkItemFGwithMachine')
   }
 }

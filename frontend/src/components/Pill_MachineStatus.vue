@@ -1,9 +1,9 @@
 <template>
-  <div
+  <button
+    class="absolute top-1/2 -translate-y-1/2 right-8"
     :title="machineStatus_time"
     @mouseover="machineStatus_refreshTime()"
     @click="focusMachineSelect()"
-    class="absolute top-1/2 -translate-y-1/2 right-8"
   >
     <span
       class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border select-none transition-all cursor-pointer"
@@ -12,11 +12,12 @@
       <span class="w-2 h-2 rounded-full animate-pulse" :class="machineStatus_lightClass"> </span>
       {{ machineStatus_text }}
     </span>
-  </div>
+  </button>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { timeAgo } from '@/utils/timeAgo.js'
 
 const props = defineProps({
   machineStatus: {
@@ -30,7 +31,9 @@ const props = defineProps({
   },
 })
 
-const focusMachineSelect = () => {
+const emit = defineEmits(['fetchMachineStatus'])
+
+const focusMachineSelect = () => { 
   const Input_Machine = document.getElementById('Input_Machine')
   if (Input_Machine) {
     if (typeof Input_Machine.showPicker === 'function') {
@@ -90,5 +93,13 @@ const machineStatus_text = computed(() => {
     default:
       return 'N/A'
   }
+})
+
+onMounted(() => {
+  emit('fetchMachineStatus')
+
+  setInterval(() => {
+    emit('fetchMachineStatus')
+  }, 300000) // 5 minutes (5 * 60 * 1000)
 })
 </script>
