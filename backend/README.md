@@ -29,6 +29,7 @@ Router mount อยู่ที่ทั้ง `/` (local dev) และ `/Lamin
 | GET    | `/api/processes`       | รายการประเภทกระบวนการ (Laminate, Printing, BlownFilm)     | ❌         |
 | GET    | `/api/machines`        | รายการเครื่องจักรทั้งหมด หรือกรองตาม `?processType=`      | ❌         |
 | GET    | `/api/checkItemFG`     | ตรวจสอบรหัส Item FG และเครื่องจักรในฐานข้อมูล AX          | ✅         |
+| GET    | `/api/searchItemFG`    | ค้นหา Item FG ด้วย keyword (>= 4 ตัว) พร้อม item_fg_name  | ✅         |
 | GET    | `/api/report/laminate` | ดึงข้อมูลรายงานจากฐานข้อมูลจริง `KEP_LOG`                 | ✅         |
 | GET    | `/api/chart/laminate`  | ดึงข้อมูลกราฟ Time Series จากฐานข้อมูลจริง `KEP_LOG`      | ✅         |
 | GET    | `/api/machineStatus`   | ตรวจสอบสถานะเครื่องจักร (online/offline จาก `LINE_SPEED`) | ✅         |

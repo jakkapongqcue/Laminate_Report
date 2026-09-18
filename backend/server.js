@@ -65,6 +65,84 @@ router.get("/api/machines", (req, res) => {
   );
 });
 
+// GET /api/searchItemFG -> Search Item FG by partial keyword (>= 4 chars) and Machine ID from AX DB
+router.get("/api/searchItemFG", async (req, res) => {
+  const { machine, keyword, processType } = req.query;
+  const cleanKeyword = String(keyword || "").trim();
+
+  if (!cleanKeyword || cleanKeyword.length < 4) {
+    return res.status(400).json({
+      success: false,
+      message: "กรุณาระบุคำค้นหาอย่างน้อย 4 ตัวอักษร",
+      items: [],
+    });
+  }
+
+  const machineConfig =
+    findMachine(machine) ||
+    (processType ? getMachinesByProcess(processType)[0] : ALL_MACHINES[0]);
+  const axMachineId = machineConfig ? machineConfig.axMachineId : machine;
+
+  try {
+    const axPool = await getAxPool();
+    if (!axPool) {
+      const dbErr = getAxLastError() || "ไม่สามารถติดต่อฐานข้อมูล AX ได้";
+      return res.status(503).json({
+        success: false,
+        dbError: true,
+        keyword: cleanKeyword,
+        machine: axMachineId,
+        message: `ไม่สามารถเชื่อมต่อ AX (${config.AX_DB_SERVER}): ${dbErr}`,
+        items: [],
+      });
+    }
+
+    const axRequest = axPool.request();
+    axRequest.input("keyword", sql.VarChar, `%${cleanKeyword}%`);
+    axRequest.input("ax_machine", sql.VarChar, axMachineId);
+
+    const axQuery = `
+      SELECT DISTINCT TOP 20
+        a.ITEMFG AS item_fg,
+        ISNULL(ai.ITEMNAME, '') AS item_fg_name
+      FROM [AX50_SF_PRD_SP1].[dbo].[SF_ProdSpecMachine] a
+      LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] ai 
+        ON ai.ITEMID = a.ITEMFG
+      WHERE a.MACHINE = @ax_machine
+        AND a.ITEMFG LIKE @keyword
+      ORDER BY a.ITEMFG ASC
+    `;
+
+    const axResult = await axRequest.query(axQuery);
+    const items = (axResult.recordset || []).map((row) => ({
+      item_fg: row.item_fg,
+      item_fg_name: (row.item_fg_name || "").trim(),
+    }));
+
+    return res.json({
+      success: true,
+      keyword: cleanKeyword,
+      machine: axMachineId,
+      count: items.length,
+      items,
+      message:
+        items.length > 0
+          ? `พบ ${items.length} รายการที่ตรงกับคำค้นหา`
+          : `ไม่พบ Item FG ที่ตรงกับ "${cleanKeyword}"`,
+    });
+  } catch (err) {
+    console.error(`Search Item FG Error: ${err.message}`);
+    return res.status(500).json({
+      success: false,
+      dbError: true,
+      keyword: cleanKeyword,
+      machine: axMachineId,
+      message: `เกิดข้อผิดพลาดในการค้นหา AX: ${err.message}`,
+      items: [],
+    });
+  }
+});
+
 // GET /api/checkItemFG -> Check if Item FG and Machine ID exist in AX DB
 router.get("/api/checkItemFG", async (req, res) => {
   const { machine, item_fg, processType } = req.query;
@@ -106,9 +184,11 @@ router.get("/api/checkItemFG", async (req, res) => {
         a.ITEMID, 
         bi.PRODPOOLID, 
         a.REVID, 
-        a.RECID
+        a.RECID,
+        ISNULL(ai.ITEMNAME, '') AS ITEMNAME
       FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] a
       LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] bi ON bi.ITEMID = a.ITEMID
+      LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] ai ON ai.ITEMID = a.ITEMFG
       WHERE a.ITEMFG = @item_fg AND a.MACHINE = @ax_machine
       ORDER BY a.REVID DESC, a.RECID DESC
     `;
@@ -139,10 +219,12 @@ router.get("/api/checkItemFG", async (req, res) => {
     const prodPools = Array.from(poolMap.values());
     const defaultPool = prodPools.length > 0 ? prodPools[0].poolId : null;
     const firstRecord = exists ? records[0] : null;
+    const itemFgName = firstRecord ? (firstRecord.ITEMNAME || "").trim() : "";
 
     return res.json({
       exists,
       item_fg: cleanItemFg,
+      item_fg_name: itemFgName,
       machine: axMachineId,
       itemId: firstRecord ? firstRecord.ITEMID : null,
       prodPools,
@@ -219,8 +301,9 @@ router.get("/api/report/laminate", async (req, res) => {
 
     console.log(`Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}.`);
 
-    // Fetch Set Point (PS) from AXDB if item_fg is provided
+    // Fetch Set Point (PS) and item_fg_name from AXDB if item_fg is provided
     let setPointMap = {};
+    let itemFgName = "";
     if (item_fg) {
       try {
         const axPool = await getAxPool();
@@ -238,9 +321,11 @@ router.get("/api/report/laminate", async (req, res) => {
 
           const axQuery = `
             SELECT TOP 1
-              ${AX_PS_COLUMNS.join(",\n              ")}
+              ${AX_PS_COLUMNS.join(",\n              ")},
+              ISNULL(ai.ITEMNAME, '') AS [ITEM_FG_NAME]
             FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] a
             LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] bi ON bi.ITEMID = a.ITEMID
+            LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] ai ON ai.ITEMID = a.ITEMFG
             WHERE a.ITEMFG = @item_fg 
               AND a.MACHINE = @ax_machine
               ${cleanProdPool ? "AND bi.PRODPOOLID = @prod_pool" : ""}
@@ -249,8 +334,9 @@ router.get("/api/report/laminate", async (req, res) => {
           const axResult = await axRequest.query(axQuery);
           if (axResult.recordset && axResult.recordset.length > 0) {
             setPointMap = axResult.recordset[0];
+            itemFgName = (setPointMap.ITEM_FG_NAME || "").trim();
             console.log(
-              `Retrieved Set Point (PS) for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}, POOL: ${cleanProdPool || "ANY"}`
+              `Retrieved Set Point (PS) for ITEMFG: ${item_fg} (${itemFgName}), MACHINE: ${axMachineId}, POOL: ${cleanProdPool || "ANY"}`
             );
           } else {
             console.log(
@@ -273,6 +359,7 @@ router.get("/api/report/laminate", async (req, res) => {
       hourStep: parseInt(hour_step),
       setPointMap,
       itemFg: item_fg,
+      itemFgName,
     });
 
     res.json(response);

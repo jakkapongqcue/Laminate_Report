@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-wrap items-center justify-between gap-4 p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-sm no-print"
+    class="flex flex-nowrap items-center justify-between gap-4 p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-sm no-print"
   >
     <div class="flex items-center gap-3">
       <div
@@ -8,11 +8,13 @@
       ></div>
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="text-lg font-bold text-gray-900 leading-5 sm:leading-normal">
+          <h1
+            class="text-base md:text-lg font-bold text-gray-900 leading-5 sm:leading-normal line-clamp-2"
+          >
             {{ currentProcess.title }}
           </h1>
         </div>
-        <p class="text-xs text-gray-500 hidden sm:inline-block">
+        <p class="text-xs text-gray-500 hidden md:inline-block">
           {{ currentProcess.subtitle }}
         </p>
       </div>
@@ -43,10 +45,12 @@
             </div>
           </div>
 
-          <span class="text-gray-900 font-bold">{{ currentProcess.name }}</span>
+          <span class="text-gray-900 font-bold hidden sm:inline-block">{{
+            currentProcess.name
+          }}</span>
           <span
             v-if="currentProcessStats.text"
-            class="inline-flex items-center px-1.5 py-0.5 text-[11px] font-bold rounded border select-none"
+            class="items-center px-1.5 py-0.5 text-[11px] font-bold rounded border select-none hidden sm:inline-block"
             :class="currentProcess.badgeClass"
           >
             {{ currentProcessStats.text }}

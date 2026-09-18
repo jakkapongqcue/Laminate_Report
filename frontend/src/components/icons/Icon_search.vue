@@ -31,11 +31,11 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
+import { defineProps } from 'vue'
 const props = defineProps({
   loading: {
     type: Boolean,
-    required: true,
+    default: false,
   },
   cusClass: {
     type: String,

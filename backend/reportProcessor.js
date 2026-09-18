@@ -21,6 +21,7 @@ function processSqlViewData({
   hourStep = 1,
   setPointMap = {},
   itemFg = "",
+  itemFgName = "",
 }) {
   const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
   const machineName = machineConfig.name;
@@ -255,6 +256,7 @@ function processSqlViewData({
   return {
     machine: machineName,
     item_fg: itemFg || "",
+    item_fg_name: itemFgName || "",
     date_from: dateFromStr,
     date_to: dateToStr,
     time_from: timeFromStr,

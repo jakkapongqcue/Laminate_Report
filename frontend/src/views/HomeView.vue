@@ -8,17 +8,21 @@
       :filters="filters"
       :machines="machines"
       :statusLoading="isLoading"
-      :isCheckingItemFg="isCheckingItemFg"
+      :isCheckingItemFg="isCheckingItemFg || isSearchingItemFg"
       :itemFgStatus="itemFgStatus"
       :machineStatus="machineStatus"
       :currentViewMode="viewMode"
       :isHaveReportData="reportData && reportData.pages && reportData.pages.length > 0"
       :prodPools="prodPools"
+      :itemFgSearchResults="itemFgSearchResults"
       @search="handleSearch"
       @print="printReport"
       @refreshMachine="fetchMachines"
       @fetchMachineStatus="fetchMachineStatus"
       @checkItemFGwithMachine="checkItemFGwithMachine"
+      @searchItemFGwithMachine="searchItemFGwithMachine"
+      @selectItemFgFromSearch="selectItemFgFromSearch"
+      @clearItemFgSearchResults="clearItemFgSearchResults"
       @clearItemFgStatus="clearItemFgStatus"
     />
 
@@ -66,7 +70,8 @@
         <Laminate_ReportSheet
           v-bind:page-data="page"
           :machine="reportData.machine"
-          :item-fg="reportData.item_fg || filters.item_fg"
+          :item-fg="reportData.item_fg"
+          :item-fg-name="reportData.item_fg_name"
           :date-from="reportData.date_from"
           :date-to="reportData.date_to"
           :time-from="reportData.time_from"
@@ -153,6 +158,7 @@ const viewMode = ref('report') // 'report' | 'chart'
 const filters = reactive({
   machine: '1LB09',
   item_fg: '',
+  item_fg_name: '',
   prod_pool: '',
   date_from: getTodayStr(),
   date_to: getTodayStr(),
@@ -195,6 +201,7 @@ const clearItemFgStatus = () => {
   itemFgStatus.status = 'idle'
   prodPools.value = []
   filters.prod_pool = ''
+  filters.item_fg_name = ''
 }
 
 const showItemFgStatus = ({ status = '', text = '', message = '', duration = 0 }) => {
@@ -250,6 +257,7 @@ const checkItemFGwithMachine = async () => {
     }
 
     if (data.exists) {
+      filters.item_fg_name = data.item_fg_name || ''
       prodPools.value = data.prodPools || []
       if (data.defaultPool) {
         filters.prod_pool = data.defaultPool
@@ -262,6 +270,7 @@ const checkItemFGwithMachine = async () => {
         message: data.message,
       })
     } else {
+      filters.item_fg_name = ''
       prodPools.value = []
       filters.prod_pool = ''
       showItemFgStatus({
@@ -278,10 +287,101 @@ const checkItemFGwithMachine = async () => {
         text: 'เกิดข้อผิดพลาด',
         message: `ไม่สามารถตรวจสอบข้อมูลกับเซิร์ฟเวอร์ได้: ${err.message}`,
       })
+      prodPools.value = []
     }
   } finally {
     isCheckingItemFg.value = false
   }
+}
+
+const itemFgSearchResults = ref([])
+const isSearchingItemFg = ref(false)
+
+const searchItemFGwithMachine = async () => {
+  const keyword = (filters.item_fg || '').trim()
+  if (!keyword) {
+    showItemFgStatus({
+      status: 'not_found',
+      text: 'ระบุคำค้นหา',
+      message: 'โปรดกรอกคำค้นหา Item FG ก่อน',
+      duration: 3000,
+    })
+    return
+  }
+
+  if (keyword.length < 4) {
+    showItemFgStatus({
+      status: 'not_found',
+      text: 'ระบุอย่างน้อย 4 ตัว',
+      message: 'กรุณากรอกคำค้นหาอย่างน้อย 4 ตัวอักษร',
+      duration: 3500,
+    })
+    return
+  }
+
+  isSearchingItemFg.value = true
+  showItemFgStatus({
+    status: 'checking',
+    text: 'กำลังค้นหา...',
+    message: `กำลังค้นหา Item FG ที่มี "${keyword}" ในระบบ AX...`,
+    duration: 0,
+  })
+
+  try {
+    const queryParams = new URLSearchParams({
+      machine: filters.machine,
+      keyword: keyword,
+      processType: activeProcessType.value,
+    })
+
+    const res = await fetch(`${BACKEND_API_BASE_URL}/api/searchItemFG?${queryParams.toString()}`)
+    const data = await res.json()
+
+    if (data.success && data.items && data.items.length > 0) {
+      if (data.items.length === 1) {
+        // Only 1 item found -> Auto-select and check PS directly
+        filters.item_fg = data.items[0].item_fg
+        itemFgSearchResults.value = []
+        await checkItemFGwithMachine()
+      } else {
+        // Multiple items found -> Show dropdown options
+        itemFgSearchResults.value = data.items
+        showItemFgStatus({
+          status: 'found',
+          text: `พบ ${data.items.length} รายการ`,
+          message: `พบ ${data.items.length} รายการที่ตรงกับคำค้นหา โปรดเลือกจากรายการ`,
+        })
+      }
+    } else {
+      itemFgSearchResults.value = []
+      showItemFgStatus({
+        status: 'not_found',
+        text: 'ไม่พบรายการ',
+        message: data.message || `ไม่พบ Item FG ที่มีคำว่า "${keyword}"`,
+        duration: 4000,
+      })
+    }
+  } catch (err) {
+    console.error('Search Item FG error:', err)
+    itemFgSearchResults.value = []
+    showItemFgStatus({
+      status: 'not_found',
+      text: 'เกิดข้อผิดพลาด',
+      message: `ไม่สามารถค้นหาข้อมูลได้: ${err.message}`,
+    })
+  } finally {
+    isSearchingItemFg.value = false
+  }
+}
+
+const selectItemFgFromSearch = async (item) => {
+  filters.item_fg = item.item_fg
+  itemFgSearchResults.value = []
+  await checkItemFGwithMachine()
+}
+
+const clearItemFgSearchResults = () => {
+  itemFgSearchResults.value = []
 }
 
 const fetchMachines = async (procType = activeProcessType.value) => {

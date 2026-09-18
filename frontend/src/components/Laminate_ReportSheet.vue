@@ -24,10 +24,12 @@
     </div>
 
     <!-- ── Metadata Row ─────────────────────────────────────────────────── -->
-    <div class="flex gap-2 text-[9px] mb-1 font-medium">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[9px] mb-1 font-medium">
       <div class="flex items-center gap-1">
         <span class="font-bold">FG Code:</span>
         <span class="px-1 py-0.5 rounded font-semibold">{{ itemFg || '-' }}</span>
+        <span v-if="itemFgName" class="font-bold px-1 py-0.5">ชื่องาน:</span>
+        <span v-if="itemFgName" class="px-1 py-0.5 line-clamp-1 w-72">{{ itemFgName }}</span>
       </div>
       <div class="flex items-center gap-1">
         <span class="font-bold">เครื่องเคลือบ:</span>
@@ -101,6 +103,10 @@ const props = defineProps({
     default: '1LB09_Bobst',
   },
   itemFg: {
+    type: String,
+    default: '',
+  },
+  itemFgName: {
     type: String,
     default: '',
   },
