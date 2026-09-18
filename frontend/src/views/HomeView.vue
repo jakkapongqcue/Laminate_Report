@@ -566,10 +566,10 @@ const fetchMachineStatus = async () => {
 
 onMounted(() => {
   fetchMachines()
-  // fetchMachineStatus()
+  fetchMachineStatus()
 
-  // setInterval(() => {
-  //   fetchMachineStatus()
-  // }, 300000) // 5 minutes (5 * 60 * 1000)
+  setInterval(() => {
+    fetchMachineStatus()
+  }, 300000) // 5 minutes (5 * 60 * 1000)
 })
 </script>

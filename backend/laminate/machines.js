@@ -49,7 +49,7 @@ const LAMINATE_MACHINES = [
   },
   {
     id: "LB10",
-    name: "LB-10 Bobst",
+    name: "LB-10 Bobst (Under Construction)",
     brand: "Bobst",
     isMES: true,
     processType: "Laminate",
@@ -59,7 +59,7 @@ const LAMINATE_MACHINES = [
   },
   {
     id: "1LL07",
-    name: "1LL-07 Comexi",
+    name: "1LL-07 Comexi (Under Construction)",
     brand: "Comexi",
     isMES: true,
     processType: "Laminate",
@@ -92,7 +92,7 @@ const LAMINATE_MACHINES = [
   },
   {
     id: "2LB06",
-    name: "2LB-06 Fuji Kikai",
+    name: "2LB-06 Fuji Kikai (Under Construction)",
     brand: "FujiKikai",
     isMES: true,
     processType: "Laminate",
@@ -135,7 +135,7 @@ const LAMINATE_MACHINES = [
   },
   {
     id: "SB04",
-    name: "SB-04 Beiren",
+    name: "SB-04 Beiren (Under Construction)",
     brand: "Beiren",
     isMES: true,
     processType: "Laminate",
