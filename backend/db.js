@@ -1,5 +1,5 @@
-const sql = require('mssql');
-const config = require('./config');
+const sql = require("mssql");
+const config = require("./config");
 
 const kepLogDbConfig = {
   user: config.KEPLOG_DB_USER,
@@ -10,10 +10,10 @@ const kepLogDbConfig = {
   options: {
     encrypt: false,
     trustServerCertificate: true,
-    useUTC: false
+    useUTC: false,
   },
   connectionTimeout: 5000,
-  requestTimeout: 15000
+  requestTimeout: 15000,
 };
 
 const axDbConfig = {
@@ -25,37 +25,48 @@ const axDbConfig = {
   options: {
     encrypt: false,
     trustServerCertificate: true,
-    useUTC: false
+    useUTC: false,
   },
   connectionTimeout: 5000,
-  requestTimeout: 15000
+  requestTimeout: 15000,
 };
 
-let pool = null;
+let kepLogPool = null;
+let kepLogPoolPromise = null;
 let axPool = null;
+let axPoolPromise = null;
 
-async function getPool() {
-  if (pool && pool.connected) {
-    return pool;
+async function getKepLogPool() {
+  if (kepLogPool && kepLogPool.connected) {
+    return kepLogPool;
   }
-  try {
-    // If pool exists but not connected, close it first
-    if (pool) {
-      try {
-        await pool.close();
-      } catch (e) {
-        // ignore
+  if (kepLogPoolPromise) {
+    return kepLogPoolPromise;
+  }
+  kepLogPoolPromise = (async () => {
+    try {
+      if (kepLogPool) {
+        try {
+          await kepLogPool.close();
+        } catch (e) {
+          // ignore
+        }
       }
+      kepLogPool = new sql.ConnectionPool(kepLogDbConfig);
+      await kepLogPool.connect();
+      console.log(
+        `Successfully connected to SQL Server at ${config.KEPLOG_DB_SERVER}:${config.KEPLOG_DB_PORT}`,
+      );
+      return kepLogPool;
+    } catch (err) {
+      console.error(`Keplog Database connection failed: ${err.message}`);
+      kepLogPool = null;
+      return null;
+    } finally {
+      kepLogPoolPromise = null;
     }
-    pool = new sql.ConnectionPool(kepLogDbConfig);
-    await pool.connect();
-    console.log(`Successfully connected to SQL Server at ${config.KEPLOG_DB_SERVER}:${config.KEPLOG_DB_PORT}`);
-    return pool;
-  } catch (err) {
-    console.error(`Database connection failed: ${err.message}`);
-    pool = null;
-    return null;
-  }
+  })();
+  return kepLogPoolPromise;
 }
 
 let lastAxError = null;
@@ -64,25 +75,35 @@ async function getAxPool() {
   if (axPool && axPool.connected) {
     return axPool;
   }
-  try {
-    if (axPool) {
-      try {
-        await axPool.close();
-      } catch (e) {
-        // ignore
-      }
-    }
-    axPool = new sql.ConnectionPool(axDbConfig);
-    await axPool.connect();
-    lastAxError = null;
-    console.log(`Successfully connected to AX SQL Server at ${config.AX_DB_SERVER}:${config.AX_DB_PORT}`);
-    return axPool;
-  } catch (err) {
-    console.error(`AX Database connection failed: ${err.message}`);
-    lastAxError = err.message;
-    axPool = null;
-    return null;
+  if (axPoolPromise) {
+    return axPoolPromise;
   }
+  axPoolPromise = (async () => {
+    try {
+      if (axPool) {
+        try {
+          await axPool.close();
+        } catch (e) {
+          // ignore
+        }
+      }
+      axPool = new sql.ConnectionPool(axDbConfig);
+      await axPool.connect();
+      lastAxError = null;
+      console.log(
+        `Successfully connected to AX SQL Server at ${config.AX_DB_SERVER}:${config.AX_DB_PORT}`,
+      );
+      return axPool;
+    } catch (err) {
+      console.error(`AX Database connection failed: ${err.message}`);
+      lastAxError = err.message;
+      axPool = null;
+      return null;
+    } finally {
+      axPoolPromise = null;
+    }
+  })();
+  return axPoolPromise;
 }
 
 function getAxLastError() {
@@ -90,8 +111,8 @@ function getAxLastError() {
 }
 
 module.exports = {
-  getPool,
+  getKepLogPool,
   getAxPool,
   getAxLastError,
-  sql
+  sql,
 };

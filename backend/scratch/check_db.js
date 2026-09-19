@@ -1,16 +1,16 @@
-const { getPool, sql } = require('../db');
+const { getKepLogPool, sql } = require("../db");
 
 async function check() {
-  const pool = await getPool();
-  if (!pool) {
+  const kepLogPool = await getKepLogPool();
+  if (!kepLogPool) {
     console.log("Failed to connect to database");
     return;
   }
   try {
-    const result = await pool.request()
-      .input('start_dt', sql.VarChar, '2026-08-20 05:00:00')
-      .input('end_dt', sql.VarChar, '2026-08-20 18:00:00')
-      .query(`
+    const result = await kepLogPool
+      .request()
+      .input("start_dt", sql.VarChar, "2026-08-20 05:00:00")
+      .input("end_dt", sql.VarChar, "2026-08-20 18:00:00").query(`
         SELECT [SERVER TIMESTAMP], [Machine : Speed]
         FROM [KEP_LOG].[dbo].[View_1LB09_Bobst]
         WHERE [SERVER TIMESTAMP] BETWEEN @start_dt AND @end_dt

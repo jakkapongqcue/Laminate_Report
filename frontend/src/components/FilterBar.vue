@@ -77,6 +77,7 @@
           <label class="class_Lable">
             <Icon_calendar />
             วันที่สิ้นสุด
+            <span class="text-xs font-normal text-gray-400">(สูงสุด 31 วัน)</span>
           </label>
           <input type="date" v-model="filters.date_to" class="class_Input" />
         </div>

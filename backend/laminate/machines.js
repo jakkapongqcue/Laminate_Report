@@ -102,7 +102,7 @@ const LAMINATE_MACHINES = [
     columns: [
       "[SERVER TIMESTAMP] AS SERVER_TIMESTAMP",
       "[Speed.Actual Speed] AS LINE_SPEED",
-      "[Speed.Rewinder Splice Speed Max Set] AS SPILCE_SPEED",
+      "[Speed.Rewinder Splice Speed Max Set] AS SPLICE_SPEED",
       "[Temp.No.1 Zone] AS TEMP_ZONE_1",
       "[Temp.No.2 Zone] AS TEMP_ZONE_2",
       "[Temp.No.3 Zone] AS TEMP_ZONE_3",

@@ -3,16 +3,15 @@
   "printWidth": 100,
   "overrides": [
     {
-      "files": "*.vue",
-      "options": {
-        "singleQuote": true,
-        "semi": false
-      }
-    },
-    {
       "files": "server.js",
       "options": {
         "printWidth": 100
+      }
+    },
+    {
+      "files": "parameters.js",
+      "options": {
+        "printWidth": 300
       }
     },
     {

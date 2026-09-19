@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const config = require("./config");
-const { getPool, getAxPool, getAxLastError, sql } = require("./db");
+const { getKepLogPool, getAxPool, getAxLastError, sql } = require("./db");
 const {
   MACHINES,
   parseSqlTimestamp,
@@ -61,7 +61,7 @@ router.get("/api/machines", (req, res) => {
       brand: m.brand,
       isMES: m.isMES,
       processType: m.processType,
-    }))
+    })),
   );
 });
 
@@ -79,8 +79,7 @@ router.get("/api/searchItemFG", async (req, res) => {
   }
 
   const machineConfig =
-    findMachine(machine) ||
-    (processType ? getMachinesByProcess(processType)[0] : ALL_MACHINES[0]);
+    findMachine(machine) || (processType ? getMachinesByProcess(processType)[0] : ALL_MACHINES[0]);
   const axMachineId = machineConfig ? machineConfig.axMachineId : machine;
 
   try {
@@ -155,8 +154,7 @@ router.get("/api/checkItemFG", async (req, res) => {
   }
 
   const machineConfig =
-    findMachine(machine) ||
-    (processType ? getMachinesByProcess(processType)[0] : ALL_MACHINES[0]);
+    findMachine(machine) || (processType ? getMachinesByProcess(processType)[0] : ALL_MACHINES[0]);
   const axMachineId = machineConfig ? machineConfig.axMachineId : machine;
   const cleanItemFg = String(item_fg).trim();
 
@@ -203,11 +201,7 @@ router.get("/api/checkItemFG", async (req, res) => {
       const poolId = row.PRODPOOLID || "Default";
       if (!poolMap.has(poolId)) {
         const name =
-          poolId === "Laminate1"
-            ? "Laminate 1"
-            : poolId === "Laminate2"
-              ? "Laminate 2"
-              : poolId;
+          poolId === "Laminate1" ? "Laminate 1" : poolId === "Laminate2" ? "Laminate 2" : poolId;
         poolMap.set(poolId, {
           poolId,
           name,
@@ -245,6 +239,32 @@ router.get("/api/checkItemFG", async (req, res) => {
   }
 });
 
+/**
+ * ตรวจสอบความถูกต้องของช่วงวันที่ (date_from, date_to)
+ * กำหนดให้ไม่เกิน maxDays วัน (ค่าเริ่มต้น 31 วัน)
+ */
+function validateDateRange(date_from, date_to, maxDays = 31) {
+  if (!date_from || !date_to) {
+    return { valid: false, detail: "date_from and date_to are required parameters." };
+  }
+  const fromDate = new Date(date_from);
+  const toDate = new Date(date_to);
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    return { valid: false, detail: "รูปแบบวันที่ไม่ถูกต้อง (ต้องเป็นรูปแบบ YYYY-MM-DD)" };
+  }
+  const diffDays = Math.round((toDate - fromDate) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) {
+    return { valid: false, detail: "วันที่เริ่มต้น (date_from) ต้องไม่มากกว่าวันที่สิ้นสุด (date_to)" };
+  }
+  if (diffDays > maxDays) {
+    return {
+      valid: false,
+      detail: `ช่วงเวลาที่เลือกต้องไม่เกิน ${maxDays} วัน (คุณเลือก ${diffDays} วัน) เพื่อประสิทธิภาพและความเสถียรของระบบ`,
+    };
+  }
+  return { valid: true, diffDays };
+}
+
 // GET /api/report/laminate -> Query SQL Server database for Report Sheet
 router.get("/api/report/laminate", async (req, res) => {
   const {
@@ -258,14 +278,15 @@ router.get("/api/report/laminate", async (req, res) => {
     prod_pool = null,
   } = req.query;
 
-  if (!date_from || !date_to) {
+  const dateValidation = validateDateRange(date_from, date_to, 31);
+  if (!dateValidation.valid) {
     return res.status(400).json({
-      detail: "date_from and date_to are required parameters.",
+      detail: dateValidation.detail,
     });
   }
 
-  const pool = await getPool();
-  if (!pool) {
+  const kepLogPool = await getKepLogPool();
+  if (!kepLogPool) {
     return res.status(500).json({
       detail:
         "ไม่สามารถเชื่อมต่อฐานข้อมูล MS SQL Server (192.168.10.99) กรุณาตรวจสอบ DB_PASSWORD ในไฟล์ backend/.env",
@@ -274,6 +295,11 @@ router.get("/api/report/laminate", async (req, res) => {
 
   try {
     const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
+    if (!machineConfig || !machineConfig.tableName) {
+      return res.status(400).json({
+        detail: `เครื่องจักร ${machineConfig ? machineConfig.name : machine} ยังไม่มีฐานข้อมูลรองรับ (Under Construction)`,
+      });
+    }
     const tableName = machineConfig.tableName;
     const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
     const selectCols =
@@ -284,7 +310,7 @@ router.get("/api/report/laminate", async (req, res) => {
     const startDatetime = `${date_from} ${time_from}:00`;
     const endDatetime = `${date_to} ${time_to}:00`;
 
-    const request = pool.request();
+    const request = kepLogPool.request();
     request.input("start_dt", sql.VarChar, startDatetime);
     request.input("end_dt", sql.VarChar, endDatetime);
 
@@ -336,11 +362,11 @@ router.get("/api/report/laminate", async (req, res) => {
             setPointMap = axResult.recordset[0];
             itemFgName = (setPointMap.ITEM_FG_NAME || "").trim();
             console.log(
-              `Retrieved Set Point (PS) for ITEMFG: ${item_fg} (${itemFgName}), MACHINE: ${axMachineId}, POOL: ${cleanProdPool || "ANY"}`
+              `Retrieved Set Point (PS) for ITEMFG: ${item_fg} (${itemFgName}), MACHINE: ${axMachineId}, POOL: ${cleanProdPool || "ANY"}`,
             );
           } else {
             console.log(
-              `No Set Point record found in AX for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}, POOL: ${cleanProdPool || "ANY"}`
+              `No Set Point record found in AX for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}, POOL: ${cleanProdPool || "ANY"}`,
             );
           }
         }
@@ -382,14 +408,15 @@ router.get("/api/chart/laminate", async (req, res) => {
     step_minutes = null,
   } = req.query;
 
-  if (!date_from || !date_to) {
+  const dateValidation = validateDateRange(date_from, date_to, 31);
+  if (!dateValidation.valid) {
     return res.status(400).json({
-      detail: "date_from and date_to are required parameters.",
+      detail: dateValidation.detail,
     });
   }
 
-  const pool = await getPool();
-  if (!pool) {
+  const kepLogPool = await getKepLogPool();
+  if (!kepLogPool) {
     return res.status(500).json({
       detail:
         "ไม่สามารถเชื่อมต่อฐานข้อมูล MS SQL Server (192.168.10.99) กรุณาตรวจสอบ DB_PASSWORD ในไฟล์ backend/.env",
@@ -398,6 +425,11 @@ router.get("/api/chart/laminate", async (req, res) => {
 
   try {
     const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
+    if (!machineConfig || !machineConfig.tableName) {
+      return res.status(400).json({
+        detail: `เครื่องจักร ${machineConfig ? machineConfig.name : machine} ยังไม่มีฐานข้อมูลรองรับ (Under Construction)`,
+      });
+    }
     const tableName = machineConfig.tableName;
     const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
     const selectCols =
@@ -408,7 +440,7 @@ router.get("/api/chart/laminate", async (req, res) => {
     const startDatetime = `${date_from} ${time_from}:00`;
     const endDatetime = `${date_to} ${time_to}:00`;
 
-    const request = pool.request();
+    const request = kepLogPool.request();
     request.input("start_dt", sql.VarChar, startDatetime);
     request.input("end_dt", sql.VarChar, endDatetime);
 
@@ -466,12 +498,22 @@ router.get("/api/machineStatus", async (req, res) => {
     return res.json(cached.data);
   }
 
-  const pool = await getPool();
-  if (!pool) {
+  const kepLogPool = await getKepLogPool();
+  if (!kepLogPool) {
     return res.status(500).json({ detail: "Database connection unavailable" });
   }
 
   const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
+  if (!machineConfig || !machineConfig.tableName) {
+    const responseData = {
+      machine,
+      status: 0,
+      updateTime: "",
+      message: "No MES / Under Construction",
+    };
+    machineStatusCache.set(machine, { data: responseData, cachedAt: now });
+    return res.json(responseData);
+  }
   const tableName = machineConfig.tableName;
   const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
   const speedCol =
@@ -490,7 +532,7 @@ router.get("/api/machineStatus", async (req, res) => {
   `;
 
   try {
-    let result = await pool.request().query(fastQuery);
+    let result = await kepLogPool.request().query(fastQuery);
     let sqlRows = result.recordset;
 
     // 3. Fallback: if machine has been completely stopped for >24h, fetch latest historical record
@@ -503,7 +545,7 @@ router.get("/api/machineStatus", async (req, res) => {
         FROM ${tableName}
         ORDER BY ${timestampCol} DESC
       `;
-      result = await pool.request().query(fallbackQuery);
+      result = await kepLogPool.request().query(fallbackQuery);
       sqlRows = result.recordset;
     }
 

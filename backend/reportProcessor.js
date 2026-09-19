@@ -159,7 +159,7 @@ function processSqlViewData({
     });
 
     for (const dt of chunk.timestamps) {
-      const { bestActualDt } = findNearestRow(dt);
+      const { bestActualDt, bestRow } = findNearestRow(dt);
       const displayDt = bestActualDt || dt;
 
       const hh = String(dt.getHours()).padStart(2, "0");
@@ -170,6 +170,7 @@ function processSqlViewData({
         key: key,
         label: formatTimeThai(displayDt),
         full_datetime: formatDateTimeShort(displayDt),
+        _cachedRow: bestRow,
       });
     }
 
@@ -199,18 +200,7 @@ function processSqlViewData({
           continue;
         }
 
-        const [datePart, timePart] = col.full_datetime.split(" ");
-        const [yearVal, monthVal, dayVal] = datePart.split("-").map(Number);
-        const [hourVal, minVal] = timePart.split(":").map(Number);
-        const colDt = new Date(yearVal, monthVal - 1, dayVal, hourVal, minVal, 0, 0);
-
-        if (isNaN(colDt.getTime())) {
-          colValues[col.key] = "";
-          continue;
-        }
-
-        const { bestRow } = findNearestRow(colDt);
-
+        const bestRow = col._cachedRow;
         if (bestRow) {
           const rawVal = extractValueFromRow(bestRow, dbColumnName, colIdx);
           if (rawVal !== null && rawVal !== undefined) {
@@ -244,11 +234,18 @@ function processSqlViewData({
       });
     }
 
+    // Clean up _cachedRow before returning page data
+    const cleanTimeCols = timeCols.map(({ key, label, full_datetime }) => ({
+      key,
+      label,
+      full_datetime,
+    }));
+
     pages.push({
       page_number: idx,
       total_pages: totalPages,
       date_str: formattedDateTh,
-      time_columns: timeCols,
+      time_columns: cleanTimeCols,
       rows: rows,
     });
   }

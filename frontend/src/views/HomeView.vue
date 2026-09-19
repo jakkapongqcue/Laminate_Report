@@ -80,7 +80,7 @@
       <Icon_report v-if="viewMode === 'report'" :class="'mb-2 h-12 w-12'" />
       <Icon_chart v-else cusClass="h-12 w-12 mb-2" />
       <h3 class="text-sm font-semibold text-gray-800">
-        <div v-if="loadFristTime">กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มสร้าง{{ viewMode === "report" ? "รายงาน" : "กราฟ" }}</div>
+        <div v-if="loadFirstTime">กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มสร้าง{{ viewMode === "report" ? "รายงาน" : "กราฟ" }}</div>
         <div v-else>ไม่พบข้อมูล{{ viewMode === "report" ? "รายงาน" : "กราฟ" }}ในช่วงเวลาดังกล่าว</div>
       </h3>
     </div>
@@ -140,13 +140,13 @@ const filters = reactive({
 
 const prodPools = ref([])
 const machines = ref([])
-const loadFristTime = ref(true)
+const loadFirstTime = ref(true)
 const isLoading = ref(false)
 const errorMessage = ref("")
 const reportData = ref(null)
 const chartData = ref(null)
 
-const BACKEND_API_BASE_URL = import.meta.env.VITE_BACK_BASE_URL
+const BACKEND_API_BASE_URL = import.meta.env.VITE_BACK_BASE_URL || ""
 
 const machineStatus = ref({
   status: "N/A", //'N/A', 'Online', 'Offline'
@@ -381,7 +381,7 @@ watch(
   async (newType) => {
     reportData.value = null
     chartData.value = null
-    loadFristTime.value = true
+    loadFirstTime.value = true
     errorMessage.value = ""
     clearItemFgStatus()
     await fetchMachines(newType)
@@ -393,20 +393,40 @@ const currentMachineObj = computed(() => {
   return machines.value.find((m) => m.id === filters.machine) || null
 })
 
+const validateDateRange = (dateFrom, dateTo, maxDays = 31) => {
+  if (!dateFrom || !dateTo) {
+    return "กรุณาระบุวันที่เริ่มต้นและวันที่สิ้นสุด"
+  }
+  const from = new Date(dateFrom)
+  const to = new Date(dateTo)
+  if (isNaN(from.getTime()) || isNaN(to.getTime())) {
+    return "รูปแบบวันที่ไม่ถูกต้อง"
+  }
+  const diffDays = Math.round((to - from) / (1000 * 60 * 60 * 24))
+  if (diffDays < 0) {
+    return "วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด"
+  }
+  if (diffDays > maxDays) {
+    return `ช่วงเวลาที่เลือกต้องไม่เกิน ${maxDays} วัน (คุณเลือก ${diffDays} วัน) กรุณาเลือกช่วงเวลาใหม่`
+  }
+  return null
+}
+
 const fetchReport = async () => {
   if (activeProcessType.value !== "Laminate") {
     errorMessage.value = `ระบบรายงานสำหรับกระบวนการ ${activeProcessType.value} (${currentMachineObj.value?.name || filters.machine}) อยู่ระหว่างการพัฒนาระบบ`
     return
   }
 
-  // if (!filters.item_fg) {
-  //   errorMessage.value = 'กรุณาระบุ Item FG ก่อนดึงข้อมูลรายงาน'
-  //   return
-  // }
+  const dateErr = validateDateRange(filters.date_from, filters.date_to, 31)
+  if (dateErr) {
+    errorMessage.value = dateErr
+    return
+  }
 
   isLoading.value = true
   errorMessage.value = ""
-  loadFristTime.value = false
+  loadFirstTime.value = false
 
   try {
     const queryParams = new URLSearchParams({
@@ -427,7 +447,8 @@ const fetchReport = async () => {
     const res = await fetch(`${BACKEND_API_BASE_URL}${path}?${queryParams.toString()}`)
 
     if (!res.ok) {
-      throw new Error(`Server returned status ${res.status}`)
+      const errData = await res.json().catch(() => null)
+      throw new Error(errData?.detail || `Server returned status ${res.status}`)
     }
 
     const data = await res.json()
@@ -446,9 +467,15 @@ const fetchChart = async () => {
     return
   }
 
+  const dateErr = validateDateRange(filters.date_from, filters.date_to, 31)
+  if (dateErr) {
+    errorMessage.value = dateErr
+    return
+  }
+
   isLoading.value = true
   errorMessage.value = ""
-  loadFristTime.value = false
+  loadFirstTime.value = false
 
   try {
     const queryParams = new URLSearchParams({
@@ -463,7 +490,8 @@ const fetchChart = async () => {
     const res = await fetch(`${BACKEND_API_BASE_URL}${path}?${queryParams.toString()}`)
 
     if (!res.ok) {
-      throw new Error(`Server returned status ${res.status}`)
+      const errData = await res.json().catch(() => null)
+      throw new Error(errData?.detail || `Server returned status ${res.status}`)
     }
 
     const data = await res.json()
@@ -488,9 +516,9 @@ const setViewMode = (mode) => {
   viewMode.value = mode
   // If switching to chart mode and chart data is not yet fetched, fetch it automatically if user had already searched once
   clearErrorMessage()
-  if (mode === "chart" && !chartData.value && !loadFristTime.value) {
+  if (mode === "chart" && !chartData.value && !loadFirstTime.value) {
     fetchChart()
-  } else if (mode === "report" && !reportData.value && !loadFristTime.value) {
+  } else if (mode === "report" && !reportData.value && !loadFirstTime.value) {
     fetchReport()
   }
 }
