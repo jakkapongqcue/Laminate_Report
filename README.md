@@ -50,11 +50,17 @@ C:\webapp\LaminateReport\
 
 3. กำหนดข้อมูลการเชื่อมต่อฐานข้อมูล SQL Server ในไฟล์ `.env` ที่อยู่ในโฟลเดอร์ `backend`:
    ```env
-   DB_SERVER=192.168.10.99
-   DB_PORT=1433
-   DB_NAME=KEP_LOG
-   DB_USER=operation
-   DB_PASSWORD=[YourPassword]
+   KEPLOG_DB_SERVER=192.168.10.99
+   KEPLOG_DB_PORT=1433
+   KEPLOG_DB_NAME=KEP_LOG
+   KEPLOG_DB_USER=operation
+   KEPLOG_DB_PASSWORD=[YourPassword]
+
+   AX_DB_SERVER=AXDB
+   AX_DB_PORT=1433
+   AX_DB_NAME=AX50_SF_PRD_SP1
+   AX_DB_USER=operation
+   AX_DB_PASSWORD=[YourPassword]
    ```
 
 ---

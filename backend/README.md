@@ -67,12 +67,18 @@ Router mount อยู่ที่ทั้ง `/` (local dev) และ `/Lamin
    ```
 3. สร้างและตั้งค่าไฟล์ `.env`:
    ```env
-   DB_SERVER=192.168.10.99
-   DB_PORT=1433
-   DB_NAME=KEP_LOG
-   DB_USER=operation
-   DB_PASSWORD=YourPassword
+   KEPLOG_DB_SERVER=192.168.10.99
+   KEPLOG_DB_PORT=1433
+   KEPLOG_DB_NAME=KEP_LOG
+   KEPLOG_DB_USER=operation
+   KEPLOG_DB_PASSWORD=YourPassword
    PORT=8051
+
+   AX_DB_SERVER=AXDB
+   AX_DB_PORT=1433
+   AX_DB_NAME=AX50_SF_PRD_SP1
+   AX_DB_USER=operation
+   AX_DB_PASSWORD=YourPassword
    ```
 4. รันระบบ:
    ```bash
@@ -103,11 +109,17 @@ Router mount อยู่ที่ทั้ง `/` (local dev) และ `/Lamin
    ```
 3. แก้ไขไฟล์ `.env` ให้ตรงกับฐานข้อมูล Production:
    ```env
-   DB_SERVER=192.168.10.99
-   DB_PORT=1433
-   DB_NAME=KEP_LOG
-   DB_USER=operation
-   DB_PASSWORD=YourActualPassword
+   KEPLOG_DB_SERVER=192.168.10.99
+   KEPLOG_DB_PORT=1433
+   KEPLOG_DB_NAME=KEP_LOG
+   KEPLOG_DB_USER=operation
+   KEPLOG_DB_PASSWORD=YourActualPassword
+
+   AX_DB_SERVER=AXDB
+   AX_DB_PORT=1433
+   AX_DB_NAME=AX50_SF_PRD_SP1
+   AX_DB_USER=operation
+   AX_DB_PASSWORD=YourActualPassword
    ```
    > **หมายเหตุ**: ไม่ต้องระบุ `PORT` บน IIS เพราะ iisnode จะส่ง Named Pipe มาแทน
 
