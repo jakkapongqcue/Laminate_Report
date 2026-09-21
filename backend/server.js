@@ -15,6 +15,7 @@ const {
   getMachinesByProcess,
   findMachine,
   getProcess,
+  printing,
 } = require("./processes");
 const { processSqlViewData } = require("./reportProcessor");
 const { processSqlChartData } = require("./chartProcessor");
@@ -254,7 +255,10 @@ function validateDateRange(date_from, date_to, maxDays = 31) {
   }
   const diffDays = Math.round((toDate - fromDate) / (1000 * 60 * 60 * 24));
   if (diffDays < 0) {
-    return { valid: false, detail: "วันที่เริ่มต้น (date_from) ต้องไม่มากกว่าวันที่สิ้นสุด (date_to)" };
+    return {
+      valid: false,
+      detail: "วันที่เริ่มต้น (date_from) ต้องไม่มากกว่าวันที่สิ้นสุด (date_to)",
+    };
   }
   if (diffDays > maxDays) {
     return {
@@ -391,6 +395,147 @@ router.get("/api/report/laminate", async (req, res) => {
     res.json(response);
   } catch (err) {
     console.error(`PRD SQL Server Query Error: ${err.message}`);
+    res.status(500).json({
+      detail: `เกิดข้อผิดพลาดในการดึงข้อมูลจาก SQL Server: ${err.message}`,
+    });
+  }
+});
+
+// GET /api/report/printing -> Query SQL Server database for Printing Report Sheet
+router.get("/api/report/printing", async (req, res) => {
+  const {
+    machine = "1PG06",
+    date_from,
+    date_to,
+    time_from = "08:00",
+    time_to = "17:00",
+    hour_step = 1,
+    item_fg = null,
+    prod_pool = null,
+  } = req.query;
+
+  const dateValidation = validateDateRange(date_from, date_to, 31);
+  if (!dateValidation.valid) {
+    return res.status(400).json({
+      detail: dateValidation.detail,
+    });
+  }
+
+  const kepLogPool = await getKepLogPool();
+  if (!kepLogPool) {
+    return res.status(500).json({
+      detail:
+        "ไม่สามารถเชื่อมต่อฐานข้อมูล MS SQL Server (192.168.10.99) กรุณาตรวจสอบ DB_PASSWORD ในไฟล์ backend/.env",
+    });
+  }
+
+  try {
+    const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
+    if (!machineConfig || !machineConfig.tableName) {
+      return res.status(400).json({
+        detail: `เครื่องจักร ${machineConfig ? machineConfig.name : machine} ยังไม่มีฐานข้อมูลรองรับ (Under Construction)`,
+      });
+    }
+    const tableName = machineConfig.tableName;
+    const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
+    const selectCols =
+      machineConfig.columns && machineConfig.columns.length > 0
+        ? machineConfig.columns.join(",\n          ")
+        : "*";
+
+    const startDatetime = `${date_from} ${time_from}:00`;
+    const endDatetime = `${date_to} ${time_to}:00`;
+
+    const request = kepLogPool.request();
+    request.input("start_dt", sql.VarChar, startDatetime);
+    request.input("end_dt", sql.VarChar, endDatetime);
+
+    const query = `
+      SELECT 
+          ${selectCols}
+      FROM ${tableName}
+      WHERE ${timestampCol} BETWEEN @start_dt AND @end_dt
+      ORDER BY ${timestampCol} ASC
+    `;
+
+    const result = await request.query(query);
+    const sqlRows = result.recordset;
+
+    console.log(
+      `[Printing] Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}.`,
+    );
+
+    // Fetch Set Point (PS) and item_fg_name from AXDB if item_fg is provided
+    let setPointMap = {};
+    let itemFgName = "";
+    if (item_fg) {
+      try {
+        const axPool = await getAxPool();
+        if (axPool) {
+          const axMachineId = machineConfig.axMachineId;
+          const cleanProdPool =
+            prod_pool && String(prod_pool).trim() ? String(prod_pool).trim() : null;
+
+          const axRequest = axPool.request();
+          axRequest.input("item_fg", sql.VarChar, String(item_fg).trim());
+          axRequest.input("ax_machine", sql.VarChar, axMachineId);
+          if (cleanProdPool) {
+            axRequest.input("prod_pool", sql.VarChar, cleanProdPool);
+          }
+
+          const axPsCols =
+            printing.axPsColumns && printing.axPsColumns.length > 0
+              ? printing.axPsColumns.join(",\n              ")
+              : "a.RECID";
+
+          const axQuery = `
+            SELECT TOP 1
+              ${axPsCols},
+              ISNULL(ai.ITEMNAME, '') AS [ITEM_FG_NAME]
+            FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] a
+            LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] bi ON bi.ITEMID = a.ITEMID
+            LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] ai ON ai.ITEMID = a.ITEMFG
+            WHERE a.ITEMFG = @item_fg 
+              AND a.MACHINE = @ax_machine
+              ${cleanProdPool ? "AND bi.PRODPOOLID = @prod_pool" : ""}
+            ORDER BY a.REVID DESC, a.RECID DESC
+          `;
+          const axResult = await axRequest.query(axQuery);
+          if (axResult.recordset && axResult.recordset.length > 0) {
+            setPointMap = axResult.recordset[0];
+            itemFgName = (setPointMap.ITEM_FG_NAME || "").trim();
+            console.log(
+              `[Printing] Retrieved Set Point (PS) for ITEMFG: ${item_fg} (${itemFgName}), MACHINE: ${axMachineId}`,
+            );
+          } else {
+            console.log(
+              `[Printing] No Set Point record found in AX for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}`,
+            );
+          }
+        }
+      } catch (axErr) {
+        console.warn(`[Printing] Could not query AXDB for Set Point: ${axErr.message}`);
+      }
+    }
+
+    const response = processSqlViewData({
+      sqlRows,
+      machine,
+      dateFromStr: date_from,
+      dateToStr: date_to,
+      timeFromStr: time_from,
+      timeToStr: time_to,
+      hourStep: parseInt(hour_step),
+      setPointMap,
+      itemFg: item_fg,
+      itemFgName,
+      parameters: printing.parameters,
+      machinesList: printing.machines,
+    });
+
+    res.json(response);
+  } catch (err) {
+    console.error(`[Printing] SQL Server Query Error: ${err.message}`);
     res.status(500).json({
       detail: `เกิดข้อผิดพลาดในการดึงข้อมูลจาก SQL Server: ${err.message}`,
     });

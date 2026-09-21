@@ -1,6 +1,6 @@
 // AX PS (Set Point) columns for Printing process
 const AX_PRINTING_PS_COLUMNS = [
-  "[SPEED1] AS LINE_SPEED",
+  "[SPEED] AS LINE_SPEED",
 ];
 
 module.exports = {

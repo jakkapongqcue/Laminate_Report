@@ -22,8 +22,10 @@ function processSqlViewData({
   setPointMap = {},
   itemFg = "",
   itemFgName = "",
+  parameters = STANDARD_PARAMETERS,
+  machinesList = MACHINES,
 }) {
-  const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
+  const machineConfig = machinesList.find((m) => m.id === machine) || machinesList[0];
   const machineName = machineConfig.name;
 
   // Build a timestamp mapping list
@@ -175,7 +177,7 @@ function processSqlViewData({
     }
 
     const rows = [];
-    for (const p of STANDARD_PARAMETERS) {
+    for (const p of parameters) {
       let setupVal = "";
       const colValues = {};
 

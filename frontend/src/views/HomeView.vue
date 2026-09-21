@@ -50,7 +50,19 @@
 
     <Slot_MainContainer v-else-if="viewMode === 'report' && reportData && reportData.pages && reportData.pages.length > 0">
       <div v-for="page in reportData.pages" :key="page.page_number" class="report-wrapper">
+        <Printing_ReportSheet
+          v-if="activeProcessType === 'Printing'"
+          v-bind:page-data="page"
+          :machine="reportData.machine"
+          :item-fg="reportData.item_fg"
+          :item-fg-name="reportData.item_fg_name"
+          :date-from="reportData.date_from"
+          :date-to="reportData.date_to"
+          :time-from="reportData.time_from"
+          :time-to="reportData.time_to"
+        />
         <Laminate_ReportSheet
+          v-else
           v-bind:page-data="page"
           :machine="reportData.machine"
           :item-fg="reportData.item_fg"
@@ -92,6 +104,7 @@ import { ref, reactive, computed, watch, onMounted } from "vue"
 import { useRoute } from "vue-router"
 import FilterBar from "../components/FilterBar.vue"
 import Laminate_ReportSheet from "../components/Laminate_ReportSheet.vue"
+import Printing_ReportSheet from "../components/Printing_ReportSheet.vue"
 import Laminate_Chart from "../components/Laminate_Chart.vue"
 import AppHeadTitle from "../components/AppHeadTitle.vue"
 import Icon_circleLoad from "../components/icons/Icon_circleLoad.vue"
@@ -414,7 +427,7 @@ const validateDateRange = (dateFrom, dateTo, maxDays = 31) => {
 }
 
 const fetchReport = async () => {
-  if (activeProcessType.value !== "Laminate") {
+  if (!["Laminate", "Printing"].includes(activeProcessType.value)) {
     errorMessage.value = `ระบบรายงานสำหรับกระบวนการ ${activeProcessType.value} (${currentMachineObj.value?.name || filters.machineId}) อยู่ระหว่างการพัฒนาระบบ`
     return
   }
@@ -444,7 +457,7 @@ const fetchReport = async () => {
       queryParams.append("prod_pool", filters.prod_pool)
     }
 
-    const path = "/api/report/laminate"
+    const path = activeProcessType.value === "Printing" ? "/api/report/printing" : "/api/report/laminate"
     const res = await fetch(`${BACKEND_API_BASE_URL}${path}?${queryParams.toString()}`)
 
     if (!res.ok) {
