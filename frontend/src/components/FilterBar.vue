@@ -2,21 +2,15 @@
   <div class="no-print mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-md">
     <div class="flex flex-wrap items-end justify-between gap-4">
       <!-- Filter Controls Group -->
-      <div class="grid w-full grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div class="grid w-full grid-cols-2 gap-2 lg:grid-cols-4 xl:grid-cols-5">
         <!-- Machine Selection -->
-        <div class="class_InputGroup col-span-2 flex flex-col">
+        <div class="class_InputGroup col-span-2">
           <label class="class_Lable">
             <Icon_machine />
             เครื่องจักร (Machine)
           </label>
           <div class="relative">
-            <select
-              id="Input_Machine"
-              v-model="filters.machineId"
-              class="class_Input w-full bg-white"
-              @click.ctrl.alt="$emit('refreshMachine')"
-              @change="handleMachineChange()"
-            >
+            <select id="Input_Machine" v-model="filters.machineId" class="class_Input bg-white" @click.ctrl.alt="$emit('refreshMachine')" @change="handleMachineChange()">
               <option v-for="m in machines" :key="m.id" :value="m.id" :disabled="m.isMES === false" :class="{ 'bg-gray-50 text-gray-400': m.isMES === false }">
                 {{ m.name }}{{ m.isMES === false ? " (No MES)" : "" }}
               </option>
@@ -43,16 +37,18 @@
         />
 
         <!-- Date Range -->
-        <div class="class_InputGroup col-span-1 col-start-1 flex flex-col self-end">
-          <label class="class_Lable">
-            <Icon_calendar />
-            วันที่เริ่มต้น
-          </label>
-          <input type="date" v-model="filters.date_from" class="class_Input" />
+        <div class="class_InputGroup col-span-1 col-start-1">
+          <div class="relative">
+            <label class="class_Lable">
+              <Icon_calendar />
+              วันที่เริ่มต้น
+            </label>
+            <input type="date" v-model="filters.date_from" class="class_Input" />
+          </div>
         </div>
 
         <!-- Time Range -->
-        <div class="class_InputGroup col-span-1 flex flex-col self-end">
+        <div class="class_InputGroup col-span-1">
           <label class="class_Lable">
             <Icon_time />
             เวลาม้วนแรกที่ทำการผลิต
@@ -61,7 +57,7 @@
         </div>
 
         <!-- Hourly Step (Visible on Report mode) -->
-        <div class="class_InputGroup col-span-2 flex flex-col lg:col-span-1">
+        <div class="class_InputGroup col-span-2 lg:col-span-1">
           <label class="class_Lable">
             <Icon_time />
             ช่วงเวลา (Step)
@@ -73,7 +69,7 @@
           </select>
         </div>
 
-        <div class="class_InputGroup col-span-1 col-start-1 flex flex-col">
+        <div class="class_InputGroup col-span-1 col-start-1">
           <label class="class_Lable">
             <Icon_calendar />
             วันที่สิ้นสุด
@@ -82,7 +78,7 @@
           <input type="date" v-model="filters.date_to" class="class_Input" />
         </div>
 
-        <div class="class_InputGroup col-span-1 flex flex-col">
+        <div class="class_InputGroup col-span-1">
           <label class="class_Lable">
             <Icon_time />
             เวลาสิ้นสุด

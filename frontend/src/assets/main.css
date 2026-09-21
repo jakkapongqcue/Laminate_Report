@@ -2,19 +2,19 @@
 
 @layer base {
   .class_Lable {
-    @apply text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1;
+    @apply mb-1 flex items-center gap-1 text-xs font-semibold text-gray-700;
   }
   .class_InputGroup {
     @apply mb-4;
   }
   .class_Input {
-    @apply px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 w-full;
+    @apply box-border h-9 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none;
   }
   .parentView {
     @apply px-4 py-6;
   }
   .slotMainContainer {
-    @apply py-6 bg-white border border-gray-200 rounded-lg shadow-sm;
+    @apply rounded-lg border border-gray-200 bg-white py-6 shadow-sm;
   }
 }
 
@@ -32,6 +32,14 @@ body {
   background-color: #e5e7eb;
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
+}
+
+input[type="date"],
+input[type="time"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
 }
 
 button,
@@ -173,7 +181,7 @@ select:disabled {
     @apply p-0!;
   }
   .slotMainContainer {
-    @apply py-0! bg-white! border-none! rounded-none! shadow-none!;
+    @apply rounded-none! border-none! bg-white! py-0! shadow-none!;
   }
   /* Each .report-page = exactly one printed page */
 
