@@ -143,7 +143,7 @@
       mode="out-in"
       ><div v-if="filters.item_fg_name && filters.item_fg_name.length > 0" class="mt-2 flex items-center gap-1.5 text-xs text-gray-500">
         <span class="self-start text-nowrap">ชื่อสินค้า:</span>
-        <span class="line-clamp-2 md:line-clamp-1" :title="filters.item_fg_name">{{ filters.item_fg_name }} </span>
+        <span class="line-clamp-2" :title="filters.item_fg_name">{{ filters.item_fg_name }} </span>
       </div></transition
     >
   </div>
