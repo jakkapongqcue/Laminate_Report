@@ -88,13 +88,13 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="grid w-full grid-cols-2 items-center gap-2 border-t border-gray-100 pt-3 text-xs text-gray-500 md:flex">
+      <div class="grid w-full grid-cols-2 items-center gap-2 border-t border-gray-100 pt-3 text-xs text-gray-500 lg:grid-cols-4 xl:grid-cols-5">
         <!-- Search button -->
         <button
           @click="$emit('search')"
           :disabled="statusLoading"
           :title="!filters.item_fg ? 'กรุณาระบุ Item FG ก่อนดึงข้อมูล' : ''"
-          class="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sky-600 px-5 py-2.5 text-sm font-medium text-white shadow transition duration-150 ease-in-out hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50 md:w-40"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sky-600 px-5 py-2.5 text-sm font-medium text-white shadow transition duration-150 ease-in-out hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Icon_search :loading="statusLoading" :cusClass="'w-4 h-4'" />
           ดึงข้อมูล{{ currentViewMode === "chart" ? "กราฟ" : "รายงาน" }}
@@ -105,7 +105,7 @@
           v-if="currentViewMode === 'report'"
           :disabled="!isHaveReportData"
           @click="$emit('print')"
-          class="inline-flex w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow transition duration-150 ease-in-out hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 md:w-40"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow transition duration-150 ease-in-out hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Icon_print />
           พิมพ์รายงาน
