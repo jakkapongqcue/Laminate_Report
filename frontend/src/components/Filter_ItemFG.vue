@@ -16,6 +16,7 @@
           v-model.trim="filters.item_fg"
           placeholder="ระบุ Item FG หรือคำค้นหา เช่น 180101 (กด Enter เพื่อค้นหา)"
           class="class_Input w-full font-mono uppercase placeholder:text-xs"
+          :class="{ 'pr-45': itemFgStatus && itemFgStatus.show }"
           autocomplete="off"
         />
 

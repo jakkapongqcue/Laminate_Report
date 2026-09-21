@@ -127,7 +127,7 @@ const getTodayStr = () => {
 const viewMode = ref("report") // 'report' | 'chart'
 
 const filters = reactive({
-  machine: "1LB09",
+  machineId: "1LB09",
   item_fg: "",
   item_fg_name: "",
   prod_pool: "",
@@ -214,7 +214,7 @@ const checkItemFGwithMachine = async () => {
 
   try {
     const queryParams = new URLSearchParams({
-      machine: filters.machine,
+      machine: filters.machineId,
       item_fg: cleanItemFg,
       processType: activeProcessType.value,
     })
@@ -300,7 +300,7 @@ const searchItemFGwithMachine = async () => {
 
   try {
     const queryParams = new URLSearchParams({
-      machine: filters.machine,
+      machine: filters.machineId,
       keyword: keyword,
       processType: activeProcessType.value,
     })
@@ -347,6 +347,7 @@ const searchItemFGwithMachine = async () => {
 
 const selectItemFgFromSearch = async (item) => {
   filters.item_fg = item.item_fg
+  filters.item_fg_name = item.item_fg_name
   itemFgSearchResults.value = []
   await checkItemFGwithMachine()
 }
@@ -364,10 +365,10 @@ const fetchMachines = async (procType = activeProcessType.value) => {
       if (data && data.length > 0) {
         machines.value = data
         // Select first available machine with MES if current selection is not valid or has no MES
-        const currentMatch = data.find((m) => m.id === filters.machine)
+        const currentMatch = data.find((m) => m.id === filters.machineId)
         if (!currentMatch || currentMatch.isMES === false) {
           const firstMes = data.find((m) => m.isMES !== false)
-          filters.machine = firstMes ? firstMes.id : data[0].id
+          filters.machineId = firstMes ? firstMes.id : data[0].id
         }
       }
     }
@@ -390,7 +391,7 @@ watch(
 )
 
 const currentMachineObj = computed(() => {
-  return machines.value.find((m) => m.id === filters.machine) || null
+  return machines.value.find((m) => m.id === filters.machineId) || null
 })
 
 const validateDateRange = (dateFrom, dateTo, maxDays = 31) => {
@@ -414,7 +415,7 @@ const validateDateRange = (dateFrom, dateTo, maxDays = 31) => {
 
 const fetchReport = async () => {
   if (activeProcessType.value !== "Laminate") {
-    errorMessage.value = `ระบบรายงานสำหรับกระบวนการ ${activeProcessType.value} (${currentMachineObj.value?.name || filters.machine}) อยู่ระหว่างการพัฒนาระบบ`
+    errorMessage.value = `ระบบรายงานสำหรับกระบวนการ ${activeProcessType.value} (${currentMachineObj.value?.name || filters.machineId}) อยู่ระหว่างการพัฒนาระบบ`
     return
   }
 
@@ -430,7 +431,7 @@ const fetchReport = async () => {
 
   try {
     const queryParams = new URLSearchParams({
-      machine: filters.machine,
+      machine: filters.machineId,
       date_from: filters.date_from,
       date_to: filters.date_to,
       time_from: filters.time_from,
@@ -463,7 +464,7 @@ const fetchReport = async () => {
 
 const fetchChart = async () => {
   if (activeProcessType.value !== "Laminate") {
-    errorMessage.value = `ระบบกราฟสำหรับกระบวนการ ${activeProcessType.value} (${currentMachineObj.value?.name || filters.machine}) อยู่ระหว่างการพัฒนาระบบ`
+    errorMessage.value = `ระบบกราฟสำหรับกระบวนการ ${activeProcessType.value} (${currentMachineObj.value?.name || filters.machineId}) อยู่ระหว่างการพัฒนาระบบ`
     return
   }
 
@@ -479,7 +480,7 @@ const fetchChart = async () => {
 
   try {
     const queryParams = new URLSearchParams({
-      machine: filters.machine,
+      machine: filters.machineId,
       date_from: filters.date_from,
       date_to: filters.date_to,
       time_from: filters.time_from,
@@ -542,7 +543,7 @@ const fetchMachineStatus = async () => {
   machineStatus.value.status = "Loading"
   try {
     const queryParams = new URLSearchParams({
-      machine: filters.machine,
+      machine: filters.machineId,
     })
     const res = await fetch(BACKEND_API_BASE_URL + "/api/machineStatus?" + queryParams.toString(), {
       signal: machineStatusAbortController.signal,

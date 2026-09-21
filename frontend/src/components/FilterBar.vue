@@ -12,7 +12,7 @@
           <div class="relative">
             <select
               id="Input_Machine"
-              v-model="filters.machine"
+              v-model="filters.machineId"
               class="class_Input w-full bg-white"
               @click.ctrl.alt="$emit('refreshMachine')"
               @change="handleMachineChange()"
