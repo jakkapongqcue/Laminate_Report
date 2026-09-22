@@ -1,7 +1,7 @@
 const PRINTING_MACHINES = [
   {
     id: "1PG06",
-    name: "1PG-06 Caida",
+    name: "1PG-06 Caida (In Progress)",
     brand: "Caida",
     isMES: true,
     processType: "Printing",
@@ -46,7 +46,7 @@ const PRINTING_MACHINES = [
   },
   {
     id: "1PG07",
-    name: "1PG-07 Caida",
+    name: "1PG-07 Caida (In Progress)",
     brand: "Caida",
     isMES: true,
     processType: "Printing",
@@ -111,17 +111,24 @@ const PRINTING_MACHINES = [
   },
   {
     id: "PT04",
-    name: "PT-04 Beiren",
+    name: "PT-04 Beiren (In Progress)",
     brand: "Beiren",
     isMES: true,
     processType: "Printing",
     axMachineId: "PT-04",
     tableName: "[KEP_LOG].[dbo].[View_PT04_Beiren]",
-    columns: [],
+    timestampColumn: "[SERVER TIMESTAMP]",
+    columns: [
+      "[SERVER TIMESTAMP]",
+      "[Main Speed] as [LINE_SPEED]",
+      "[RewinderA length] as [RewingA_length]",
+      "[RewinderB length] as [RewingB_length]",
+      "[Unwind Cutting Length] as [TOTAL_length]",
+    ],
   },
   {
     id: "PT08",
-    name: "PT-08 Altima",
+    name: "PT-08 Altima (In Progress)",
     brand: "Altima",
     isMES: true,
     processType: "Printing",

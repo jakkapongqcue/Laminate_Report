@@ -77,13 +77,14 @@
 
     <!-- ── Mode 2: Chart Rendering Container ────────────────────────── -->
     <div v-else-if="viewMode === 'chart' && chartData && chartData.parameters && chartData.parameters.length > 0" class="no-print">
-      <Laminate_Chart
+      <Global_Chart
         :chart-data="chartData"
         :machine="chartData.machine"
         :date-from="chartData.date_from"
         :date-to="chartData.date_to"
         :time-from="chartData.time_from"
         :time-to="chartData.time_to"
+        :process-type="activeProcessType"
       />
     </div>
 
@@ -105,7 +106,7 @@ import { useRoute } from "vue-router"
 import FilterBar from "../components/FilterBar.vue"
 import Laminate_ReportSheet from "../components/Laminate_ReportSheet.vue"
 import Printing_ReportSheet from "../components/Printing_ReportSheet.vue"
-import Laminate_Chart from "../components/Laminate_Chart.vue"
+import Global_Chart from "../components/Global_Chart.vue"
 import AppHeadTitle from "../components/AppHeadTitle.vue"
 import Icon_circleLoad from "../components/icons/Icon_circleLoad.vue"
 import Icon_report from "../components/icons/Icon_report.vue"
@@ -399,7 +400,7 @@ watch(
     errorMessage.value = ""
     clearItemFgStatus()
     await fetchMachines(newType)
-    // fetchMachineStatus()
+    fetchMachineStatus()
   },
 )
 
@@ -469,14 +470,15 @@ const fetchReport = async () => {
     reportData.value = data
   } catch (err) {
     console.error("Fetch report error:", err)
-    errorMessage.value = `เกิดข้อผิดพลาดในการดึงข้อมูลรายงาน: ${err.message}`
+    reportData.value = null
+    errorMessage.value = err.message
   } finally {
     isLoading.value = false
   }
 }
 
 const fetchChart = async () => {
-  if (activeProcessType.value !== "Laminate") {
+  if (!["Laminate", "Printing"].includes(activeProcessType.value)) {
     errorMessage.value = `ระบบกราฟสำหรับกระบวนการ ${activeProcessType.value} (${currentMachineObj.value?.name || filters.machineId}) อยู่ระหว่างการพัฒนาระบบ`
     return
   }
@@ -500,7 +502,7 @@ const fetchChart = async () => {
       time_to: filters.time_to,
     })
 
-    const path = "/api/chart/laminate"
+    const path = `/api/chart/${activeProcessType.value.toLowerCase()}`
     const res = await fetch(`${BACKEND_API_BASE_URL}${path}?${queryParams.toString()}`)
 
     if (!res.ok) {
@@ -512,7 +514,8 @@ const fetchChart = async () => {
     chartData.value = data
   } catch (err) {
     console.error("Fetch chart error:", err)
-    errorMessage.value = `เกิดข้อผิดพลาดในการดึงข้อมูลกราฟ: ${err.message}`
+    chartData.value = null
+    errorMessage.value = err.message
   } finally {
     isLoading.value = false
   }
@@ -565,8 +568,12 @@ const fetchMachineStatus = async () => {
       throw new Error(`Server returned status ${res.status}`)
     }
     const data = await res.json()
-    machineStatus.value.status = data.status.toString() == "1" ? "Online" : "Offline"
-    machineStatus.value.time = data.updateTime.toString()
+    if (data.status === "N/A" || data.message?.includes("No MES")) {
+      machineStatus.value.status = "N/A"
+    } else {
+      machineStatus.value.status = data.status.toString() == "1" ? "Online" : "Offline"
+    }
+    machineStatus.value.time = data.updateTime ? data.updateTime.toString() : ""
   } catch (err) {
     if (err.name === "AbortError") {
       return
@@ -577,7 +584,17 @@ const fetchMachineStatus = async () => {
   }
 }
 
-onMounted(() => {
-  fetchMachines()
+watch(
+  () => filters.machineId,
+  (newId) => {
+    if (newId) {
+      fetchMachineStatus()
+    }
+  },
+)
+
+onMounted(async () => {
+  await fetchMachines()
+  fetchMachineStatus()
 })
 </script>

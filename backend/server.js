@@ -331,6 +331,12 @@ router.get("/api/report/laminate", async (req, res) => {
 
     console.log(`Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}.`);
 
+    if (!sqlRows || sqlRows.length === 0) {
+      return res.status(404).json({
+        detail: `ไม่พบข้อมูลใน KEP_LOG สำหรับเครื่อง ${machineConfig.name || machine} ในช่วงเวลาที่เลือก (${date_from} ${time_from} ถึง ${date_to} ${time_to})`,
+      });
+    }
+
     // Fetch Set Point (PS) and item_fg_name from AXDB if item_fg is provided
     let setPointMap = {};
     let itemFgName = "";
@@ -465,6 +471,12 @@ router.get("/api/report/printing", async (req, res) => {
       `[Printing] Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}.`,
     );
 
+    if (!sqlRows || sqlRows.length === 0) {
+      return res.status(404).json({
+        detail: `ไม่พบข้อมูลใน KEP_LOG สำหรับเครื่อง ${machineConfig.name || machine} ในช่วงเวลาที่เลือก (${date_from} ${time_from} ถึง ${date_to} ${time_to})`,
+      });
+    }
+
     // Fetch Set Point (PS) and item_fg_name from AXDB if item_fg is provided
     let setPointMap = {};
     let itemFgName = "";
@@ -542,10 +554,15 @@ router.get("/api/report/printing", async (req, res) => {
   }
 });
 
-// GET /api/chart/laminate -> Query SQL Server database for Line Chart time series
-router.get("/api/chart/laminate", async (req, res) => {
+// GET /api/chart/:processType -> Query SQL Server database for Line Chart time series
+router.get(["/api/chart/:processType", "/api/chart/laminate"], async (req, res) => {
+  const processType = req.params.processType || "laminate";
+  const proc = getProcess(processType);
+  const procMachines = (proc && proc.machines) || MACHINES;
+  const procParameters = (proc && proc.parameters) || null;
+
   const {
-    machine = "1LB09_Bobst",
+    machine = procMachines[0]?.id || "1LB09",
     date_from,
     date_to,
     time_from = "08:00",
@@ -569,7 +586,7 @@ router.get("/api/chart/laminate", async (req, res) => {
   }
 
   try {
-    const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
+    const machineConfig = MACHINES.find((m) => m.id === machine) || procMachines[0];
     if (!machineConfig || !machineConfig.tableName) {
       return res.status(400).json({
         detail: `เครื่องจักร ${machineConfig ? machineConfig.name : machine} ยังไม่มีฐานข้อมูลรองรับ (Under Construction)`,
@@ -601,8 +618,14 @@ router.get("/api/chart/laminate", async (req, res) => {
     const sqlRows = result.recordset;
 
     console.log(
-      `[Chart API] Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}.`,
+      `[Chart API - ${processType}] Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}.`,
     );
+
+    if (!sqlRows || sqlRows.length === 0) {
+      return res.status(404).json({
+        detail: `ไม่พบข้อมูลใน KEP_LOG สำหรับเครื่อง ${machineConfig.name || machine} ในช่วงเวลาที่เลือก (${date_from} ${time_from} ถึง ${date_to} ${time_to})`,
+      });
+    }
 
     const parsedStep = step_minutes ? parseInt(step_minutes) : null;
     const response = processSqlChartData({
@@ -613,6 +636,8 @@ router.get("/api/chart/laminate", async (req, res) => {
       timeFromStr: time_from,
       timeToStr: time_to,
       stepMinutes: parsedStep,
+      parameters: procParameters,
+      machinesList: procMachines,
     });
 
     res.json(response);
@@ -648,13 +673,13 @@ router.get("/api/machineStatus", async (req, res) => {
     return res.status(500).json({ detail: "Database connection unavailable" });
   }
 
-  const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
-  if (!machineConfig || !machineConfig.tableName) {
+  const machineConfig = findMachine(machine) || MACHINES.find((m) => m.id === machine);
+  if (!machineConfig || !machineConfig.tableName || machineConfig.isMES === false) {
     const responseData = {
       machine,
       status: 0,
       updateTime: "",
-      message: "No MES / Under Construction",
+      message: machineConfig ? "No MES / Under Construction" : "Machine not found",
     };
     machineStatusCache.set(machine, { data: responseData, cachedAt: now });
     return res.json(responseData);
@@ -662,7 +687,7 @@ router.get("/api/machineStatus", async (req, res) => {
   const tableName = machineConfig.tableName;
   const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
   const speedCol =
-    machineConfig.columns?.find((c) => c.includes("AS LINE_SPEED")) ||
+    machineConfig.columns?.find((c) => /LINE_SPEED/i.test(c)) ||
     "[Machine : Speed] AS LINE_SPEED";
 
   // 2. Optimized query: Only select necessary columns with a time window (last 24h)
@@ -695,14 +720,17 @@ router.get("/api/machineStatus", async (req, res) => {
     }
 
     if (!sqlRows || sqlRows.length === 0) {
-      const responseData = { machine, status: 0, updateTime: "" };
+      const responseData = { machine, status: 0, updateTime: "", message: "No data in KEP_LOG" };
       machineStatusCache.set(machine, { data: responseData, cachedAt: now });
       return res.json(responseData);
     }
 
     const row = sqlRows[0];
-    const lineSpeed = parseFloat(row["LINE_SPEED"]) || 0;
-    const status = lineSpeed > 0 ? 1 : 0;
+    const rawSpeed = row["LINE_SPEED"] !== undefined ? row["LINE_SPEED"] : row["line_speed"];
+    const lineSpeed = parseFloat(rawSpeed) || 0;
+    const diffSec = row["DIFF_SECONDS"] !== null && row["DIFF_SECONDS"] !== undefined ? Number(row["DIFF_SECONDS"]) : null;
+    const isRecent = diffSec === null || (diffSec >= 0 && diffSec <= 1800);
+    const status = (isRecent && lineSpeed > 0) ? 1 : 0;
     const parsedTime = parseSqlTimestamp(row["SERVER_TIMESTAMP"]);
     const updateTime = parsedTime ? formatDateTimeShort(parsedTime) : "";
 
@@ -710,8 +738,9 @@ router.get("/api/machineStatus", async (req, res) => {
     machineStatusCache.set(machine, { data: responseData, cachedAt: now });
     res.json(responseData);
   } catch (err) {
-    console.error(`Machine status query error: ${err.message}`);
-    res.status(500).json({ detail: err.message });
+    console.error(`Machine status query error for ${machine}: ${err.message}`);
+    const responseData = { machine, status: 0, updateTime: "", message: err.message };
+    res.json(responseData);
   }
 });
 

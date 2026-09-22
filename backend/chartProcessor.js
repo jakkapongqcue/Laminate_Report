@@ -20,9 +20,11 @@ function processSqlChartData({
   timeFromStr = "08:00",
   timeToStr = "17:00",
   stepMinutes = null,
+  parameters: targetParameters = STANDARD_PARAMETERS,
+  machinesList = MACHINES,
 }) {
-  const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
-  const machineName = machineConfig.name;
+  const machineConfig = machinesList.find((m) => m.id === machine) || machinesList[0];
+  const machineName = machineConfig ? machineConfig.name : machine;
 
   // 1. Build sorted record list with valid timestamps
   const records = [];
@@ -54,10 +56,10 @@ function processSqlChartData({
   // 3. Map parameters to series
   const parameters = [];
 
-  for (const p of STANDARD_PARAMETERS) {
+  for (const p of targetParameters) {
     const dbColumnName = p.key;
     const colIdx = p.param_id;
-    const unit = (machineConfig.unitOverrides && machineConfig.unitOverrides[p.key]) || p.unit;
+    const unit = (machineConfig && machineConfig.unitOverrides && machineConfig.unitOverrides[p.key]) || p.unit;
 
     const dataPoints = [];
     let sum = 0;
