@@ -8,8 +8,10 @@
 
 **Laminate Checking Report** คือระบบเว็บแอปพลิเคชันสำหรับดึงข้อมูลการทำงานและค่าพารามิเตอร์ของเครื่องจักรในโรงงาน (Starflex Public Company Limited) จากระบบ IoT / SCADA ในฐานข้อมูล MS SQL Server มาแสดงผลใน 2 รูปแบบหลัก:
 
-1. **Report Mode (รายงานตรวจสอบตามแบบฟอร์มกระดาษ)**: สร้างและจัดหน้ารายงานตามมาตรฐานเอกสาร ISO/QA **`FM-PRD-01/55 Rev.05 Effective Date : 01/11/2024`** ในขนาด A4 แนวนอน (Landscape) พร้อมพิมพ์ (Print-ready)
-2. **Chart Mode (กราฟวิเคราะห์แนวโน้ม Time Series)**: แสดงกราฟเชิงลึกเปรียบเทียบค่าพารามิเตอร์ต่างๆ (ความเร็ว, อุณหภูมิ, แรงดึง, แรงดัน, ค่าโคโรนา) แบบ Interactive ด้วย ApexCharts
+1. **Report Mode (รายงานตรวจสอบตามแบบฟอร์มกระดาษ)**:
+   - **Laminate Checking Report**: จัดหน้ารายงานตามมาตรฐานเอกสาร ISO/QA **`FM-PRD-01/55 Rev.05 Effective Date : 01/11/2024`** ขนาด A4 แนวนอน (23 พารามิเตอร์)
+   - **Printing Checking Report**: จัดหน้ารายงานเครื่องพิมพ์ตามมาตรฐานเอกสาร **`FM-PRD-XX/XX Rev.XX`** ขนาด A4 แนวนอน (32 พารามิเตอร์: Speed, Total Length, Rewind/Unwind, 1U-13U Roll C & Work)
+2. **Chart Mode (กราฟวิเคราะห์แนวโน้ม Time Series)**: แสดงกราฟเชิงลึกเปรียบเทียบค่าพารามิเตอร์ต่างๆ (ความเร็ว, อุณหภูมิ, แรงดึง, แรงดัน, ค่าโคโรนา, ความยาว, หน่วยพิมพ์) แบบ Interactive ด้วย ApexCharts ผ่านคอมโพเนนต์กลาง **`Global_Chart.vue`**
 
 ### รองรับ 3 สายการผลิต (Process Types)
 - **Laminate (เครื่องเคลือบ)**: 1LB-09 Bobst, LB-10 Bobst, 1LL-07 Comexi, 2LB-06 Fuji Kikai, SB-01, SB-04 Beiren
@@ -44,6 +46,8 @@
      - `[KEP_LOG].[dbo].[View_2LB06_FujiKikai]`
      - `[KEP_LOG].[dbo].[View_SB04_Beiren]`
      - `[KEP_LOG].[dbo].[View_1PG06_Caida]`
+     - `[KEP_LOG].[dbo].[View_1PG07_Caida]`
+     - `[KEP_LOG].[dbo].[View_PT04_Beiren]`
      - `[KEP_LOG].[dbo].[View_1BF01_Blownfilm]`
 2. **`AX50_SF_PRD_SP1`** (`AXDB:1433`):
    - Microsoft Dynamics AX สำหรับดึงสูตร/สเปกการผลิต (Standard Parameters / Set Point: PS)
@@ -71,18 +75,21 @@ Laminate_Report/
 │   ├── config.js                 # โหลด Environment variables จาก .env
 │   ├── db.js                     # จัดการ Connection Pool สำหรับ KEP_LOG และ AXDB
 │   ├── common.js                 # Helper functions, ฟอร์แมตวันที่/เวลา, แปลงค่าตัวเลข
-│   ├── processes.js              # รวบรวมและจัดการรายชื่อ Process & Machine ทั้งระบบ
-│   ├── reportProcessor.js        # Logic จัดกลุ่มข้อมูลรายชั่วโมง, คำนวณ Set up, และจัดหน้า Report
-│   ├── chartProcessor.js         # Logic จัดการและ Downsample ข้อมูล Time Series สำหรับ ApexCharts
+│   ├── processes.js              # รวบรวมและจัดการรายชื่อ Process & Machine ทั้งระบบ (getProcess, findMachine)
+│   ├── reportProcessor.js        # Logic จัดกลุ่มข้อมูลรายชั่วโมง, คำนวณ Set up, และจัดหน้า Report (Dynamic Parameters)
+│   ├── chartProcessor.js         # Logic จัดการและ Downsample ข้อมูล Time Series สำหรับ ApexCharts (Dynamic Parameters)
 │   ├── web.config                # คอนฟิก IIS URL Rewrite และ iisnode module
 │   ├── package.json
 │   ├── laminate/                 # Config เฉพาะสาย Laminate
 │   │   ├── index.js
 │   │   ├── machines.js           # รายการเครื่องจักร, ชื่อ View DB, คอลัมน์ที่ Query, Unit Overrides
-│   │   ├── parameters.js         # นิยาม Standard Parameters 29 ค่า (Speed, Temp, Tension, ฯลฯ)
+│   │   ├── parameters.js         # นิยาม Standard Parameters 23 ค่า (Speed, Temp, Tension, ฯลฯ)
 │   │   └── axPs.js               # Mapping ชื่อคอลัมน์จาก AX SF_PRODSPECMACHINE
 │   ├── printing/                 # Config เฉพาะสาย Printing (เครื่องพิมพ์)
-│   │   ├── index.js, machines.js, parameters.js, axPs.js
+│   │   ├── index.js
+│   │   ├── machines.js           # เครื่อง 1PG-06, 1PG-07, 2PG-05, PT-03, PT-04, PT-08 (Delimited identifiers)
+│   │   ├── parameters.js         # นิยามพารามิเตอร์ 32 ค่า (Speed, Length, 1U-13U Roll/Work) พร้อม Category
+│   │   └── axPs.js               # Mapping ชื่อคอลัมน์ PS จาก AX
 │   └── blownfilm/                # Config เฉพาะสาย BlownFilm (เครื่องเป่าฟิล์ม)
 │       ├── index.js, machines.js, parameters.js, axPs.js
 │
@@ -98,18 +105,20 @@ Laminate_Report/
         ├── router/
         │   └── index.js          # Routes: /laminate, /printing, /blownfilm, /setting
         ├── views/
-        │   ├── HomeView.vue      # หน้าจอหลัก (จัดการ State, Filter, Query API, สลับโหมด)
+        │   ├── HomeView.vue      # หน้าจอหลัก (จัดการ State, Filter, Query API, สลับโหมด, Watcher)
         │   └── Setting.vue       # หน้าแสดงสถานะการเชื่อมต่อฐานข้อมูล
         ├── components/
-        │   ├── AppHeadTitle.vue  # Header ด้านบน พร้อม Dropdown สลับประเภท Process
-        │   ├── FilterBar.vue     # แถบเลือกเงื่อนไข (Machine, Date, Time, Step, ปุ่มค้นหา/พิมพ์)
-        │   ├── Filter_ItemFG.vue # ช่องกรอก/ค้นหา Item FG (Autocomplete >= 4 ตัวอักษร)
-        │   ├── Laminate_ReportSheet.vue   # แบบฟอร์มรายงานขนาด A4 มาตรฐาน FM-PRD-01/55
-        │   ├── Laminate_ParameterTable.vue# ตารางแสดงค่าพารามิเตอร์ พร้อมเช็คค่าผิดสเปก
-        │   ├── Laminate_Chart.vue         # กราฟ Time Series แบบ Interactive (ApexCharts)
-        │   ├── SwitchViewMode.vue         # ปุ่มสลับระหว่าง "ตารางรายงาน" กับ "กราฟเส้น"
-        │   ├── Pill_MachineStatus.vue     # ป้ายแสดงสถานะ Online/Offline ของเครื่องจักร
-        │   └── Slot_MainContainer.vue     # Container ครอบหน้าจอ
+        │   ├── AppHeadTitle.vue          # Header ด้านบน พร้อม Dropdown สลับประเภท Process
+        │   ├── FilterBar.vue             # แถบเลือกเงื่อนไข (Machine, Date, Time, Step, ปุ่มค้นหา/พิมพ์)
+        │   ├── Filter_ItemFG.vue         # ช่องกรอก/ค้นหา Item FG (Autocomplete >= 4 ตัวอักษร)
+        │   ├── Laminate_ReportSheet.vue  # แบบฟอร์มรายงาน Laminate มาตรฐาน FM-PRD-01/55
+        │   ├── Laminate_ParameterTable.vue # ตารางพารามิเตอร์ Laminate พร้อมเช็ค Out-of-Spec
+        │   ├── Printing_ReportSheet.vue  # แบบฟอร์มรายงาน Printing มาตรฐาน FM-PRD-XX/XX
+        │   ├── Printing_ParameterTable.vue # ตารางพารามิเตอร์ Printing 32 แถวแบบ Compact
+        │   ├── Global_Chart.vue          # กราฟ Time Series กลาง รองรับทุกสายการผลิต (ApexCharts)
+        │   ├── SwitchViewMode.vue        # ปุ่มสลับระหว่าง "ตารางรายงาน" กับ "กราฟเส้น"
+        │   ├── Pill_MachineStatus.vue    # ป้ายแสดงสถานะ Online/Offline/Loading/NA ของเครื่องจักร
+        │   └── Slot_MainContainer.vue    # Container ครอบหน้าจอ
         └── utils/
             └── timeAgo.js        # Helper คำนวณเวลาเชิงสัมพันธ์ (Relative Time)
 ```
@@ -198,10 +207,18 @@ Router รองรับการ Mount 2 รูปแบบพร้อมก�
 | `GET` | `/api/processes` | - | รายการสายการผลิตทั้งหมด (Laminate, Printing, BlownFilm) |
 | `GET` | `/api/machines` | `processType` (optional) | รายชื่อเครื่องจักรทั้งหมด หรือกรองตามสายการผลิต |
 | `GET` | `/api/searchItemFG` | `machine`, `keyword` (>= 4 ตัวอักษร), `processType` | ค้นหา Item FG แบบ Autocomplete จากฐานข้อมูล AX (จำกัด TOP 20) |
-| `GET` | `/api/checkItemFG` | `machine`, `item_fg`, `processType` | ตรวจสอบรหัส Item FG ใน AX, ค้นหา Revision ล่าสุด และรายการ Production Pools (เช่น Laminate 1, Laminate 2) |
-| `GET` | `/api/report/laminate` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool` | ดึงข้อมูลเซนเซอร์จาก `KEP_LOG` และดึงค่า Set Point จาก `AXDB` เพื่อนำมาประกอบเป็นหน้ารายงานตามช่วงเวลา |
-| `GET` | `/api/chart/laminate` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `step_minutes` | ดึงข้อมูลเซนเซอร์ Time Series ที่จัดโครงสร้างพร้อมแสดงผลบน ApexCharts |
-| `GET` | `/api/machineStatus` | `machine` | ตรวจสอบสถานะการทำงาน (Online: speed > 0, Offline: speed = 0) พร้อม Cache 5 วินาที |
+| `GET` | `/api/checkItemFG` | `machine`, `item_fg`, `processType` | ตรวจสอบรหัส Item FG ใน AX, ค้นหา Revision ล่าสุด, รายการ Production Pools, และคืนค่า `item_fg_name` |
+| `GET` | `/api/report/laminate` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool` | ดึงข้อมูลเซนเซอร์ Laminate (23 พารามิเตอร์) จาก `KEP_LOG` และค่า Set Point จาก `AXDB` (หากไม่มีข้อมูลส่ง HTTP 404) |
+| `GET` | `/api/report/printing` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool` | ดึงข้อมูลเซนเซอร์ Printing (32 พารามิเตอร์) จาก `KEP_LOG` และค่า Set Point จาก `AXDB` (หากไม่มีข้อมูลส่ง HTTP 404) |
+| `GET` | `/api/chart/:processType` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `step_minutes` | ดึงข้อมูลเซนเซอร์ Time Series แบบไดนามิกตามสายการผลิต (`laminate`, `printing`) สำหรับ ApexCharts (หากไม่มีข้อมูลส่ง HTTP 404) |
+| `GET` | `/api/machineStatus` | `machine` | ตรวจสอบสถานะการทำงาน (Online: speed > 0 และอัปเดตไม่เกิน 30 นาที, Offline: speed = 0) พร้อม Cache 5 วินาที |
+
+> **การจัดการกรณีไม่มีข้อมูล (Empty Data Response)**:
+> ในทุก Endpoint รายงานและกราฟ หาก Query ฐานข้อมูล `KEP_LOG` แล้วไม่พบข้อมูล (`sqlRows.length === 0`) Backend จะส่งสถานะ **HTTP 404** พร้อม JSON:
+> ```json
+> { "detail": "ไม่พบข้อมูลใน KEP_LOG สำหรับเครื่อง [ชื่อเครื่อง] ในช่วงเวลาที่เลือก (...)" }
+> ```
+> ฝั่ง Frontend จะนำข้อความไปแสดงในกล่องแจ้งเตือนสีแดง (`errorMessage`) ทันที พร้อมเคลียร์ข้อมูลรายงาน/กราฟเก่าออก
 
 ---
 
@@ -214,17 +231,27 @@ Router รองรับการ Mount 2 รูปแบบพร้อมก�
 - **การแบ่งหน้า (Pagination)**: แบ่งหน้าตามวัน (Day Cluster) แต่ละวันสามารถมีคอลัมน์เวลาสูงสุด 13-14 คอลัมน์ หากเกินจะจัดขึ้นหน้าใหม่โดยอัตโนมัติ
 
 ### 7.2 การเปรียบเทียบค่าผิดสเปก (Out-of-Spec Highlighting)
-- เมื่อผู้ใช้ระบุ `item_fg` ระบบจะดึงค่า Set Point (PS) จาก AX
-- ตารางพารามิเตอร์ (`Laminate_ParameterTable.vue`) จะตรวจสอบค่าที่อ่านได้เทียบกับค่า Set Point (เช่น ค่าเดี่ยว หรือช่วง `180-200`)
+- เมื่อผู้ใช้ระบุ `item_fg` ระบบจะดึงค่า Set Point (PS) จาก AX พร้อมชื่อสินค้า `item_fg_name`
+- ตารางพารามิเตอร์ (`Laminate_ParameterTable.vue`, `Printing_ParameterTable.vue`) จะตรวจสอบค่าที่อ่านได้เทียบกับค่า Set Point (เช่น ค่าเดี่ยว หรือช่วง `180-200`)
 - หากพบค่าหลุดช่วง (โดยเฉพาะ `LINE_SPEED`) ระบบจะเน้นสีพื้นหลังแดงและตัวอักษรสีแดงเข้ม (`bg-red-100 text-red-600 font-bold`) เพื่อให้ผู้ตรวจสอบสังเกตเห็นได้ทันที
 
-### 7.3 การแคชสถานะเครื่องจักร (Machine Status Caching)
-- Endpoint `/api/machineStatus` มี In-memory cache 5,000 ms (`STATUS_CACHE_TTL_MS = 5000`) ป้องกันการส่งคำสั่ง Query ไปยัง `KEP_LOG` ซ้ำๆ เมื่อมีหลายไคลเอ็นต์ Poll สถานะพร้อมกัน
+### 7.3 การแคชและคำนวณสถานะเครื่องจักร (Machine Status Logic)
+- Endpoint `/api/machineStatus` มี In-memory cache 5,000 ms (`STATUS_CACHE_TTL_MS = 5000`) ป้องกันการส่งคำสั่ง Query ซ้ำๆ
+- การตรวจสอบสถานะ Online / Offline:
+  - ใช้ `DIFF_SECONDS = DATEDIFF(second, timestamp, GETDATE())`
+  - เครื่องจะถือว่า **Online (`status = 1`)** เฉพาะเมื่อ `lineSpeed > 0` **และ** มีข้อมูลส่งเข้ามาล่าสุดไม่เกิน 30 นาที (`DIFF_SECONDS <= 1800`)
+  - หากไม่มีข้อมูลในรอบ 24 ชั่วโมง หรือเครื่องที่ไม่มีระบบ MES (`isMES === false`) จะตอบกลับเป็น `status: 0` หรือ `status: "N/A"` พร้อมข้อความแจ้งสถานะ
 
 ### 7.4 การจัดการฟอร์แมตพิมพ์ (Print-Ready Layout)
 - ออกแบบเฉพาะสำหรับกระดาษ **A4 Landscape (297mm x 210mm)**
 - ใช้ CSS `@media print` ซ่อนส่วน Filter, Controls, Navigation Bar และปุ่มต่างๆ (`no-print`)
 - กำหนด `page-break-after: always` ในแต่ละหน้ารายงานเพื่อให้พิมพ์ออกมาแยกหน้าอย่างสมบูรณ์
+- สำหรับ Printing ที่มีถึง 32 พารามิเตอร์ มีการปรับความสูงแถวตารางให้กะทัดรัด (`height: 15.5px`) เพื่อให้แสดงผลครบถ้วนภายใน 1 หน้ากระดาษ A4
+
+### 7.5 ระบบกราฟกลาง (Global Chart Component)
+- คอมโพเนนต์ `Global_Chart.vue` รองรับการแสดงผลกราฟ Time Series ของทุกสายการผลิต
+- **Dynamic Category Pills**: จัดหมวดหมู่ตัวแปรอัตโนมัติ (Speed, Length, Temp, Tension, Pressure, Corona, Roll & Work, General)
+- **Per-Process LocalStorage**: แยกบันทึกตัวแปรเริ่มต้นใน Browser Cache ตามแต่ละ Process เช่น `laminate-report-chart-default-params` และ `printing-report-chart-default-params`
 
 ---
 
@@ -256,7 +283,12 @@ Router รองรับการ Mount 2 รูปแบบพร้อมก�
    - ห้าม Hardcode พอร์ตเฉพาะใน `server.js` เพราะบน IIS ตัว `iisnode` จะส่ง Named Pipe มาทาง `process.env.PORT` (เช่น `\\.\pipe\...`)
 3. **ความปลอดภัยของฐานข้อมูล**:
    - คำสั่ง SQL Query ทั้งหมดต้องใช้ Parameterized Input ผ่าน `request.input()` ของ `mssql` เสมอ เพื่อป้องกัน SQL Injection
-4. **รูปแบบโค้ด (Code Formatting)**:
+4. **SQL Server Delimited Identifiers (วงเล็บเหลี่ยม `[...]`)**:
+   - ใน T-SQL คอลัมน์หรือ Alias ที่ขึ้นต้นด้วยตัวเลข (เช่น `1U_Roll_C`, `13U_WORK`) **ต้องครอบด้วย `[...]` เสมอ** เช่น `AS [1U_Roll_C]`
+   - หากเขียน `AS 1U_Roll_C` โดยไม่มีวงเล็บเหลี่ยม SQL Server จะมองตัวเลข `1` เป็น Literal และเกิดข้อผิดพลาด `Incorrect syntax near '1'.`
+5. **การค้นหาคอลัมน์ Speed**:
+   - ใน `server.js` ควรใช้ Regex `/LINE_SPEED/i.test(col)` เสมอ เพราะคอลัมน์ของแต่ละเครื่องมีทั้ง `[LINE_SPEED]`, `LINE_SPEED`, และ `as` เล็ก/ใหญ่
+6. **รูปแบบโค้ด (Code Formatting)**:
    - โปรเจกต์ใช้ Prettier:
      - สำหรับไฟล์ `.vue`: `singleQuote: true`, `semi: false`
      - สำหรับไฟล์ `.js`: `printWidth: 100` (ยกเว้น `common.js` ใช้ `printWidth: 190`)
