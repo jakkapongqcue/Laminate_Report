@@ -133,7 +133,7 @@ const PRINTING_MACHINES = [
     isMES: true,
     processType: "Printing",
     axMachineId: "PT-08",
-    tableName: "[KEP_LOG].[dbo].[View_PT08_Altima]",
+    tableName: null,
     columns: [],
   },
 ];

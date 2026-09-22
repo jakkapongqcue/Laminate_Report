@@ -22,17 +22,6 @@
 
         <!-- Right action buttons / Pills inside Input -->
         <div class="absolute top-1/2 right-1 flex -translate-y-1/2 items-center gap-1.5">
-          <!-- Search Icon Button (Click to trigger search) -->
-          <button
-            type="button"
-            @click="handleEnterOrSearch()"
-            :disabled="isCheckingItemFg"
-            title="กดเพื่อค้นหา Item FG (หรือกดปุ่ม Enter)"
-            class="hidden rounded bg-sky-50 p-2 text-gray-400 transition-colors hover:text-sky-600 focus:outline-none sm:inline-block"
-          >
-            <Icon_search :cusClass="'w-4 h-4'" />
-          </button>
-
           <!-- Pill Notification Inside Input (Persistent until text changes) -->
           <transition
             enter-active-class="transition duration-200 ease-out"
@@ -49,6 +38,17 @@
               </span>
             </div>
           </transition>
+
+          <!-- Search Icon Button (Click to trigger search) -->
+          <button
+            type="button"
+            @click="handleEnterOrSearch()"
+            :disabled="isCheckingItemFg"
+            title="กดเพื่อค้นหา Item FG (หรือกดปุ่ม Enter)"
+            class="hidden rounded bg-sky-50 p-2 text-gray-400 transition-colors hover:text-sky-600 focus:outline-none sm:inline-block"
+          >
+            <Icon_search :cusClass="'w-4 h-4'" />
+          </button>
         </div>
 
         <!-- Search Dropdown Result (TOP 20) -->
