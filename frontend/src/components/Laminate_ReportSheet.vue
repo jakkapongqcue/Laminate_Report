@@ -4,19 +4,17 @@
     <div class="flex items-start justify-between pb-1">
       <!-- Company Logo & Brand -->
       <div class="flex items-center">
-        <div class="starflexLogo w-20 h-16"></div>
+        <div class="starflexLogo h-16 w-20"></div>
         <div></div>
       </div>
 
       <!-- Main Report Title -->
       <div class="self-center text-center">
-        <h1 class="text-base font-bold tracking-wide text-gray-900 uppercase">
-          LAMINATE CHECKING REPORT
-        </h1>
+        <h1 class="text-base font-bold tracking-wide text-gray-900 uppercase">LAMINATE CHECKING REPORT</h1>
       </div>
 
       <!-- Page Indicator -->
-      <div class="text-right text-[9px] font-semibold text-gray-700 self-center w-20">
+      <div class="w-20 self-center text-right text-[9px] font-semibold text-gray-700">
         Page:
         <span class="text-xs font-bold text-gray-900">{{ pageData.page_number }}</span>
         / {{ pageData.total_pages }}
@@ -24,24 +22,24 @@
     </div>
 
     <!-- ── Metadata Row ─────────────────────────────────────────────────── -->
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[9px] mb-1 font-medium">
+    <div class="mb-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[9px] font-medium">
       <div class="flex items-center gap-1">
         <span class="font-bold">FG Code:</span>
-        <span class="px-1 py-0.5 rounded font-semibold">{{ itemFg || '-' }}</span>
-        <span v-if="itemFgName" class="font-bold px-1 py-0.5">ชื่องาน:</span>
-        <span v-if="itemFgName" class="px-1 py-0.5 line-clamp-1 w-72">{{ itemFgName }}</span>
+        <span class="rounded px-1 py-0.5 font-semibold">{{ itemFg || "-" }}</span>
+        <span v-if="itemFgName" class="px-1 py-0.5 font-bold">ชื่องาน:</span>
+        <span v-if="itemFgName" class="line-clamp-1 w-72 px-1 py-0.5">{{ itemFgName }}</span>
       </div>
       <div class="flex items-center gap-1">
         <span class="font-bold">เครื่องเคลือบ:</span>
-        <span class="px-1 py-0.5 rounded font-semibold">{{ machine }}</span>
+        <span class="rounded px-1 py-0.5 font-semibold">{{ machine }}</span>
       </div>
       <div class="flex items-center gap-1">
         <span class="font-bold">วันที่:</span>
-        <span class="px-1 py-0.5 rounded"> {{ formatDate(dateFrom) }}</span>
-        <span class="px-1 py-0.5 rounded"> {{ formatTime(timeFrom) }}</span>
-        <span class="font-bold self-center">ถึง</span>
-        <span v-if="dateFrom !== dateTo" class="px-1 py-0.5 rounded">{{ formatDate(dateTo) }}</span>
-        <span class="px-1 py-0.5 rounded"> {{ formatTime(timeTo) }}</span>
+        <span class="rounded px-1 py-0.5"> {{ formatDate(dateFrom) }}</span>
+        <span class="rounded px-1 py-0.5"> {{ formatTime(timeFrom) }}</span>
+        <span class="self-center font-bold">ถึง</span>
+        <span v-if="dateFrom !== dateTo" class="rounded px-1 py-0.5">{{ formatDate(dateTo) }}</span>
+        <span class="rounded px-1 py-0.5"> {{ formatTime(timeTo) }}</span>
       </div>
     </div>
 
@@ -51,46 +49,46 @@
     </div>
 
     <!-- ── Footer ──────────────────────────────────────────────────────── -->
-    <div class="text-[9px] pt-4">
+    <div class="pt-4 text-[9px]">
       <!-- Signatures Block -->
       <div class="flex items-center">
         <!-- Reviewer -->
-        <div class="flex flex-col w-40 gap-3 ml-auto">
+        <div class="ml-auto flex w-40 flex-col gap-3">
           <div class="flex items-center gap-2">
             <span class="text-nowrap">ผู้ทบทวน:</span>
-            <span class="block w-full h-4 border-b border-gray-400"></span>
+            <span class="block h-4 w-full border-b border-gray-400"></span>
           </div>
           <div class="flex items-center gap-2">
             <span class="text-nowrap">วันที่:</span>
-            <span class="block w-full h-4 text-center border-b border-gray-400"> </span>
+            <span class="block h-4 w-full border-b border-gray-400 text-center"> </span>
           </div>
         </div>
       </div>
 
       <!-- Paper version -->
       <div>
-        <span>FM-PRD-01/55 Rev.05 Effective Date : 01/11/2024</span>
+        <span>FM-PRD-01/55 Rev.05 Effective Date : 01/01/2077</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import Laminate_ParameterTable from './Laminate_ParameterTable.vue'
+import { ref } from "vue"
+import Laminate_ParameterTable from "./Laminate_ParameterTable.vue"
 
 function formatDate(dateStr) {
-  if (!dateStr) return ''
+  if (!dateStr) return ""
   const d = new Date(dateStr)
   if (isNaN(d)) return dateStr
-  const day = String(d.getDate()).padStart(2, '0')
-  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, "0")
+  const month = String(d.getMonth() + 1).padStart(2, "0")
   const year = d.getFullYear()
   return `${day}/${month}/${year}`
 }
 
 function formatTime(timeStr) {
-  return timeStr + ' น.'
+  return timeStr + " น."
 }
 
 const props = defineProps({
@@ -100,35 +98,35 @@ const props = defineProps({
   },
   machine: {
     type: String,
-    default: '1LB09_Bobst',
+    default: "1LB09_Bobst",
   },
   itemFg: {
     type: String,
-    default: '',
+    default: "",
   },
   itemFgName: {
     type: String,
-    default: '',
+    default: "",
   },
   dateFrom: {
     type: String,
-    default: '',
+    default: "",
   },
   dateTo: {
     type: String,
-    default: '',
+    default: "",
   },
   timeFrom: {
     type: String,
-    default: '',
+    default: "",
   },
   timeTo: {
     type: String,
-    default: '',
+    default: "",
   },
 })
 
-const remark = ref('')
+const remark = ref("")
 </script>
 
 <style lang="css" scoped>
