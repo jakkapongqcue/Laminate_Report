@@ -143,10 +143,10 @@ const storageKey = computed(() => {
   return `${p}-report-chart-default-params`
 })
 
-// Built-in standard default parameters mapping
 const INITIAL_DEFAULTS_BY_PROCESS = {
   laminate: ["LINE_SPEED", "TEMP_ZONE_1", "TEMP_ZONE_2", "TENSION_UNWIND_1", "TENSION_REWIND"],
   printing: ["LINE_SPEED", "TOTAL_length", "RewingA_length", "UnwingA_length"],
+  blownfilm: ["LINE_SPEED", "Take_Off", "Nip", "Gauge", "Thruput"],
 }
 
 const selectedParamKeys = ref([])
@@ -165,10 +165,14 @@ const paramCategories = computed(() => {
     { name: "Speed", label: "ความเร็ว (Speed)", params: [] },
     { name: "Length", label: "ความยาว (Length)", params: [] },
     { name: "Temperature", label: "อุณหภูมิ (Temp)", params: [] },
+    { name: "Dimension & Gauge", label: "ขนาดและความหนา (Dimension & Gauge)", params: [] },
+    { name: "Throughput", label: "กำลังการผลิต (Throughput)", params: [] },
     { name: "Tension", label: "แรงตึง (Tension)", params: [] },
+    { name: "Tension & Rotation", label: "แรงตึงและการหมุน (Tension & Rotation)", params: [] },
     { name: "Pressure", label: "แรงดัน (Pressure)", params: [] },
     { name: "Corona", label: "โคโรนา (Corona)", params: [] },
     { name: "Roll & Work", label: "หน่วยพิมพ์ (Roll & Work)", params: [] },
+    { name: "Information", label: "ข้อมูลการผลิต (Information)", params: [] },
   ]
 
   for (const p of availableParams.value) {

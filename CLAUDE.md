@@ -11,12 +11,13 @@
 1. **Report Mode (รายงานตรวจสอบตามแบบฟอร์มกระดาษ)**:
    - **Laminate Checking Report**: จัดหน้ารายงานตามมาตรฐานเอกสาร ISO/QA **`FM-PRD-01/55 Rev.05 Effective Date : 01/11/2024`** ขนาด A4 แนวนอน (23 พารามิเตอร์)
    - **Printing Checking Report**: จัดหน้ารายงานเครื่องพิมพ์ตามมาตรฐานเอกสาร **`FM-PRD-XX/XX Rev.XX`** ขนาด A4 แนวนอน (32 พารามิเตอร์: Speed, Total Length, Rewind/Unwind, 1U-13U Roll C & Work)
-2. **Chart Mode (กราฟวิเคราะห์แนวโน้ม Time Series)**: แสดงกราฟเชิงลึกเปรียบเทียบค่าพารามิเตอร์ต่างๆ (ความเร็ว, อุณหภูมิ, แรงดึง, แรงดัน, ค่าโคโรนา, ความยาว, หน่วยพิมพ์) แบบ Interactive ด้วย ApexCharts ผ่านคอมโพเนนต์กลาง **`Global_Chart.vue`**
+   - **BlownFilm Checking Report**: จัดหน้ารายงานเครื่องเป่าฟิล์มตามมาตรฐานเอกสาร **`FM-PRD-XX/XX Rev.XX`** ขนาด A4 แนวนอน (40 พารามิเตอร์: Speed, Temperatures, Dimension & Gauge, Throughput, Tension & Rotation, Information)
+2. **Chart Mode (กราฟวิเคราะห์แนวโน้ม Time Series)**: แสดงกราฟเชิงลึกเปรียบเทียบค่าพารามิเตอร์ต่างๆ (ความเร็ว, อุณหภูมิ, แรงดึง, แรงดัน, ค่าโคโรนา, ความหนา, กำลังการผลิต) แบบ Interactive ด้วย ApexCharts ผ่านคอมโพเนนต์กลาง **`Global_Chart.vue`**
 
 ### รองรับ 3 สายการผลิต (Process Types)
 - **Laminate (เครื่องเคลือบ)**: 1LB-09 Bobst, LB-10 Bobst, 1LL-07 Comexi, 2LB-06 Fuji Kikai, SB-01, SB-04 Beiren
 - **Printing (เครื่องพิมพ์)**: 1PG-06 Caida, 1PG-07 Caida, 2PG-05 Beiren, PT-03 Xinda, PT-04 Beiren, PT-08 Altima
-- **BlownFilm (เครื่องเป่าฟิล์ม)**: 1BF-01 Blownfilm
+- **BlownFilm (เครื่องเป่าฟิล์ม)**: 1BF-01 Blownfilm (View_1BF01_Blownfilm)
 
 ---
 
@@ -91,7 +92,10 @@ Laminate_Report/
 │   │   ├── parameters.js         # นิยามพารามิเตอร์ 32 ค่า (Speed, Length, 1U-13U Roll/Work) พร้อม Category
 │   │   └── axPs.js               # Mapping ชื่อคอลัมน์ PS จาก AX
 │   └── blownfilm/                # Config เฉพาะสาย BlownFilm (เครื่องเป่าฟิล์ม)
-│       ├── index.js, machines.js, parameters.js, axPs.js
+│       ├── index.js
+│       ├── machines.js           # เครื่อง 1BF-01 Blownfilm (Take Off Link Speed AS LINE_SPEED)
+│       ├── parameters.js         # นิยามพารามิเตอร์ 40 ค่า พร้อม Unit, param_id (1-40) และ Category
+│       └── axPs.js               # Mapping ชื่อคอลัมน์ PS จาก AX
 │
 └── frontend/                     # Vue 3 + Vite Application
     ├── vite.config.js            # กำหนด Plugins (Vue, Tailwind CSS) และ Alias `@`
@@ -115,6 +119,8 @@ Laminate_Report/
         │   ├── Laminate_ParameterTable.vue # ตารางพารามิเตอร์ Laminate พร้อมเช็ค Out-of-Spec
         │   ├── Printing_ReportSheet.vue  # แบบฟอร์มรายงาน Printing มาตรฐาน FM-PRD-XX/XX
         │   ├── Printing_ParameterTable.vue # ตารางพารามิเตอร์ Printing 32 แถวแบบ Compact
+        │   ├── BlownFilm_ReportSheet.vue # แบบฟอร์มรายงาน BlownFilm มาตรฐาน FM-PRD-XX/XX
+        │   ├── BlownFilm_ParameterTable.vue # ตารางพารามิเตอร์ BlownFilm 40 แถวแบบ Ultra-Compact
         │   ├── Global_Chart.vue          # กราฟ Time Series กลาง รองรับทุกสายการผลิต (ApexCharts)
         │   ├── SwitchViewMode.vue        # ปุ่มสลับระหว่าง "ตารางรายงาน" กับ "กราฟเส้น"
         │   ├── Pill_MachineStatus.vue    # ป้ายแสดงสถานะ Online/Offline/Loading/NA ของเครื่องจักร
@@ -210,7 +216,8 @@ Router รองรับการ Mount 2 รูปแบบพร้อมก�
 | `GET` | `/api/checkItemFG` | `machine`, `item_fg`, `processType` | ตรวจสอบรหัส Item FG ใน AX, ค้นหา Revision ล่าสุด, รายการ Production Pools, และคืนค่า `item_fg_name` |
 | `GET` | `/api/report/laminate` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool` | ดึงข้อมูลเซนเซอร์ Laminate (23 พารามิเตอร์) จาก `KEP_LOG` และค่า Set Point จาก `AXDB` (หากไม่มีข้อมูลส่ง HTTP 404) |
 | `GET` | `/api/report/printing` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool` | ดึงข้อมูลเซนเซอร์ Printing (32 พารามิเตอร์) จาก `KEP_LOG` และค่า Set Point จาก `AXDB` (หากไม่มีข้อมูลส่ง HTTP 404) |
-| `GET` | `/api/chart/:processType` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `step_minutes` | ดึงข้อมูลเซนเซอร์ Time Series แบบไดนามิกตามสายการผลิต (`laminate`, `printing`) สำหรับ ApexCharts (หากไม่มีข้อมูลส่ง HTTP 404) |
+| `GET` | `/api/report/blownfilm` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool` | ดึงข้อมูลเซนเซอร์ BlownFilm (40 พารามิเตอร์) จาก `KEP_LOG` และค่า Set Point จาก `AXDB` (หากไม่มีข้อมูลส่ง HTTP 404) |
+| `GET` | `/api/chart/:processType` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `step_minutes` | ดึงข้อมูลเซนเซอร์ Time Series แบบไดนามิกตามสายการผลิต (`laminate`, `printing`, `blownfilm`) สำหรับ ApexCharts (หากไม่มีข้อมูลส่ง HTTP 404) |
 | `GET` | `/api/machineStatus` | `machine` | ตรวจสอบสถานะการทำงาน (Online: speed > 0 และอัปเดตไม่เกิน 30 นาที, Offline: speed = 0) พร้อม Cache 5 วินาที |
 
 > **การจัดการกรณีไม่มีข้อมูล (Empty Data Response)**:
@@ -246,12 +253,12 @@ Router รองรับการ Mount 2 รูปแบบพร้อมก�
 - ออกแบบเฉพาะสำหรับกระดาษ **A4 Landscape (297mm x 210mm)**
 - ใช้ CSS `@media print` ซ่อนส่วน Filter, Controls, Navigation Bar และปุ่มต่างๆ (`no-print`)
 - กำหนด `page-break-after: always` ในแต่ละหน้ารายงานเพื่อให้พิมพ์ออกมาแยกหน้าอย่างสมบูรณ์
-- สำหรับ Printing ที่มีถึง 32 พารามิเตอร์ มีการปรับความสูงแถวตารางให้กะทัดรัด (`height: 15.5px`) เพื่อให้แสดงผลครบถ้วนภายใน 1 หน้ากระดาษ A4
+- สำหรับ Printing ที่มีถึง 32 พารามิเตอร์ มีการปรับความสูงแถวตารางให้กะทัดรัด (`height: 15.5px`) และ BlownFilm ที่มีถึง 40 พารามิเตอร์ ใช้ความสูงแถว (`height: 12.5px`, `font-size: 8px`) เพื่อให้แสดงผลครบถ้วนภายใน 1 หน้ากระดาษ A4
 
 ### 7.5 ระบบกราฟกลาง (Global Chart Component)
 - คอมโพเนนต์ `Global_Chart.vue` รองรับการแสดงผลกราฟ Time Series ของทุกสายการผลิต
-- **Dynamic Category Pills**: จัดหมวดหมู่ตัวแปรอัตโนมัติ (Speed, Length, Temp, Tension, Pressure, Corona, Roll & Work, General)
-- **Per-Process LocalStorage**: แยกบันทึกตัวแปรเริ่มต้นใน Browser Cache ตามแต่ละ Process เช่น `laminate-report-chart-default-params` และ `printing-report-chart-default-params`
+- **Dynamic Category Pills**: จัดหมวดหมู่ตัวแปรอัตโนมัติ (Speed, Length, Temp, Dimension & Gauge, Throughput, Tension, Tension & Rotation, Pressure, Corona, Roll & Work, Information)
+- **Per-Process LocalStorage**: แยกบันทึกตัวแปรเริ่มต้นใน Browser Cache ตามแต่ละ Process เช่น `laminate-report-chart-default-params`, `printing-report-chart-default-params`, และ `blownfilm-report-chart-default-params`
 
 ---
 

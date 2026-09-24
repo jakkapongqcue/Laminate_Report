@@ -16,6 +16,7 @@ const {
   findMachine,
   getProcess,
   printing,
+  blownfilm,
 } = require("./processes");
 const { processSqlViewData } = require("./reportProcessor");
 const { processSqlChartData } = require("./chartProcessor");
@@ -436,7 +437,10 @@ router.get("/api/report/printing", async (req, res) => {
   }
 
   try {
-    const machineConfig = MACHINES.find((m) => m.id === machine) || MACHINES[0];
+    const machineConfig =
+      printing.machines.find((m) => m.id === machine) ||
+      findMachine(machine) ||
+      printing.machines[0];
     if (!machineConfig || !machineConfig.tableName) {
       return res.status(400).json({
         detail: `เครื่องจักร ${machineConfig ? machineConfig.name : machine} ยังไม่มีฐานข้อมูลรองรับ (Under Construction)`,
@@ -554,6 +558,157 @@ router.get("/api/report/printing", async (req, res) => {
   }
 });
 
+// GET /api/report/blownfilm -> Query SQL Server database for BlownFilm Report Sheet
+router.get("/api/report/blownfilm", async (req, res) => {
+  const {
+    machine = "1BF01",
+    date_from,
+    date_to,
+    time_from = "08:00",
+    time_to = "17:00",
+    hour_step = 1,
+    item_fg = null,
+    prod_pool = null,
+  } = req.query;
+
+  const dateValidation = validateDateRange(date_from, date_to, 31);
+  if (!dateValidation.valid) {
+    return res.status(400).json({
+      detail: dateValidation.detail,
+    });
+  }
+
+  const kepLogPool = await getKepLogPool();
+  if (!kepLogPool) {
+    return res.status(500).json({
+      detail:
+        "ไม่สามารถเชื่อมต่อฐานข้อมูล MS SQL Server (192.168.10.99) กรุณาตรวจสอบ DB_PASSWORD ในไฟล์ backend/.env",
+    });
+  }
+
+  try {
+    const machineConfig =
+      blownfilm.machines.find((m) => m.id === machine) ||
+      findMachine(machine) ||
+      blownfilm.machines[0];
+
+    if (!machineConfig || !machineConfig.tableName) {
+      return res.status(400).json({
+        detail: `เครื่องจักร ${machineConfig ? machineConfig.name : machine} ยังไม่มีฐานข้อมูลรองรับ (Under Construction)`,
+      });
+    }
+    const tableName = machineConfig.tableName;
+    const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
+    const selectCols =
+      machineConfig.columns && machineConfig.columns.length > 0
+        ? machineConfig.columns.join(",\n          ")
+        : "*";
+
+    const startDatetime = `${date_from} ${time_from}:00`;
+    const endDatetime = `${date_to} ${time_to}:00`;
+
+    const request = kepLogPool.request();
+    request.input("start_dt", sql.VarChar, startDatetime);
+    request.input("end_dt", sql.VarChar, endDatetime);
+
+    const query = `
+      SELECT 
+          ${selectCols}
+      FROM ${tableName}
+      WHERE ${timestampCol} BETWEEN @start_dt AND @end_dt
+      ORDER BY ${timestampCol} ASC
+    `;
+
+    const result = await request.query(query);
+    const sqlRows = result.recordset;
+
+    console.log(
+      `[BlownFilm] Retrieved ${sqlRows.length} records from ${tableName} for machine ${machine}.`,
+    );
+
+    if (!sqlRows || sqlRows.length === 0) {
+      return res.status(404).json({
+        detail: `ไม่พบข้อมูลใน KEP_LOG สำหรับเครื่อง ${machineConfig.name || machine} ในช่วงเวลาที่เลือก (${date_from} ${time_from} ถึง ${date_to} ${time_to})`,
+      });
+    }
+
+    // Fetch Set Point (PS) and item_fg_name from AXDB if item_fg is provided
+    let setPointMap = {};
+    let itemFgName = "";
+    if (item_fg) {
+      try {
+        const axPool = await getAxPool();
+        if (axPool) {
+          const axMachineId = machineConfig.axMachineId;
+          const cleanProdPool =
+            prod_pool && String(prod_pool).trim() ? String(prod_pool).trim() : null;
+
+          const axRequest = axPool.request();
+          axRequest.input("item_fg", sql.VarChar, String(item_fg).trim());
+          axRequest.input("ax_machine", sql.VarChar, axMachineId);
+          if (cleanProdPool) {
+            axRequest.input("prod_pool", sql.VarChar, cleanProdPool);
+          }
+
+          const axPsCols =
+            blownfilm.axPsColumns && blownfilm.axPsColumns.length > 0
+              ? blownfilm.axPsColumns.join(",\n              ")
+              : "a.RECID";
+
+          const axQuery = `
+            SELECT TOP 1
+              ${axPsCols},
+              ISNULL(ai.ITEMNAME, '') AS [ITEM_FG_NAME]
+            FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] a
+            LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] bi ON bi.ITEMID = a.ITEMID
+            LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] ai ON ai.ITEMID = a.ITEMFG
+            WHERE a.ITEMFG = @item_fg 
+              AND a.MACHINE = @ax_machine
+              ${cleanProdPool ? "AND bi.PRODPOOLID = @prod_pool" : ""}
+            ORDER BY a.REVID DESC, a.RECID DESC
+          `;
+          const axResult = await axRequest.query(axQuery);
+          if (axResult.recordset && axResult.recordset.length > 0) {
+            setPointMap = axResult.recordset[0];
+            itemFgName = (setPointMap.ITEM_FG_NAME || "").trim();
+            console.log(
+              `[BlownFilm] Retrieved Set Point (PS) for ITEMFG: ${item_fg} (${itemFgName}), MACHINE: ${axMachineId}`,
+            );
+          } else {
+            console.log(
+              `[BlownFilm] No Set Point record found in AX for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}`,
+            );
+          }
+        }
+      } catch (axErr) {
+        console.warn(`[BlownFilm] Could not query AXDB for Set Point: ${axErr.message}`);
+      }
+    }
+
+    const response = processSqlViewData({
+      sqlRows,
+      machine,
+      dateFromStr: date_from,
+      dateToStr: date_to,
+      timeFromStr: time_from,
+      timeToStr: time_to,
+      hourStep: parseInt(hour_step),
+      setPointMap,
+      itemFg: item_fg,
+      itemFgName,
+      parameters: blownfilm.parameters,
+      machinesList: blownfilm.machines,
+    });
+
+    res.json(response);
+  } catch (err) {
+    console.error(`[BlownFilm] SQL Server Query Error: ${err.message}`);
+    res.status(500).json({
+      detail: `เกิดข้อผิดพลาดในการดึงข้อมูลจาก SQL Server: ${err.message}`,
+    });
+  }
+});
+
 // GET /api/chart/:processType -> Query SQL Server database for Line Chart time series
 router.get(["/api/chart/:processType", "/api/chart/laminate"], async (req, res) => {
   const processType = req.params.processType || "laminate";
@@ -586,7 +741,10 @@ router.get(["/api/chart/:processType", "/api/chart/laminate"], async (req, res) 
   }
 
   try {
-    const machineConfig = MACHINES.find((m) => m.id === machine) || procMachines[0];
+    const machineConfig =
+      procMachines.find((m) => m.id === machine) ||
+      findMachine(machine) ||
+      procMachines[0];
     if (!machineConfig || !machineConfig.tableName) {
       return res.status(400).json({
         detail: `เครื่องจักร ${machineConfig ? machineConfig.name : machine} ยังไม่มีฐานข้อมูลรองรับ (Under Construction)`,
@@ -713,6 +871,7 @@ router.get("/api/machineStatus", async (req, res) => {
           ${speedCol},
           DATEDIFF(second, ${timestampCol}, GETDATE()) AS DIFF_SECONDS
         FROM ${tableName}
+        WHERE ${timestampCol} >= DATEADD(day, -30, GETDATE())
         ORDER BY ${timestampCol} DESC
       `;
       result = await kepLogPool.request().query(fallbackQuery);

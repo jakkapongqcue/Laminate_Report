@@ -1,5 +1,6 @@
 const LAMINATE_MACHINES = [
   {
+    ///  แยากเป็น 09 grave, free , flxo ///// { 3 var}
     id: "1LB09",
     name: "1LB-09 Bobst",
     brand: "Bobst",

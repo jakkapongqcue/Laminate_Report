@@ -74,7 +74,6 @@
 </template>
 
 <script setup>
-import { ref } from "vue"
 import Laminate_ParameterTable from "./Laminate_ParameterTable.vue"
 
 function formatDate(dateStr) {
