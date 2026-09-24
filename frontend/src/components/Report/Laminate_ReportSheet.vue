@@ -124,8 +124,6 @@ const props = defineProps({
     default: "",
   },
 })
-
-const remark = ref("")
 </script>
 
 <style lang="css" scoped>
