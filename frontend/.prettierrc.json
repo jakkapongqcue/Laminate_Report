@@ -1,11 +1,21 @@
 {
-  "plugins": ["prettier-plugin-tailwindcss"],
+  "plugins": [
+    "prettier-plugin-tailwindcss"
+  ],
   "$schema": "https://json.schemastore.org/prettierrc",
   "printWidth": 170,
   "overrides": [
     {
       "files": "*.vue",
       "options": {
+        "singleQuote": false,
+        "semi": false
+      }
+    },
+    {
+      "files": "Icon*.vue",
+      "options": {
+        "printWidth": 60,
         "singleQuote": false,
         "semi": false
       }

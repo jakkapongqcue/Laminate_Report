@@ -8,7 +8,7 @@
             {{ selectedParamKeys.length }}
           </span>
           <h3 class="text-sm font-bold text-gray-800">เลือกพารามิเตอร์ที่ต้องการแสดงบนกราฟ (Select Parameters)</h3>
-          <span class="text-xs text-gray-400">| รวม {{ availableParams.length }} ตัวแปร</span>
+          <span class="text-xs text-gray-500">| รวม {{ availableParams.length }} ตัวแปร</span>
         </div>
 
         <!-- Quick Controls -->
@@ -16,18 +16,22 @@
           <button
             type="button"
             @click="selectAllParams"
-            class="rounded border border-gray-200 bg-gray-100 px-2.5 py-1 text-gray-700 transition hover:bg-sky-50 hover:text-sky-700"
+            class="rounded border border-gray-200 bg-gray-100 px-2.5 py-1 font-medium text-gray-700 transition hover:bg-sky-50 hover:text-sky-700"
           >
             เลือกทั้งหมด
           </button>
           <button
             type="button"
             @click="clearAllParams"
-            class="rounded border border-gray-200 bg-gray-100 px-2.5 py-1 text-gray-700 transition hover:bg-red-50 hover:text-red-700"
+            class="rounded border border-gray-200 bg-gray-100 px-2.5 py-1 font-medium text-gray-700 transition hover:bg-red-50 hover:text-red-700"
           >
             ล้างการเลือก
           </button>
-          <button type="button" @click="resetToDefaultParams" class="rounded border border-gray-200 bg-gray-100 px-2.5 py-1 text-gray-700 transition hover:bg-gray-200">
+          <button
+            type="button"
+            @click="resetToDefaultParams"
+            class="rounded border border-gray-200 bg-gray-100 px-2.5 py-1 font-medium text-gray-700 transition hover:bg-gray-200"
+          >
             ค่าเริ่มต้น
           </button>
           <button
@@ -35,7 +39,7 @@
             @click="saveAsDefaultParams"
             class="inline-flex w-32 items-center justify-center gap-1 rounded bg-sky-600 px-3 py-1 font-medium text-white shadow-sm transition hover:bg-sky-700"
           >
-            <svg v-if="saveSuccess" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-if="saveSuccess" class="h-3.5 w-3.5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
             <span>{{ saveSuccess ? "บันทึกสำเร็จ!" : "บันทึกเป็นค่าเริ่มต้น" }}</span>
@@ -46,7 +50,7 @@
       <!-- Categories & Checkbox Pills -->
       <div class="space-y-3 pt-3">
         <div v-for="cat in paramCategories" :key="cat.name" class="flex flex-wrap items-center gap-1.5">
-          <span class="w-36 shrink-0 text-xs font-semibold text-gray-500"> {{ cat.label }}: </span>
+          <span class="w-36 shrink-0 text-xs font-semibold text-gray-700"> {{ cat.label }}: </span>
           <div class="flex flex-wrap gap-1.5">
             <button
               v-for="p in cat.params"
@@ -59,7 +63,7 @@
               ]"
             >
               <span>{{ p.name }}</span>
-              <span v-if="p.unit" :class="['text-[10px]', selectedParamKeys.includes(p.key) ? 'text-sky-100' : 'text-gray-400']"> ({{ p.unit }}) </span>
+              <span v-if="p.unit" :class="['text-[10px]', selectedParamKeys.includes(p.key) ? 'text-sky-100' : 'text-gray-500']"> ({{ p.unit }}) </span>
             </button>
           </div>
         </div>
@@ -72,7 +76,7 @@
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3">
         <div class="flex items-center gap-2">
           <div class="rounded-md bg-sky-100 p-1.5 text-sky-700">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
           </div>

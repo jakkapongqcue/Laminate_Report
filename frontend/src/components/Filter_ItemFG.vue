@@ -1,6 +1,6 @@
 <template>
   <div class="class_InputGroup relative col-span-2 flex flex-col">
-    <label class="class_Lable">
+    <label class="class_Lable" for="Input_FG">
       <Icon_finishGood />
       Item FG
     </label>
@@ -45,7 +45,8 @@
             @click="handleEnterOrSearch()"
             :disabled="isCheckingItemFg"
             title="กดเพื่อค้นหา Item FG (หรือกดปุ่ม Enter)"
-            class="hidden rounded bg-sky-50 p-2 text-gray-400 transition-colors hover:text-sky-600 focus:outline-none sm:inline-block"
+            aria-label="ค้นหา Item FG"
+            class="hidden rounded bg-sky-50 p-2 text-gray-500 transition-colors hover:text-sky-600 focus:outline-none sm:inline-block"
           >
             <Icon_search :cusClass="'w-4 h-4'" />
           </button>
@@ -56,7 +57,7 @@
           v-if="showDropdown && itemFgSearchResults && itemFgSearchResults.length > 0"
           class="absolute top-full right-0 left-0 z-50 mt-1 overflow-hidden rounded-lg border border-slate-300 bg-white text-xs shadow-xl"
         >
-          <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] text-gray-500">
+          <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] text-gray-600">
             <span>
               พบ
               <strong class="font-semibold text-sky-600">
@@ -64,19 +65,20 @@
               </strong>
               รายการที่ตรงกับคำค้นหา:
             </span>
-            <button type="button" @click="closeDropdown()" class="px-1 font-bold text-gray-400 hover:text-gray-600">✕</button>
+            <button type="button" @click="closeDropdown()" aria-label="ปิดรายการค้นหา" class="px-1 font-bold text-gray-500 hover:text-gray-700">✕</button>
           </div>
-          <ul class="max-h-56 divide-y divide-slate-100 overflow-y-auto">
+          <ul role="listbox" aria-label="รายการค้นหา Item FG" class="max-h-56 divide-y divide-slate-100 overflow-y-auto">
             <li
               v-for="item in itemFgSearchResults"
               :key="item.item_fg"
+              role="option"
               @click="handleSelectSearchResult(item)"
               class="group flex cursor-pointer flex-col px-3 py-2 text-left transition-colors hover:bg-sky-50"
             >
               <div class="flex items-center justify-between">
                 <span class="font-mono font-bold text-gray-800 group-hover:text-sky-600" v-html="highlightKeyword(item.item_fg, filters.item_fg)"></span>
               </div>
-              <div v-if="item.item_fg_name" class="mt-0.5 truncate text-[11px] text-gray-500" :title="item.item_fg_name">
+              <div v-if="item.item_fg_name" class="mt-0.5 truncate text-[11px] text-gray-600" :title="item.item_fg_name">
                 {{ item.item_fg_name }}
               </div>
             </li>
@@ -104,9 +106,11 @@
           <div
             v-if="prodPools && prodPools.length > 1"
             key="multiple"
+            role="radiogroup"
+            aria-label="รอบการเคลือบ"
             class="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs"
           >
-            <span class="font-semibold text-gray-700">รอบการเคลือบ:</span>
+            <span class="font-semibold text-gray-800">รอบการเคลือบ:</span>
             <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5">
               <label v-for="p in prodPools" :key="p.poolId" class="inline-flex cursor-pointer items-center gap-1.5 font-medium text-gray-700 hover:text-sky-700">
                 <input
@@ -117,16 +121,16 @@
                   class="h-3.5 w-3.5 cursor-pointer border-gray-300 text-sky-600 focus:ring-sky-500"
                 />
                 <span>{{ p.name }}</span>
-                <span v-if="p.revId" class="self-end font-mono text-[11px] leading-3 text-gray-400">(Rev.{{ p.revId }})</span>
+                <span v-if="p.revId" class="self-end font-mono text-[11px] leading-3 text-gray-500">(Rev.{{ p.revId }})</span>
               </label>
             </div>
           </div>
 
           <!-- Single Pool Info Indicator -->
-          <div v-else-if="prodPools && prodPools.length === 1" key="single" class="flex items-center gap-1.5 text-xs text-gray-500">
+          <div v-else-if="prodPools && prodPools.length === 1" key="single" class="flex items-center gap-1.5 text-xs text-gray-600">
             <span>รอบการเคลือบ:</span>
             <span class="font-semibold text-gray-800">{{ prodPools[0].name }}</span>
-            <span v-if="prodPools[0].revId" class="font-mono text-gray-400">(Rev.{{ prodPools[0].revId }}) </span>
+            <span v-if="prodPools[0].revId" class="font-mono text-gray-500">(Rev.{{ prodPools[0].revId }}) </span>
           </div>
         </transition>
       </div>
@@ -151,6 +155,8 @@
           <div
             v-if="solventTypes && solventTypes.length > 1"
             key="multiple-solvent"
+            role="radiogroup"
+            aria-label="กระบวนการเคลือบ"
             class="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-md border border-sky-200 bg-sky-50/70 px-3 py-2 text-xs"
           >
             <span class="font-semibold text-sky-950">กระบวนการเคลือบ:</span>
@@ -169,7 +175,7 @@
           </div>
 
           <!-- Single Solvent Process Info Indicator -->
-          <div v-else-if="solventTypes && solventTypes.length === 1" key="single-solvent" class="flex items-center gap-1.5 text-xs text-gray-500">
+          <div v-else-if="solventTypes && solventTypes.length === 1" key="single-solvent" class="flex items-center gap-1.5 text-xs text-gray-600">
             <span>กระบวนการเคลือบ:</span>
             <span class="font-semibold text-sky-800">{{ solventTypes[0].name }}</span>
           </div>
@@ -186,11 +192,12 @@
       leave-from-class="opacity-100 translate-y-0"
       leave-to-class="opacity-0 -translate-y-1"
       mode="out-in"
-      ><div v-if="filters.item_fg_name && filters.item_fg_name.length > 0" class="mt-2 flex items-center gap-1.5 text-xs text-gray-500">
-        <span class="self-start text-nowrap">ชื่อสินค้า:</span>
-        <span class="line-clamp-2" :title="filters.item_fg_name">{{ filters.item_fg_name }} </span>
-      </div></transition
     >
+      <div v-if="filters.item_fg_name && filters.item_fg_name.length > 0" class="mt-2 flex items-center gap-1.5 text-xs text-gray-600">
+        <span class="self-start font-medium text-nowrap">ชื่อสินค้า:</span>
+        <span class="line-clamp-2 text-gray-800" :title="filters.item_fg_name">{{ filters.item_fg_name }} </span>
+      </div>
+    </transition>
   </div>
 </template>
 

@@ -1,6 +1,7 @@
 <template>
   <svg
-    class="w-5 h-5 text-red-500"
+    aria-hidden="true"
+    class="h-5 w-5 text-red-500"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"

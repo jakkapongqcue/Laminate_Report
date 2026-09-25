@@ -5,7 +5,7 @@
       <div class="grid w-full grid-cols-2 gap-2 lg:grid-cols-4 xl:grid-cols-5">
         <!-- Machine Selection -->
         <div class="class_InputGroup col-span-2">
-          <label class="class_Lable">
+          <label class="class_Lable" for="Input_Machine">
             <Icon_machine />
             เครื่องจักร (Machine)
           </label>
@@ -40,30 +40,30 @@
         <!-- Date Range -->
         <div class="class_InputGroup col-span-1 col-start-1">
           <div class="relative">
-            <label class="class_Lable">
+            <label class="class_Lable" for="Input_DateFrom">
               <Icon_calendar />
               วันที่เริ่มต้น
             </label>
-            <input type="date" v-model="filters.date_from" class="class_Input" />
+            <input id="Input_DateFrom" type="date" v-model="filters.date_from" class="class_Input" />
           </div>
         </div>
 
         <!-- Time Range -->
         <div class="class_InputGroup col-span-1">
-          <label class="class_Lable">
+          <label class="class_Lable" for="Input_TimeFrom">
             <Icon_time />
             เวลาม้วนแรกที่ทำการผลิต
           </label>
-          <input type="time" v-model="filters.time_from" class="class_Input" />
+          <input id="Input_TimeFrom" type="time" v-model="filters.time_from" class="class_Input" />
         </div>
 
         <!-- Hourly Step (Visible on Report mode) -->
         <div class="class_InputGroup col-span-2 lg:col-span-1">
-          <label class="class_Lable">
+          <label class="class_Lable" for="Input_Step">
             <Icon_time />
             ช่วงเวลา (Step)
           </label>
-          <select v-model.number="filters.hour_step" class="class_Input">
+          <select id="Input_Step" v-model.number="filters.hour_step" class="class_Input">
             <option :value="1">+1 ชั่วโมง</option>
             <option :value="2">+2 ชั่วโมง</option>
             <option :value="4">+4 ชั่วโมง</option>
@@ -71,20 +71,20 @@
         </div>
 
         <div class="class_InputGroup col-span-1 col-start-1">
-          <label class="class_Lable">
+          <label class="class_Lable" for="Input_DateTo">
             <Icon_calendar />
             วันที่สิ้นสุด
-            <span class="text-xs font-normal text-gray-400">(สูงสุด 31 วัน)</span>
+            <span class="text-xs font-normal text-gray-500">(สูงสุด 31 วัน)</span>
           </label>
-          <input type="date" v-model="filters.date_to" class="class_Input" />
+          <input id="Input_DateTo" type="date" v-model="filters.date_to" class="class_Input" />
         </div>
 
         <div class="class_InputGroup col-span-1">
-          <label class="class_Lable">
+          <label class="class_Lable" for="Input_TimeEnd">
             <Icon_time />
             เวลาสิ้นสุด
           </label>
-          <input type="time" v-model="filters.time_to" class="class_Input" />
+          <input id="Input_TimeEnd" type="time" v-model="filters.time_to" class="class_Input" />
         </div>
       </div>
 
@@ -92,6 +92,7 @@
       <div class="grid w-full grid-cols-2 items-center gap-2 border-t border-gray-100 pt-3 text-xs text-gray-500 lg:grid-cols-4 xl:grid-cols-5">
         <!-- Search button -->
         <button
+          type="button"
           @click="$emit('search')"
           :disabled="statusLoading"
           :title="!filters.item_fg ? 'กรุณาระบุ Item FG ก่อนดึงข้อมูล' : ''"
@@ -103,6 +104,7 @@
 
         <!-- Print / Export button (for Report mode) -->
         <button
+          type="button"
           v-if="currentViewMode === 'report'"
           :disabled="!isHaveReportData"
           @click="$emit('print')"
@@ -115,10 +117,10 @@
     </div>
 
     <!-- Presets bar -->
-    <div class="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3 text-xs text-gray-500">
-      <span class="font-semibold text-gray-700">Quick Presets:</span>
-      <button @click="setShift(1)" class="cursor-pointer rounded bg-gray-100 px-2 py-1 transition hover:bg-sky-100 hover:text-sky-700">กะเช้า (08:00 - 20:00)</button>
-      <button @click="setShift(2)" class="cursor-pointer rounded bg-gray-100 px-2 py-1 transition hover:bg-sky-100 hover:text-sky-700">
+    <div class="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3 text-xs text-gray-600">
+      <span class="font-semibold text-gray-800">Quick Presets:</span>
+      <button type="button" @click="setShift(1)" class="cursor-pointer rounded bg-gray-100 px-2 py-1 font-medium transition hover:bg-sky-100 hover:text-sky-700">กะเช้า (08:00 - 20:00)</button>
+      <button type="button" @click="setShift(2)" class="cursor-pointer rounded bg-gray-100 px-2 py-1 font-medium transition hover:bg-sky-100 hover:text-sky-700">
         กะดึกข้ามวัน (20:00 - 08:00)
       </button>
     </div>

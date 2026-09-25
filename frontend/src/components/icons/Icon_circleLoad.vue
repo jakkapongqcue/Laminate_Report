@@ -1,5 +1,11 @@
 <template>
-  <svg class="animate-spin" :class="cusClass" fill="none" viewBox="0 0 24 24">
+  <svg
+    aria-hidden="true"
+    class="animate-spin"
+    :class="cusClass"
+    fill="none"
+    viewBox="0 0 24 24"
+  >
     <circle
       class="opacity-25"
       cx="12"
@@ -20,7 +26,7 @@
 const props = defineProps({
   cusClass: {
     type: String,
-    default: '',
+    default: "",
   },
 })
 </script>

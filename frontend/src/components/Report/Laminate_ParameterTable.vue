@@ -1,44 +1,37 @@
 <template>
   <!-- overflow-auto so it scrolls on screen if needed, but is clipped for print -->
-  <div class="w-full h-full">
+  <div class="h-full w-full">
     <table class="report-table">
       <thead>
         <tr>
           <!-- Column 1: Parameter name -->
-          <th style="width: 230px; min-width: 230px">Setting Parameter</th>
+          <th scope="col" style="width: 230px; min-width: 230px">Setting Parameter</th>
 
           <!-- Column 2: Set Point -->
-          <th style="width: 68px; min-width: 68px" class="font-bold">Set Point (PS)</th>
+          <th scope="col" style="width: 68px; min-width: 68px" class="font-bold">Set Point (PS)</th>
 
           <!-- Column 3: Diagonal Time / Unit header -->
-          <th class="diagonal-cell" style="width: 48px; min-width: 48px; height: 36px">
+          <th scope="col" class="diagonal-cell" style="width: 48px; min-width: 48px; height: 36px">
             <div class="top-right-text">Time</div>
             <div class="bottom-left-text">Unit</div>
           </th>
 
           <!-- Dynamic time columns -->
-          <th v-for="col in timeColumns" :key="col.key" class="font-bold text-center">
+          <th scope="col" v-for="col in timeColumns" :key="col.key" class="text-center font-bold">
             <span class="whitespace-pre-wrap">{{ col.label }}</span>
           </th>
 
           <!-- Filler columns to always show 14 slots -->
-          <th
-            v-for="n in fillerColumnCount"
-            :key="'fill-hdr-' + n"
-            class=""
-            style="min-width: 42px"
-          >
-            น.
-          </th>
+          <th scope="col" v-for="n in fillerColumnCount" :key="'fill-hdr-' + n" class="" style="min-width: 42px">น.</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="row in rows" :key="row.param_id">
           <!-- Parameter Name -->
-          <td class="font-medium param-name-cell">{{ row.name }}</td>
+          <td class="param-name-cell font-medium">{{ row.name }}</td>
 
           <!-- Set Point -->
-          <td class="font-medium text-center">{{ row.set_point }}</td>
+          <td class="text-center font-medium">{{ row.set_point }}</td>
 
           <!-- Unit -->
           <td class="text-center" style="font-size: 8.5px">
@@ -49,13 +42,11 @@
           <td
             v-for="col in timeColumns"
             :key="col.key"
-            class="font-medium text-center"
+            class="text-center font-medium"
             :class="getCellClass(row, col.key === 'setup' ? row.setup_val : row.values[col.key])"
           >
-            <span v-if="col.key === 'setup'" class="w-full font-semibold text-center">{{
-              row.setup_val
-            }}</span>
-            <span v-else>{{ row.values[col.key] || '' }}</span>
+            <span v-if="col.key === 'setup'" class="w-full text-center font-semibold">{{ row.setup_val }}</span>
+            <span v-else>{{ row.values[col.key] || "" }}</span>
           </td>
 
           <!-- Filler cells -->
@@ -67,7 +58,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref } from "vue"
 
 const props = defineProps({
   timeColumns: {
@@ -87,7 +78,7 @@ const props = defineProps({
 })
 
 function parseRange(setPointStr) {
-  if (!setPointStr || typeof setPointStr !== 'string') return null
+  if (!setPointStr || typeof setPointStr !== "string") return null
   const cleaned = setPointStr.trim()
   if (!cleaned) return null
 
@@ -111,34 +102,34 @@ function parseRange(setPointStr) {
 
 function getCellClass(row, rawVal) {
   // Only check for Line Speed
-  if (!row || (row.key !== 'LINE_SPEED' && !row.name?.toLowerCase().includes('line speed'))) {
-    return ''
+  if (!row || (row.key !== "LINE_SPEED" && !row.name?.toLowerCase().includes("line speed"))) {
+    return ""
   }
 
-  if (rawVal === undefined || rawVal === null || String(rawVal).trim() === '') {
-    return ''
+  if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") {
+    return ""
   }
 
   const numVal = parseFloat(rawVal)
   if (isNaN(numVal)) {
-    return ''
+    return ""
   }
 
   const range = parseRange(row.set_point)
   if (!range) {
-    return ''
+    return ""
   }
 
   if (numVal < range.min || numVal > range.max) {
-    return 'bg-red-100 text-red-600 font-bold'
+    return "bg-red-100 text-red-600 font-bold"
   }
 
-  return ''
+  return ""
 }
 
 const fillerColumnCount = computed(() => {
   // Exclude 'setup' column from counting toward the 14 visible time columns
-  const nonSetupCols = props.timeColumns.filter((c) => c.key !== 'setup')
+  const nonSetupCols = props.timeColumns.filter((c) => c.key !== "setup")
   const currentCount = nonSetupCols.length
   return currentCount < props.targetColumnCount ? props.targetColumnCount - currentCount : 0
 })

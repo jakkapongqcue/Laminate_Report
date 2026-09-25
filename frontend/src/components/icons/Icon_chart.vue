@@ -1,5 +1,6 @@
 <template>
   <svg
+    aria-hidden="true"
     class="mx-auto text-gray-400"
     :class="cusClass"
     viewBox="0 -960 960 960"
@@ -13,11 +14,11 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
+import { defineProps } from "vue"
 defineProps({
   cusClass: {
     type: String,
-    default: 'w-4 h-4',
+    default: "w-4 h-4",
   },
 })
 </script>

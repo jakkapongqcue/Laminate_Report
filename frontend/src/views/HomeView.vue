@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto" style="max-width: 297mm">
+  <main class="mx-auto" style="max-width: 297mm">
     <!-- App Header Title (Hidden on Print) -->
     <AppHeadTitle :machines="machines" />
 
@@ -32,24 +32,29 @@
     <SwitchViewMode :currentViewMode="viewMode" @setViewMode="setViewMode" />
 
     <!-- Loading State Overlay -->
-    <div v-if="isLoading" class="no-print flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white py-20 shadow">
+    <div v-if="isLoading" role="status" aria-live="polite" class="no-print flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white py-20 shadow">
       <Icon_circleLoad :cus-class="'h-10 w-10 text-sky-600 mb-3'" />
       <p class="text-sm font-semibold text-gray-700">กำลังดึงข้อมูล{{ viewMode === "report" ? "รายงาน" : "กราฟ" }}จากระบบ...</p>
       <p class="mt-1 text-xs text-gray-500">กรุณารอสักครู่</p>
     </div>
 
     <!-- Error Alert State -->
-    <div v-else-if="errorMessage" class="no-print mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+    <div v-else-if="errorMessage" role="alert" class="no-print mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
       <div class="flex items-center gap-2">
         <Icon_error />
         <span>{{ errorMessage }}</span>
       </div>
-      <button @click="handleSearch" class="rounded bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700">ลองใหม่</button>
+      <button type="button" @click="handleSearch" class="rounded bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700">ลองใหม่</button>
     </div>
 
     <!-- ── Mode 1: Report Pages Rendering Container ────────────────── -->
 
-    <Slot_MainContainer v-else-if="viewMode === 'report' && reportData && reportData.pages && reportData.pages.length > 0">
+    <Slot_MainContainer
+      v-else-if="viewMode === 'report' && reportData && reportData.pages && reportData.pages.length > 0"
+      id="report-panel"
+      role="tabpanel"
+      aria-label="รายงานตรวจสอบเครื่องจักร"
+    >
       <div v-for="page in reportData.pages" :key="page.page_number" class="report-wrapper">
         <Printing_ReportSheet
           v-if="activeProcessType === 'Printing'"
@@ -89,7 +94,13 @@
     </Slot_MainContainer>
 
     <!-- ── Mode 2: Chart Rendering Container ────────────────────────── -->
-    <div v-else-if="viewMode === 'chart' && chartData && chartData.parameters && chartData.parameters.length > 0" class="no-print">
+    <div
+      v-else-if="viewMode === 'chart' && chartData && chartData.parameters && chartData.parameters.length > 0"
+      id="chart-panel"
+      role="tabpanel"
+      aria-label="กราฟวิเคราะห์แนวโน้ม"
+      class="no-print"
+    >
       <Global_Chart
         :chart-data="chartData"
         :machine="chartData.machine"
@@ -105,12 +116,12 @@
     <div v-else class="no-print rounded-lg border border-gray-200 bg-white py-16 text-center shadow-sm">
       <Icon_report v-if="viewMode === 'report'" :class="'mb-2 h-12 w-12'" />
       <Icon_chart v-else cusClass="h-12 w-12 mb-2" />
-      <h3 class="text-sm font-semibold text-gray-800">
+      <div class="text-sm font-semibold text-gray-800">
         <div v-if="loadFirstTime">กดปุ่ม "ดึงข้อมูล" เพื่อเริ่มสร้าง{{ viewMode === "report" ? "รายงาน" : "กราฟ" }}</div>
         <div v-else>ไม่พบข้อมูล{{ viewMode === "report" ? "รายงาน" : "กราฟ" }}ในช่วงเวลาดังกล่าว</div>
-      </h3>
+      </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup>

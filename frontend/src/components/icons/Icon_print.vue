@@ -1,5 +1,11 @@
 <template>
-  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg
+    class="h-4 w-4"
+    aria-hidden="true"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
     <path
       stroke-linecap="round"
       stroke-linejoin="round"

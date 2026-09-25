@@ -1,8 +1,9 @@
 <template>
   <svg
     v-if="isChecking"
+    aria-hidden="true"
     :cusClass="cusClass"
-    class="w-3.5 h-3.5 animate-spin"
+    class="h-3.5 w-3.5 animate-spin"
     viewBox="0 0 24 24"
     fill="currentColor"
   >
@@ -14,14 +15,19 @@
       stroke="currentColor"
       stroke-width="4"
     ></circle>
-    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+    <path
+      class="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8v8z"
+    ></path>
   </svg>
 
   <svg
     v-else
+    aria-hidden="true"
     :cusClass="cusClass"
     xmlns="http://www.w3.org/2000/svg"
-    class="w-3.5 h-3.5"
+    class="h-3.5 w-3.5"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -43,7 +49,7 @@ const props = defineProps({
   },
   cusClass: {
     type: String,
-    default: '',
+    default: "",
   },
 })
 </script>

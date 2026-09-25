@@ -4,24 +4,24 @@
       <thead>
         <tr>
           <!-- Column 1: Parameter name -->
-          <th style="width: 230px; min-width: 230px">Setting Parameter</th>
+          <th scope="col" style="width: 230px; min-width: 230px">Setting Parameter</th>
 
           <!-- Column 2: Set Point -->
-          <th style="width: 68px; min-width: 68px" class="font-bold">Set Point (PS)</th>
+          <th scope="col" style="width: 68px; min-width: 68px" class="font-bold">Set Point (PS)</th>
 
           <!-- Column 3: Diagonal Time / Unit header -->
-          <th class="diagonal-cell" style="width: 48px; min-width: 48px; height: 26px">
+          <th scope="col" class="diagonal-cell" style="width: 48px; min-width: 48px; height: 26px">
             <div class="top-right-text">Time</div>
             <div class="bottom-left-text">Unit</div>
           </th>
 
           <!-- Dynamic time columns -->
-          <th v-for="col in timeColumns" :key="col.key" class="text-center font-bold">
+          <th scope="col" v-for="col in timeColumns" :key="col.key" class="text-center font-bold">
             <span class="whitespace-pre-wrap">{{ col.label }}</span>
           </th>
 
           <!-- Filler columns to always show targetColumnCount slots -->
-          <th v-for="n in fillerColumnCount" :key="'fill-hdr-' + n" class="" style="min-width: 42px">น.</th>
+          <th scope="col" v-for="n in fillerColumnCount" :key="'fill-hdr-' + n" class="" style="min-width: 42px">น.</th>
         </tr>
       </thead>
       <tbody>

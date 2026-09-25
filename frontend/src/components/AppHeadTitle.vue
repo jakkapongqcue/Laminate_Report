@@ -1,14 +1,14 @@
 <template>
-  <div class="no-print mb-6 flex flex-nowrap items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+  <header class="no-print mb-6 flex flex-nowrap items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
     <div class="flex items-center gap-3">
-      <div class="icon-img flex h-10 w-10 flex-none rounded-lg bg-sky-100 font-bold text-white shadow"></div>
+      <div class="icon-img flex h-10 w-10 flex-none rounded-lg bg-sky-100 font-bold text-white shadow" role="img" aria-label="โลโก้ Starflex"></div>
       <div>
         <div class="flex items-center gap-2">
           <h1 class="line-clamp-2 text-base leading-5 font-bold text-gray-900 sm:leading-normal md:text-lg">
             {{ currentProcess.title }}
           </h1>
         </div>
-        <p class="hidden text-xs text-gray-500 md:inline-block">
+        <p class="hidden text-xs text-gray-600 md:inline-block">
           {{ currentProcess.subtitle }}
         </p>
       </div>
@@ -21,6 +21,9 @@
         <button
           type="button"
           @click="isDropdownOpen = !isDropdownOpen"
+          aria-haspopup="true"
+          :aria-expanded="isDropdownOpen"
+          aria-label="เลือกกระบวนการผลิต"
           class="inline-flex items-center gap-2.5 rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 transition hover:border-gray-400 hover:bg-gray-100 focus:ring-2 focus:ring-sky-500 focus:outline-none sm:text-sm"
         >
           <!-- Active Process Icon -->
@@ -47,8 +50,9 @@
           <!-- <span class="text-xs text-gray-500 hidden sm:inline">({{ currentProcess.nameTh }})</span> -->
 
           <svg
-            class="h-4 w-4 text-gray-400 transition-transform duration-200"
+            class="h-4 w-4 text-gray-500 transition-transform duration-200"
             :class="{ 'rotate-180': isDropdownOpen }"
+            aria-hidden="true"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -66,13 +70,19 @@
           leave-from-class="opacity-100 scale-100"
           leave-to-class="opacity-0 scale-95"
         >
-          <div v-if="isDropdownOpen" class="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 text-sm shadow-xl">
-            <div class="border-b border-gray-100 bg-gray-50 px-3.5 py-2 text-[11px] font-bold tracking-wider text-gray-400">เลือกกระบวนการ (Process Type)</div>
+          <div
+            v-if="isDropdownOpen"
+            role="menu"
+            aria-label="เลือกกระบวนการผลิต"
+            class="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 text-sm shadow-xl"
+          >
+            <div class="border-b border-gray-100 bg-gray-50 px-3.5 py-2 text-[11px] font-bold tracking-wider text-gray-600">เลือกกระบวนการ (Process Type)</div>
             <div class="space-y-0.5 p-1">
               <button
                 v-for="proc in processes"
                 :key="proc.id"
                 type="button"
+                role="menuitem"
                 @click="switchProcess(proc)"
                 class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition"
                 :class="proc.route === route.path ? 'bg-sky-50 font-semibold text-sky-900' : 'text-gray-700 hover:bg-gray-100'"
@@ -117,7 +127,7 @@
       >
       </router-link> -->
     </div>
-  </div>
+  </header>
 </template>
 
 <script setup>
