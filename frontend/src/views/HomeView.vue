@@ -32,14 +32,23 @@
     <SwitchViewMode :currentViewMode="viewMode" @setViewMode="setViewMode" />
 
     <!-- Loading State Overlay -->
-    <div v-if="isLoading" role="status" aria-live="polite" class="no-print flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white py-20 shadow">
+    <div
+      v-if="isLoading"
+      role="status"
+      aria-live="polite"
+      class="no-print flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white py-20 shadow"
+    >
       <Icon_circleLoad :cus-class="'h-10 w-10 text-sky-600 mb-3'" />
       <p class="text-sm font-semibold text-gray-700">กำลังดึงข้อมูล{{ viewMode === "report" ? "รายงาน" : "กราฟ" }}จากระบบ...</p>
       <p class="mt-1 text-xs text-gray-500">กรุณารอสักครู่</p>
     </div>
 
     <!-- Error Alert State -->
-    <div v-else-if="errorMessage" role="alert" class="no-print mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+    <div
+      v-else-if="errorMessage"
+      role="alert"
+      class="no-print mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+    >
       <div class="flex items-center gap-2">
         <Icon_error />
         <span>{{ errorMessage }}</span>

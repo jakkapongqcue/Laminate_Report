@@ -119,7 +119,9 @@
     <!-- Presets bar -->
     <div class="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3 text-xs text-gray-600">
       <span class="font-semibold text-gray-800">Quick Presets:</span>
-      <button type="button" @click="setShift(1)" class="cursor-pointer rounded bg-gray-100 px-2 py-1 font-medium transition hover:bg-sky-100 hover:text-sky-700">กะเช้า (08:00 - 20:00)</button>
+      <button type="button" @click="setShift(1)" class="cursor-pointer rounded bg-gray-100 px-2 py-1 font-medium transition hover:bg-sky-100 hover:text-sky-700">
+        กะเช้า (08:00 - 20:00)
+      </button>
       <button type="button" @click="setShift(2)" class="cursor-pointer rounded bg-gray-100 px-2 py-1 font-medium transition hover:bg-sky-100 hover:text-sky-700">
         กะดึกข้ามวัน (20:00 - 08:00)
       </button>
