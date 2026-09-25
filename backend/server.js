@@ -20,6 +20,7 @@ const {
 } = require("./processes");
 const { processSqlViewData } = require("./reportProcessor");
 const { processSqlChartData } = require("./chartProcessor");
+const { SOLVENT_PROCESS_NAMES } = require("./laminate/machines");
 
 const app = express();
 
@@ -63,6 +64,8 @@ router.get("/api/machines", (req, res) => {
       brand: m.brand,
       isMES: m.isMES,
       processType: m.processType,
+      supportedSolventTypes: m.supportedSolventTypes || null,
+      solventTypeRules: m.solventTypeRules || null,
     })),
   );
 });
@@ -185,6 +188,7 @@ router.get("/api/checkItemFG", async (req, res) => {
         bi.PRODPOOLID, 
         a.REVID, 
         a.RECID,
+        a.DETAILINDEX,
         ISNULL(ai.ITEMNAME, '') AS ITEMNAME
       FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] a
       LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] bi ON bi.ITEMID = a.ITEMID
@@ -217,6 +221,36 @@ router.get("/api/checkItemFG", async (req, res) => {
     const firstRecord = exists ? records[0] : null;
     const itemFgName = firstRecord ? (firstRecord.ITEMNAME || "").trim() : "";
 
+    // Extract unique DETAILINDEX values from records
+    const solventTypeSet = new Set();
+    for (const row of records) {
+      if (row.DETAILINDEX !== null && row.DETAILINDEX !== undefined && row.DETAILINDEX !== "") {
+        const dIdx = Number(row.DETAILINDEX);
+        if (!isNaN(dIdx) && dIdx > 0) {
+          solventTypeSet.add(dIdx);
+        }
+      }
+    }
+    let solventTypes = Array.from(solventTypeSet)
+      .sort((a, b) => a - b)
+      .map((idx) => ({
+        detailIndex: idx,
+        name: SOLVENT_PROCESS_NAMES[idx] || `Solvent Process ${idx}`,
+      }));
+
+    // If item has no explicit DETAILINDEX in records but machine supports solvent types, fallback to machine config
+    if (solventTypes.length === 0 && machineConfig && machineConfig.supportedSolventTypes) {
+      solventTypes = machineConfig.supportedSolventTypes.map((idx) => ({
+        detailIndex: idx,
+        name: SOLVENT_PROCESS_NAMES[idx] || `Solvent Process ${idx}`,
+      }));
+    }
+
+    const defaultSolventType =
+      solventTypes.length > 0
+        ? solventTypes[0].detailIndex
+        : machineConfig?.supportedSolventTypes?.[0] || 1;
+
     return res.json({
       exists,
       item_fg: cleanItemFg,
@@ -225,6 +259,8 @@ router.get("/api/checkItemFG", async (req, res) => {
       itemId: firstRecord ? firstRecord.ITEMID : null,
       prodPools,
       defaultPool,
+      solventTypes,
+      defaultSolventType,
       message: exists
         ? `พบข้อมูล Item FG: ${cleanItemFg} สำหรับเครื่องจักร ${axMachineId} ในระบบ AX`
         : `ไม่พบข้อมูล Item FG: ${cleanItemFg} สำหรับเครื่องจักร ${axMachineId} ในระบบ AX`,
@@ -281,6 +317,7 @@ router.get("/api/report/laminate", async (req, res) => {
     hour_step = 1,
     item_fg = null,
     prod_pool = null,
+    detail_index = null,
   } = req.query;
 
   const dateValidation = validateDateRange(date_from, date_to, 31);
@@ -341,6 +378,11 @@ router.get("/api/report/laminate", async (req, res) => {
     // Fetch Set Point (PS) and item_fg_name from AXDB if item_fg is provided
     let setPointMap = {};
     let itemFgName = "";
+    const cleanDetailIndex =
+      detail_index !== null && detail_index !== undefined && String(detail_index).trim() !== ""
+        ? parseInt(detail_index, 10)
+        : null;
+
     if (item_fg) {
       try {
         const axPool = await getAxPool();
@@ -355,10 +397,14 @@ router.get("/api/report/laminate", async (req, res) => {
           if (cleanProdPool) {
             axRequest.input("prod_pool", sql.VarChar, cleanProdPool);
           }
+          if (cleanDetailIndex) {
+            axRequest.input("detail_index", sql.Int, cleanDetailIndex);
+          }
 
           const axQuery = `
             SELECT TOP 1
               ${AX_PS_COLUMNS.join(",\n              ")},
+              a.DETAILINDEX AS [DETAILINDEX],
               ISNULL(ai.ITEMNAME, '') AS [ITEM_FG_NAME]
             FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] a
             LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] bi ON bi.ITEMID = a.ITEMID
@@ -366,6 +412,7 @@ router.get("/api/report/laminate", async (req, res) => {
             WHERE a.ITEMFG = @item_fg 
               AND a.MACHINE = @ax_machine
               ${cleanProdPool ? "AND bi.PRODPOOLID = @prod_pool" : ""}
+              ${cleanDetailIndex ? "AND a.DETAILINDEX = @detail_index" : ""}
             ORDER BY a.REVID DESC, a.RECID DESC
           `;
           const axResult = await axRequest.query(axQuery);
@@ -373,11 +420,11 @@ router.get("/api/report/laminate", async (req, res) => {
             setPointMap = axResult.recordset[0];
             itemFgName = (setPointMap.ITEM_FG_NAME || "").trim();
             console.log(
-              `Retrieved Set Point (PS) for ITEMFG: ${item_fg} (${itemFgName}), MACHINE: ${axMachineId}, POOL: ${cleanProdPool || "ANY"}`,
+              `Retrieved Set Point (PS) for ITEMFG: ${item_fg} (${itemFgName}), MACHINE: ${axMachineId}, POOL: ${cleanProdPool || "ANY"}, DETAILINDEX: ${cleanDetailIndex || setPointMap.DETAILINDEX || "ANY"}`,
             );
           } else {
             console.log(
-              `No Set Point record found in AX for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}, POOL: ${cleanProdPool || "ANY"}`,
+              `No Set Point record found in AX for ITEMFG: ${item_fg}, MACHINE: ${axMachineId}, POOL: ${cleanProdPool || "ANY"}, DETAILINDEX: ${cleanDetailIndex || "ANY"}`,
             );
           }
         }
@@ -385,6 +432,9 @@ router.get("/api/report/laminate", async (req, res) => {
         console.warn(`Could not query AXDB for Set Point: ${axErr.message}`);
       }
     }
+
+    const activeDetailIndex =
+      cleanDetailIndex || (setPointMap.DETAILINDEX ? parseInt(setPointMap.DETAILINDEX, 10) : null);
 
     const response = processSqlViewData({
       sqlRows,
@@ -397,6 +447,7 @@ router.get("/api/report/laminate", async (req, res) => {
       setPointMap,
       itemFg: item_fg,
       itemFgName,
+      detailIndex: activeDetailIndex,
     });
 
     res.json(response);
@@ -742,9 +793,7 @@ router.get(["/api/chart/:processType", "/api/chart/laminate"], async (req, res) 
 
   try {
     const machineConfig =
-      procMachines.find((m) => m.id === machine) ||
-      findMachine(machine) ||
-      procMachines[0];
+      procMachines.find((m) => m.id === machine) || findMachine(machine) || procMachines[0];
     if (!machineConfig || !machineConfig.tableName) {
       return res.status(400).json({
         detail: `เครื่องจักร ${machineConfig ? machineConfig.name : machine} ยังไม่มีฐานข้อมูลรองรับ (Under Construction)`,
@@ -845,8 +894,7 @@ router.get("/api/machineStatus", async (req, res) => {
   const tableName = machineConfig.tableName;
   const timestampCol = machineConfig.timestampColumn || "[SERVER TIMESTAMP]";
   const speedCol =
-    machineConfig.columns?.find((c) => /LINE_SPEED/i.test(c)) ||
-    "[Machine : Speed] AS LINE_SPEED";
+    machineConfig.columns?.find((c) => /LINE_SPEED/i.test(c)) || "[Machine : Speed] AS LINE_SPEED";
 
   // 2. Optimized query: Only select necessary columns with a time window (last 24h)
   const fastQuery = `
@@ -887,9 +935,12 @@ router.get("/api/machineStatus", async (req, res) => {
     const row = sqlRows[0];
     const rawSpeed = row["LINE_SPEED"] !== undefined ? row["LINE_SPEED"] : row["line_speed"];
     const lineSpeed = parseFloat(rawSpeed) || 0;
-    const diffSec = row["DIFF_SECONDS"] !== null && row["DIFF_SECONDS"] !== undefined ? Number(row["DIFF_SECONDS"]) : null;
+    const diffSec =
+      row["DIFF_SECONDS"] !== null && row["DIFF_SECONDS"] !== undefined
+        ? Number(row["DIFF_SECONDS"])
+        : null;
     const isRecent = diffSec === null || (diffSec >= 0 && diffSec <= 1800);
-    const status = (isRecent && lineSpeed > 0) ? 1 : 0;
+    const status = isRecent && lineSpeed > 0 ? 1 : 0;
     const parsedTime = parseSqlTimestamp(row["SERVER_TIMESTAMP"]);
     const updateTime = parsedTime ? formatDateTimeShort(parsedTime) : "";
 

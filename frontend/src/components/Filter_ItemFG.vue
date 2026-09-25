@@ -12,7 +12,6 @@
           type="search"
           @dblclick.ctrl="handleDblClickExample()"
           @input="handleItemFgInput()"
-          @keyup.enter="handleEnterOrSearch()"
           @change="handleEnterOrSearch()"
           v-model.trim="filters.item_fg"
           placeholder="ระบุ Item FG หรือคำค้นหา เช่น 180101 (กด Enter เพื่อค้นหา)"
@@ -133,6 +132,51 @@
       </div>
     </div>
 
+    <!-- Solvent Process Section with Smooth Grid Transition -->
+    <div
+      class="grid transition-all duration-300 ease-in-out"
+      :class="solventTypes && solventTypes.length > 1 ? 'mt-2 grid-rows-[1fr] opacity-100' : 'mt-0 grid-rows-[0fr] opacity-0'"
+    >
+      <div class="overflow-hidden">
+        <transition
+          enter-active-class="transition duration-200 ease-out"
+          enter-from-class="opacity-0 translate-y-1"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-150 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-1"
+          mode="out-in"
+        >
+          <!-- Solvent Process Standard Radio Selection -->
+          <div
+            v-if="solventTypes && solventTypes.length > 1"
+            key="multiple-solvent"
+            class="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-md border border-sky-200 bg-sky-50/70 px-3 py-2 text-xs"
+          >
+            <span class="font-semibold text-sky-950">กระบวนการเคลือบ:</span>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <label v-for="s in solventTypes" :key="s.detailIndex" class="inline-flex cursor-pointer items-center gap-1.5 font-medium text-gray-700 hover:text-sky-800">
+                <input
+                  type="radio"
+                  name="solventProcessSelect"
+                  :value="s.detailIndex"
+                  v-model="filters.detail_index"
+                  class="h-3.5 w-3.5 cursor-pointer border-gray-300 text-sky-600 focus:ring-sky-500"
+                />
+                <span>{{ s.name }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Single Solvent Process Info Indicator -->
+          <div v-else-if="solventTypes && solventTypes.length === 1" key="single-solvent" class="flex items-center gap-1.5 text-xs text-gray-500">
+            <span>กระบวนการเคลือบ:</span>
+            <span class="font-semibold text-sky-800">{{ solventTypes[0].name }}</span>
+          </div>
+        </transition>
+      </div>
+    </div>
+
     <!-- Product Name Info with Smooth Transition -->
     <transition
       enter-active-class="transition duration-200 ease-out"
@@ -179,6 +223,10 @@ const props = defineProps({
     default: () => [],
   },
   itemFgSearchResults: {
+    type: Array,
+    default: () => [],
+  },
+  solventTypes: {
     type: Array,
     default: () => [],
   },
@@ -259,7 +307,7 @@ const highlightKeyword = (text, query) => {
 }
 
 const handleDblClickExample = () => {
-  props.filters.item_fg = "FGF0001020180101"
+  props.filters.item_fg = "FGF0004030133502"
   emit("checkItemFGwithMachine")
 }
 

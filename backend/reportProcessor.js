@@ -24,9 +24,19 @@ function processSqlViewData({
   itemFgName = "",
   parameters = STANDARD_PARAMETERS,
   machinesList = MACHINES,
+  detailIndex = null,
 }) {
   const machineConfig = machinesList.find((m) => m.id === machine) || machinesList[0];
   const machineName = machineConfig.name;
+
+  const solventRule =
+    detailIndex && machineConfig && machineConfig.solventTypeRules
+      ? machineConfig.solventTypeRules[detailIndex]
+      : null;
+  const isKeyInactive = (key) => {
+    if (!solventRule || !solventRule.inactiveKeys) return false;
+    return solventRule.inactiveKeys.includes(key);
+  };
 
   // Build a timestamp mapping list
   const timestampList = [];
@@ -178,6 +188,7 @@ function processSqlViewData({
 
     const rows = [];
     for (const p of parameters) {
+      const inactive = isKeyInactive(p.key);
       let setupVal = "";
       const colValues = {};
 
@@ -185,7 +196,7 @@ function processSqlViewData({
       // Index for array-based mock row fallback
       const colIdx = p.param_id;
 
-      if (idx === 1 && setupRow && dbColumnName) {
+      if (!inactive && idx === 1 && setupRow && dbColumnName) {
         const rawVal = extractValueFromRow(setupRow, dbColumnName, colIdx);
         if (rawVal !== null && rawVal !== undefined) {
           setupVal = formatReadingValue(rawVal);
@@ -197,7 +208,7 @@ function processSqlViewData({
           continue;
         }
 
-        if (!dbColumnName) {
+        if (inactive || !dbColumnName) {
           colValues[col.key] = "";
           continue;
         }
@@ -218,10 +229,12 @@ function processSqlViewData({
       const unit = (machineConfig.unitOverrides && machineConfig.unitOverrides[p.key]) || p.unit;
 
       let setPointVal = "";
-      if (setPointMap && setPointMap[p.key] !== undefined && setPointMap[p.key] !== null) {
-        setPointVal = formatReadingValue(setPointMap[p.key]);
-      } else if (p.set_point) {
-        setPointVal = String(p.set_point);
+      if (!inactive) {
+        if (setPointMap && setPointMap[p.key] !== undefined && setPointMap[p.key] !== null) {
+          setPointVal = formatReadingValue(setPointMap[p.key]);
+        } else if (p.set_point) {
+          setPointVal = String(p.set_point);
+        }
       }
 
       rows.push({
@@ -233,6 +246,7 @@ function processSqlViewData({
         unit: unit,
         setup_val: setupVal,
         values: colValues,
+        inactive: inactive,
       });
     }
 
@@ -260,6 +274,8 @@ function processSqlViewData({
     date_to: dateToStr,
     time_from: timeFromStr,
     time_to: timeToStr,
+    detail_index: detailIndex,
+    solvent_type_name: solventRule ? solventRule.name : null,
     pages,
   };
 }

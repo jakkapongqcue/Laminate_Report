@@ -22,24 +22,34 @@
     </div>
 
     <!-- ── Metadata Row ─────────────────────────────────────────────────── -->
-    <div class="mb-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[9px] font-medium">
-      <div class="flex items-center gap-1">
-        <span class="font-bold">FG Code:</span>
-        <span class="rounded px-1 py-0.5 font-semibold">{{ itemFg || "-" }}</span>
-        <span v-if="itemFgName" class="px-1 py-0.5 font-bold">ชื่องาน:</span>
-        <span v-if="itemFgName" class="line-clamp-1 w-72 px-1 py-0.5">{{ itemFgName }}</span>
+    <div class="mb-3 grid grid-cols-14 items-center gap-x-4 gap-y-1 text-[9px] font-medium text-nowrap">
+      <div class="col-span-2 flex">
+        <div class="flex items-center gap-1">
+          <span class="font-bold">FG Code:</span>
+          <span>{{ itemFg || "-" }}</span>
+        </div>
       </div>
-      <div class="flex items-center gap-1">
+      <div class="col-span-4 flex items-center gap-1">
+        <span v-if="itemFgName" class="font-bold">ชื่องาน:</span>
+        <span v-if="itemFgName" class="line-clamp-1 text-wrap">{{ itemFgName }}</span>
+      </div>
+      <div class="col-span-2 flex items-center gap-1">
         <span class="font-bold">เครื่องเคลือบ:</span>
-        <span class="rounded px-1 py-0.5 font-semibold">{{ machine }}</span>
+        <span>{{ machine }}</span>
       </div>
-      <div class="flex items-center gap-1">
+      <div class="col-span-2 flex">
+        <div v-if="solventTypeName" class="flex items-center gap-1">
+          <span class="font-bold">กระบวนการ:</span>
+          <span>{{ solventTypeName }}</span>
+        </div>
+      </div>
+      <div class="col-span-3 flex items-center gap-1">
         <span class="font-bold">วันที่:</span>
-        <span class="rounded px-1 py-0.5"> {{ formatDate(dateFrom) }}</span>
-        <span class="rounded px-1 py-0.5"> {{ formatTime(timeFrom) }}</span>
+        <span> {{ formatDate(dateFrom) }}</span>
+        <span> {{ formatTime(timeFrom) }}</span>
         <span class="self-center font-bold">ถึง</span>
-        <span v-if="dateFrom !== dateTo" class="rounded px-1 py-0.5">{{ formatDate(dateTo) }}</span>
-        <span class="rounded px-1 py-0.5"> {{ formatTime(timeTo) }}</span>
+        <span v-if="dateFrom !== dateTo">{{ formatDate(dateTo) }}</span>
+        <span> {{ formatTime(timeTo) }}</span>
       </div>
     </div>
 
@@ -104,6 +114,10 @@ const props = defineProps({
     default: "",
   },
   itemFgName: {
+    type: String,
+    default: "",
+  },
+  solventTypeName: {
     type: String,
     default: "",
   },

@@ -7,6 +7,7 @@
     <FilterBar
       :filters="filters"
       :machines="machines"
+      :solventTypes="solventTypes"
       :statusLoading="isLoading"
       :isCheckingItemFg="isCheckingItemFg || isSearchingItemFg"
       :itemFgStatus="itemFgStatus"
@@ -78,6 +79,7 @@
           :machine="reportData.machine"
           :item-fg="reportData.item_fg"
           :item-fg-name="reportData.item_fg_name"
+          :solvent-type-name="reportData.item_fg ? reportData.solvent_type_name : ''"
           :date-from="reportData.date_from"
           :date-to="reportData.date_to"
           :time-from="reportData.time_from"
@@ -157,6 +159,7 @@ const filters = reactive({
   item_fg: "",
   item_fg_name: "",
   prod_pool: "",
+  detail_index: 1,
   date_from: getTodayStr(),
   date_to: getTodayStr(),
   time_from: "08:00",
@@ -165,6 +168,7 @@ const filters = reactive({
 })
 
 const prodPools = ref([])
+const solventTypes = ref([])
 const machines = ref([])
 const loadFirstTime = ref(true)
 const isLoading = ref(false)
@@ -189,6 +193,27 @@ const itemFgStatus = reactive({
   timer: null,
 })
 
+const initSolventTypesForMachine = (machId) => {
+  const m = machines.value.find((mach) => mach.id === machId)
+  if (m && m.supportedSolventTypes && m.supportedSolventTypes.length > 0) {
+    if (m.solventTypeRules) {
+      solventTypes.value = m.supportedSolventTypes.map((idx) => ({
+        detailIndex: idx,
+        name: m.solventTypeRules[idx]?.name || `Solvent Process ${idx}`,
+      }))
+    } else {
+      solventTypes.value = m.supportedSolventTypes.map((idx) => ({
+        detailIndex: idx,
+        name: `Solvent Process ${idx}`,
+      }))
+    }
+    filters.detail_index = m.supportedSolventTypes[0]
+  } else {
+    solventTypes.value = []
+    filters.detail_index = 1
+  }
+}
+
 const clearItemFgStatus = () => {
   if (itemFgStatus.timer) {
     clearTimeout(itemFgStatus.timer)
@@ -199,6 +224,7 @@ const clearItemFgStatus = () => {
   prodPools.value = []
   filters.prod_pool = ""
   filters.item_fg_name = ""
+  initSolventTypesForMachine(filters.machineId)
 }
 
 const showItemFgStatus = ({ status = "", text = "", message = "", duration = 0 }) => {
@@ -261,6 +287,12 @@ const checkItemFGwithMachine = async () => {
       } else if (data.prodPools && data.prodPools.length > 0) {
         filters.prod_pool = data.prodPools[0].poolId
       }
+      if (data.solventTypes && data.solventTypes.length > 0) {
+        solventTypes.value = data.solventTypes
+        filters.detail_index = data.defaultSolventType || data.solventTypes[0].detailIndex
+      } else {
+        initSolventTypesForMachine(filters.machineId)
+      }
       showItemFgStatus({
         status: "found",
         text: "มีข้อมูล PS ในระบบ",
@@ -270,6 +302,7 @@ const checkItemFGwithMachine = async () => {
       filters.item_fg_name = ""
       prodPools.value = []
       filters.prod_pool = ""
+      initSolventTypesForMachine(filters.machineId)
       showItemFgStatus({
         status: "not_found",
         text: "ไม่พบข้อมูล PS ในระบบ",
@@ -396,12 +429,20 @@ const fetchMachines = async (procType = activeProcessType.value) => {
           const firstMes = data.find((m) => m.isMES !== false)
           filters.machineId = firstMes ? firstMes.id : data[0].id
         }
+        initSolventTypesForMachine(filters.machineId)
       }
     }
   } catch (err) {
     console.warn("Could not fetch machines list, using defaults:", err)
   }
 }
+
+watch(
+  () => filters.machineId,
+  (newId) => {
+    initSolventTypesForMachine(newId)
+  },
+)
 
 watch(
   () => activeProcessType.value,
@@ -412,7 +453,7 @@ watch(
     errorMessage.value = ""
     clearItemFgStatus()
     await fetchMachines(newType)
-    fetchMachineStatus()
+    // fetchMachineStatus()
   },
 )
 
@@ -463,6 +504,10 @@ const fetchReport = async () => {
 
     if (filters.prod_pool) {
       queryParams.append("prod_pool", filters.prod_pool)
+    }
+
+    if (filters.detail_index) {
+      queryParams.append("detail_index", filters.detail_index.toString())
     }
 
     let path = "/api/report/laminate"
@@ -561,53 +606,52 @@ const printReport = () => {
   window.print()
 }
 
-let machineStatusAbortController = null
+// let machineStatusAbortController = null
 
 const fetchMachineStatus = async () => {
-  if (machineStatusAbortController) {
-    machineStatusAbortController.abort()
-  }
-  machineStatusAbortController = new AbortController()
-
-  machineStatus.value.status = "Loading"
-  try {
-    const queryParams = new URLSearchParams({
-      machine: filters.machineId,
-    })
-    const res = await fetch(BACKEND_API_BASE_URL + "/api/machineStatus?" + queryParams.toString(), {
-      signal: machineStatusAbortController.signal,
-    })
-    if (!res.ok) {
-      throw new Error(`Server returned status ${res.status}`)
-    }
-    const data = await res.json()
-    if (data.status === "N/A" || data.message?.includes("No MES")) {
-      machineStatus.value.status = "N/A"
-    } else {
-      machineStatus.value.status = data.status.toString() == "1" ? "Online" : "Offline"
-    }
-    machineStatus.value.time = data.updateTime ? data.updateTime.toString() : ""
-  } catch (err) {
-    if (err.name === "AbortError") {
-      return
-    }
-    console.warn("Could not fetch machine status:", err)
-    machineStatus.value.status = "Error"
-    machineStatus.value.time = ""
-  }
+  // if (machineStatusAbortController) {
+  //   machineStatusAbortController.abort()
+  // }
+  // machineStatusAbortController = new AbortController()
+  // machineStatus.value.status = "Loading"
+  // try {
+  //   const queryParams = new URLSearchParams({
+  //     machine: filters.machineId,
+  //   })
+  //   const res = await fetch(BACKEND_API_BASE_URL + "/api/machineStatus?" + queryParams.toString(), {
+  //     signal: machineStatusAbortController.signal,
+  //   })
+  //   if (!res.ok) {
+  //     throw new Error(`Server returned status ${res.status}`)
+  //   }
+  //   const data = await res.json()
+  //   if (data.status === "N/A" || data.message?.includes("No MES")) {
+  //     machineStatus.value.status = "N/A"
+  //   } else {
+  //     machineStatus.value.status = data.status.toString() == "1" ? "Online" : "Offline"
+  //   }
+  //   machineStatus.value.time = data.updateTime ? data.updateTime.toString() : ""
+  // } catch (err) {
+  //   if (err.name === "AbortError") {
+  //     return
+  //   }
+  //   console.warn("Could not fetch machine status:", err)
+  //   machineStatus.value.status = "Error"
+  //   machineStatus.value.time = ""
+  // }
 }
 
 watch(
   () => filters.machineId,
   (newId) => {
     if (newId) {
-      fetchMachineStatus()
+      // fetchMachineStatus()
     }
   },
 )
 
 onMounted(async () => {
   await fetchMachines()
-  fetchMachineStatus()
+  // fetchMachineStatus()
 })
 </script>

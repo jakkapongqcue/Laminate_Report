@@ -25,6 +25,7 @@
         <!-- Item FG Component -->
         <Filter_ItemFG
           :filters="filters"
+          :solventTypes="solventTypes"
           :isCheckingItemFg="isCheckingItemFg"
           :itemFgStatus="itemFgStatus"
           :prodPools="prodPools"
@@ -183,6 +184,10 @@ const props = defineProps({
     default: () => [],
   },
   itemFgSearchResults: {
+    type: Array,
+    default: () => [],
+  },
+  solventTypes: {
     type: Array,
     default: () => [],
   },

@@ -47,6 +47,49 @@ const LAMINATE_MACHINES = [
       PRESSURE_COATING_FR_OP: "Bar",
       PRESSURE_COATING_FR_MO: "Bar",
     },
+    supportedSolventTypes: [1, 2, 3],
+    solventTypeRules: {
+      1: {
+        detailIndex: 1,
+        name: "Solvent Base Gravure",
+        inactiveKeys: [
+          // "TEMP_TANK_A",
+          // "TEMP_A_B",
+          // "TEMP_HOSE_AB",
+          // "TEMP_COATING_FM_BR_WR",
+          // "PRESSURE_COATING_FR_OP",
+          // "PRESSURE_COATING_FR_MO",
+        ],
+      },
+      2: {
+        detailIndex: 2,
+        name: "Solvent Free",
+        inactiveKeys: [
+          // "TEMP_ZONE_1",
+          // "TEMP_ZONE_2",
+          // "TEMP_ZONE_3",
+          // "TEMP_ZONE_4",
+          // "PRESSURE_COATING_GR_OP",
+          // "PRESSURE_COATING_GR_MO",
+          // "SMOOTHING_ROLL",
+        ],
+      },
+      3: {
+        detailIndex: 3,
+        name: "Solvent Base Flexo",
+        inactiveKeys: [
+          // "TEMP_TANK_A",
+          // "TEMP_A_B",
+          // "TEMP_HOSE_AB",
+          // "TEMP_COATING_FM_BR_WR",
+          // "PRESSURE_COATING_FR_OP",
+          // "PRESSURE_COATING_FR_MO",
+          // "PRESSURE_COATING_GR_OP",
+          // "PRESSURE_COATING_GR_MO",
+          // "SMOOTHING_ROLL",
+        ],
+      },
+    },
   },
   {
     id: "LB10",
@@ -166,6 +209,13 @@ const LAMINATE_MACHINES = [
   },
 ];
 
+const SOLVENT_PROCESS_NAMES = {
+  1: "Solvent Base Gravure",
+  2: "Solvent Free",
+  3: "Solvent Base Flexo",
+};
+
 module.exports = {
   LAMINATE_MACHINES,
+  SOLVENT_PROCESS_NAMES,
 };

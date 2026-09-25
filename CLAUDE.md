@@ -211,10 +211,10 @@ Router รองรับการ Mount 2 รูปแบบพร้อมก�
 |---|---|---|---|
 | `GET` | `/` | - | Health check และแสดงสถานะ API |
 | `GET` | `/api/processes` | - | รายการสายการผลิตทั้งหมด (Laminate, Printing, BlownFilm) |
-| `GET` | `/api/machines` | `processType` (optional) | รายชื่อเครื่องจักรทั้งหมด หรือกรองตามสายการผลิต |
+| `GET` | `/api/machines` | `processType` (optional) | รายชื่อเครื่องจักรทั้งหมด พร้อม `supportedSolventTypes` และ `solventTypeRules` สำหรับเครื่อง Multi-coating |
 | `GET` | `/api/searchItemFG` | `machine`, `keyword` (>= 4 ตัวอักษร), `processType` | ค้นหา Item FG แบบ Autocomplete จากฐานข้อมูล AX (จำกัด TOP 20) |
-| `GET` | `/api/checkItemFG` | `machine`, `item_fg`, `processType` | ตรวจสอบรหัส Item FG ใน AX, ค้นหา Revision ล่าสุด, รายการ Production Pools, และคืนค่า `item_fg_name` |
-| `GET` | `/api/report/laminate` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool` | ดึงข้อมูลเซนเซอร์ Laminate (23 พารามิเตอร์) จาก `KEP_LOG` และค่า Set Point จาก `AXDB` (หากไม่มีข้อมูลส่ง HTTP 404) |
+| `GET` | `/api/checkItemFG` | `machine`, `item_fg`, `processType` | ตรวจสอบรหัส Item FG ใน AX, ค้นหา Revision ล่าสุด, รายการ Production Pools, รายการ `solventTypes` (`DETAILINDEX`), และคืนค่า `item_fg_name` |
+| `GET` | `/api/report/laminate` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool`, `detail_index` | ดึงข้อมูลเซนเซอร์ Laminate (23 พารามิเตอร์) จาก `KEP_LOG` และค่า Set Point จาก `AXDB` กรองตาม `detail_index` และทำ Parameter Masking (หากไม่มีข้อมูลส่ง HTTP 404) |
 | `GET` | `/api/report/printing` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool` | ดึงข้อมูลเซนเซอร์ Printing (32 พารามิเตอร์) จาก `KEP_LOG` และค่า Set Point จาก `AXDB` (หากไม่มีข้อมูลส่ง HTTP 404) |
 | `GET` | `/api/report/blownfilm` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool` | ดึงข้อมูลเซนเซอร์ BlownFilm (40 พารามิเตอร์) จาก `KEP_LOG` และค่า Set Point จาก `AXDB` (หากไม่มีข้อมูลส่ง HTTP 404) |
 | `GET` | `/api/chart/:processType` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `step_minutes` | ดึงข้อมูลเซนเซอร์ Time Series แบบไดนามิกตามสายการผลิต (`laminate`, `printing`, `blownfilm`) สำหรับ ApexCharts (หากไม่มีข้อมูลส่ง HTTP 404) |
@@ -249,13 +249,30 @@ Router รองรับการ Mount 2 รูปแบบพร้อมก�
   - เครื่องจะถือว่า **Online (`status = 1`)** เฉพาะเมื่อ `lineSpeed > 0` **และ** มีข้อมูลส่งเข้ามาล่าสุดไม่เกิน 30 นาที (`DIFF_SECONDS <= 1800`)
   - หากไม่มีข้อมูลในรอบ 24 ชั่วโมง หรือเครื่องที่ไม่มีระบบ MES (`isMES === false`) จะตอบกลับเป็น `status: 0` หรือ `status: "N/A"` พร้อมข้อความแจ้งสถานะ
 
-### 7.4 การจัดการฟอร์แมตพิมพ์ (Print-Ready Layout)
+### 7.4 การจัดการกระบวนการเคลือบ (Solvent Process Filtering & Parameter Masking)
+ในเครื่องจักรสาย Laminate แบบ Combi เช่น **`1LB-09`** ตัวเครื่องสามารถสลับชุดเคลือบ (Trolley) ทำงานได้หลากหลายกระบวนการ โดยในฐานข้อมูล AX สเปกสูตรผลิตจะจำแนกตาม field **`DETAILINDEX`** ใน `[AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE]`:
+- **`1`**: Solvent Base Gravure (เปิดใช้งาน Tunnel Zone 1-4; ปิดถังต้มกาวและแรงดึงชุดเคลือบ Solvent Free)
+- **`2`**: Solvent Free (ปิด Tunnel Zone 1-4, ปิดลูกกลิ้ง Gravure และ Smoothing roll; เปิดถังต้มกาว A, A+B, ท่อสายกาว และชุดเคลือบ Solvent Free)
+- **`3`**: Solvent Base Flexo (เปิดใช้งาน Tunnel Zone 1-4; ปิดถังต้มกาว, แรงกดลูกกลิ้ง Gravure และ Smoothing roll)
+
+**กลไกการทำงานในระบบ**:
+1. **Config ระดับเครื่องจักร (`backend/laminate/machines.js`)**:
+   - ระบุ `supportedSolventTypes: [1, 2, 3]` และ `solventTypeRules` พร้อมรายการคีย์ที่ไม่เกี่ยวข้อง `inactiveKeys` สำหรับแต่ละกระบวนการ
+2. **การค้นหาและตรวจสอบ Item FG (`GET /api/checkItemFG`)**:
+   - Query ข้อมูล `DETAILINDEX` ที่มีอยู่จริงใน AX สำหรับ Item FG นั้นๆ และส่งกลับรายการ `solventTypes` (เช่น `[{ detailIndex: 1, name: "Solvent Base Gravure" }, ...]`) พร้อม `defaultSolventType`
+3. **การ Masking พารามิเตอร์ (`backend/reportProcessor.js`)**:
+   - เมื่อเลือกกระบวนการเคลือบ พารามิเตอร์ที่อยู่ใน `inactiveKeys` จะถูกเคลียร์ค่าให้เป็นค่าว่าง (`""`) ทั้งใน **Set Point (PS)**, **Set up** และ **ค่าอ่านรายชั่วโมงจาก `KEP_LOG`** เพื่อป้องกันความสับสนจากเซนเซอร์ของชุด Trolley ที่ไม่ได้ใช้งาน แต่ยังคงรักษาโครงสร้างตาราง 23 แถวตามมาตรฐานเอกสาร `FM-PRD-01/55` ไว้อย่างครบถ้วน
+4. **ส่วนแสดงผล Frontend**:
+   - **Filter Bar (`Filter_ItemFG.vue`)**: แสดงตัวเลือก Radio ให้ผู้ใช้เลือกกระบวนการเคลือบเฉพาะเมื่อเครื่องจักรหรือ Item FG รองรับหลายกระบวนการ
+   - **A4 Report Sheet (`Laminate_ReportSheet.vue`)**: แสดง Badge ระบุกระบวนการเคลือบ เช่น `กระบวนการ: Solvent Base Gravure` บนส่วนหัว Metadata ของรายงาน
+
+### 7.5 การจัดการฟอร์แมตพิมพ์ (Print-Ready Layout)
 - ออกแบบเฉพาะสำหรับกระดาษ **A4 Landscape (297mm x 210mm)**
 - ใช้ CSS `@media print` ซ่อนส่วน Filter, Controls, Navigation Bar และปุ่มต่างๆ (`no-print`)
 - กำหนด `page-break-after: always` ในแต่ละหน้ารายงานเพื่อให้พิมพ์ออกมาแยกหน้าอย่างสมบูรณ์
 - สำหรับ Printing ที่มีถึง 32 พารามิเตอร์ มีการปรับความสูงแถวตารางให้กะทัดรัด (`height: 15.5px`) และ BlownFilm ที่มีถึง 40 พารามิเตอร์ ใช้ความสูงแถว (`height: 12.5px`, `font-size: 8px`) เพื่อให้แสดงผลครบถ้วนภายใน 1 หน้ากระดาษ A4
 
-### 7.5 ระบบกราฟกลาง (Global Chart Component)
+### 7.6 ระบบกราฟกลาง (Global Chart Component)
 - คอมโพเนนต์ `Global_Chart.vue` รองรับการแสดงผลกราฟ Time Series ของทุกสายการผลิต
 - **Dynamic Category Pills**: จัดหมวดหมู่ตัวแปรอัตโนมัติ (Speed, Length, Temp, Dimension & Gauge, Throughput, Tension, Tension & Rotation, Pressure, Corona, Roll & Work, Information)
 - **Per-Process LocalStorage**: แยกบันทึกตัวแปรเริ่มต้นใน Browser Cache ตามแต่ละ Process เช่น `laminate-report-chart-default-params`, `printing-report-chart-default-params`, และ `blownfilm-report-chart-default-params`
