@@ -245,7 +245,7 @@ onUnmounted(() => {
 
 <style lang="css" scoped>
 .icon-img {
-  background-image: url("/logo-icon.svg");
+  background-image: url("@/assets/icon_starflex_NoBG.svg");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
