@@ -19,8 +19,23 @@ call npm run build
 popd
 echo From: %FRONT_SRC%
 echo To:   %FRONT_DST%
-if not exist "%FRONT_DST%" mkdir "%FRONT_DST%"
-:: Using robocopy to copy/mirror the built files
+
+if not exist "%FRONT_DST%" (
+    mkdir "%FRONT_DST%"
+) else (
+    echo Cleaning target frontend directory...
+    rem Delete all files in target frontend
+    for /f "delims=" %%F in ('dir "%FRONT_DST%" /b /a:-d 2^>nul') do (
+        del /f /q /a "%FRONT_DST%\%%F"
+    )
+    rem Delete all folders in target frontend
+    for /f "delims=" %%D in ('dir "%FRONT_DST%" /b /a:d 2^>nul') do (
+        rd /s /q "%FRONT_DST%\%%D"
+    )
+    echo Clean frontend completed.
+)
+
+:: Using robocopy to copy the built files
 robocopy "%FRONT_SRC%" "%FRONT_DST%" /E /R:3 /W:5
 if %ERRORLEVEL% LSS 8 (
     echo Frontend copy completed successfully.
