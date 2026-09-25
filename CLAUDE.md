@@ -257,11 +257,12 @@ Router รองรับการ Mount 2 รูปแบบพร้อมก�
 
 **กลไกการทำงานในระบบ**:
 1. **Config ระดับเครื่องจักร (`backend/laminate/machines.js`)**:
-   - ระบุ `supportedSolventTypes: [1, 2, 3]` และ `solventTypeRules` พร้อมรายการคีย์ที่ไม่เกี่ยวข้อง `inactiveKeys` สำหรับแต่ละกระบวนการ
+   - รองรับทั้งการระบุ `inactiveKeys` ระดับเครื่องจักรโดยตรง (เช่น เครื่อง `2LB06` ที่ไม่มี Zone 4 และไม่มีชุด Solvent Free)
+   - และระบุ `supportedSolventTypes: [1, 2, 3]` พร้อม `solventTypeRules` ที่มี `inactiveKeys` แยกตามกระบวนการ (เช่น เครื่อง Combi `1LB09`)
 2. **การค้นหาและตรวจสอบ Item FG (`GET /api/checkItemFG`)**:
    - Query ข้อมูล `DETAILINDEX` ที่มีอยู่จริงใน AX สำหรับ Item FG นั้นๆ และส่งกลับรายการ `solventTypes` (เช่น `[{ detailIndex: 1, name: "Solvent Base Gravure" }, ...]`) พร้อม `defaultSolventType`
 3. **การ Masking พารามิเตอร์ (`backend/reportProcessor.js`)**:
-   - เมื่อเลือกกระบวนการเคลือบ พารามิเตอร์ที่อยู่ใน `inactiveKeys` จะถูกเคลียร์ค่าให้เป็นค่าว่าง (`""`) ทั้งใน **Set Point (PS)**, **Set up** และ **ค่าอ่านรายชั่วโมงจาก `KEP_LOG`** เพื่อป้องกันความสับสนจากเซนเซอร์ของชุด Trolley ที่ไม่ได้ใช้งาน แต่ยังคงรักษาโครงสร้างตาราง 23 แถวตามมาตรฐานเอกสาร `FM-PRD-01/55` ไว้อย่างครบถ้วน
+   - เมื่อสร้างหน้ารายงาน พารามิเตอร์ที่อยู่ใน `machineConfig.inactiveKeys` หรือ `solventRule.inactiveKeys` จะถูกเคลียร์ค่าให้เป็นค่าว่าง (`""`) ทั้งใน **Set Point (PS)**, **Set up** และ **ค่าอ่านรายชั่วโมงจาก `KEP_LOG`** เพื่อป้องกันความสับสนจากเซนเซอร์ที่ไม่ได้ติดตั้งหรือชุด Trolley ที่ไม่ได้ใช้งาน แต่ยังคงรักษาโครงสร้างตาราง 23 แถวตามมาตรฐานเอกสาร `FM-PRD-01/55` ไว้อย่างครบถ้วน
 4. **ส่วนแสดงผล Frontend**:
    - **Filter Bar (`Filter_ItemFG.vue`)**: แสดงตัวเลือก Radio ให้ผู้ใช้เลือกกระบวนการเคลือบเฉพาะเมื่อเครื่องจักรหรือ Item FG รองรับหลายกระบวนการ
    - **A4 Report Sheet (`Laminate_ReportSheet.vue`)**: แสดง Badge ระบุกระบวนการเคลือบ เช่น `กระบวนการ: Solvent Base Gravure` บนส่วนหัว Metadata ของรายงาน

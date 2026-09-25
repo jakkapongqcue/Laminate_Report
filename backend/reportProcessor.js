@@ -34,6 +34,9 @@ function processSqlViewData({
       ? machineConfig.solventTypeRules[detailIndex]
       : null;
   const isKeyInactive = (key) => {
+    if (machineConfig && machineConfig.inactiveKeys && machineConfig.inactiveKeys.includes(key)) {
+      return true;
+    }
     if (!solventRule || !solventRule.inactiveKeys) return false;
     return solventRule.inactiveKeys.includes(key);
   };

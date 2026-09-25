@@ -155,6 +155,15 @@ const LAMINATE_MACHINES = [
       TENSION_UNWIND_2: "N",
       TENSION_REWIND: "N",
     },
+    inactiveKeys: [
+      "TEMP_ZONE_4",
+      "TEMP_TANK_A",
+      "TEMP_A_B",
+      "TEMP_HOSE_AB",
+      "TEMP_COATING_FM_BR_WR",
+      "PRESSURE_COATING_FR_OP",
+      "PRESSURE_COATING_FR_MO",
+    ],
   },
   {
     id: "SB01",
