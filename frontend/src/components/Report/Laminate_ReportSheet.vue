@@ -22,16 +22,16 @@
     </div>
 
     <!-- ── Metadata Row ─────────────────────────────────────────────────── -->
-    <div class="mb-3 grid grid-cols-14 items-center gap-x-4 gap-y-1 text-[9px] font-medium text-nowrap">
+    <div class="mb-3 grid grid-cols-14 items-center gap-x-4 text-[9px] font-medium text-nowrap">
       <div class="col-span-2 flex">
         <div class="flex items-center gap-1">
           <span class="font-bold">FG Code:</span>
           <span>{{ itemFg || "-" }}</span>
         </div>
       </div>
-      <div class="col-span-4 flex items-center gap-1">
-        <span v-if="itemFgName" class="font-bold">ชื่องาน:</span>
-        <span v-if="itemFgName" class="line-clamp-1 text-wrap">{{ itemFgName }}</span>
+      <div class="col-span-5 flex items-center gap-1">
+        <span class="font-bold">ชื่องาน:</span>
+        <span class="line-clamp-1 text-wrap">{{ itemFgName || "-" }}</span>
       </div>
       <div class="col-span-2 flex items-center gap-1">
         <span class="font-bold">เครื่องเคลือบ:</span>
@@ -43,7 +43,7 @@
           <span>{{ solventTypeName }}</span>
         </div>
       </div>
-      <div class="col-span-3 flex items-center gap-1">
+      <div class="col-span-3 flex items-center justify-end gap-1">
         <span class="font-bold">วันที่:</span>
         <span> {{ formatDate(dateFrom) }}</span>
         <span> {{ formatTime(timeFrom) }}</span>
