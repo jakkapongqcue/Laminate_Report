@@ -24,19 +24,19 @@
 ## 2. เทคโนโลยีที่ใช้ (Tech Stack)
 
 ### Frontend
-- **Framework**: Vue 3 (`^3.5.40`) ด้วย Composition API (`<script setup>`)
-- **Build Tool**: Vite (`^8.1.5`)
-- **Styling**: Tailwind CSS v4 (`^4.3.3`) พร้อม `@tailwindcss/vite`
-- **Router**: Vue Router (`^5.2.0`)
-- **State Management**: Pinia (`^4.0.2`)
-- **Charting**: ApexCharts (`^7.0.0`) และ `vue3-apexcharts` (`^1.11.1`)
-- **Code Formatter**: Prettier (`^3.9.8`) + `prettier-plugin-tailwindcss`
+- **Framework**: Vue 3 ด้วย Composition API (`<script setup>`)
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS v4 พร้อม `@tailwindcss/vite`
+- **Router**: Vue Router
+- **State Management**: Pinia
+- **Charting**: ApexCharts และ `vue3-apexcharts`
+- **Code Formatter**: Prettier + `prettier-plugin-tailwindcss`
 
 ### Backend
 - **Runtime**: Node.js (เวอร์ชัน 18+ หรือ 22+)
-- **Framework**: Express.js (`^4.19.2`)
-- **Database Driver**: `mssql` (`^10.0.2`) พร้อม Connection Pooling
-- **Utilities**: `cors` (`^2.8.5`), `dotenv` (`^16.4.5`)
+- **Framework**: Express.js
+- **Database Driver**: `mssql` พร้อม Connection Pooling
+- **Utilities**: `cors`, `dotenv`
 - **Web Server Hosting**: Windows Server IIS + `iisnode` (รองรับ Named Pipe IPC)
 
 ### Databases
@@ -115,16 +115,18 @@ Laminate_Report/
         │   ├── AppHeadTitle.vue          # Header ด้านบน พร้อม Dropdown สลับประเภท Process
         │   ├── FilterBar.vue             # แถบเลือกเงื่อนไข (Machine, Date, Time, Step, ปุ่มค้นหา/พิมพ์)
         │   ├── Filter_ItemFG.vue         # ช่องกรอก/ค้นหา Item FG (Autocomplete >= 4 ตัวอักษร)
-        │   ├── Laminate_ReportSheet.vue  # แบบฟอร์มรายงาน Laminate มาตรฐาน FM-PRD-01/55
-        │   ├── Laminate_ParameterTable.vue # ตารางพารามิเตอร์ Laminate พร้อมเช็ค Out-of-Spec
-        │   ├── Printing_ReportSheet.vue  # แบบฟอร์มรายงาน Printing มาตรฐาน FM-PRD-XX/XX
-        │   ├── Printing_ParameterTable.vue # ตารางพารามิเตอร์ Printing 32 แถวแบบ Compact
-        │   ├── BlownFilm_ReportSheet.vue # แบบฟอร์มรายงาน BlownFilm มาตรฐาน FM-PRD-XX/XX
-        │   ├── BlownFilm_ParameterTable.vue # ตารางพารามิเตอร์ BlownFilm 40 แถวแบบ Ultra-Compact
-        │   ├── Global_Chart.vue          # กราฟ Time Series กลาง รองรับทุกสายการผลิต (ApexCharts)
-        │   ├── SwitchViewMode.vue        # ปุ่มสลับระหว่าง "ตารางรายงาน" กับ "กราฟเส้น"
         │   ├── Pill_MachineStatus.vue    # ป้ายแสดงสถานะ Online/Offline/Loading/NA ของเครื่องจักร
-        │   └── Slot_MainContainer.vue    # Container ครอบหน้าจอ
+        │   ├── SwitchViewMode.vue        # ปุ่มสลับระหว่าง "ตารางรายงาน" กับ "กราฟเส้น"
+        │   ├── Slot_MainContainer.vue    # Container ครอบหน้าจอ
+        │   ├── Report/                   # คอมโพเนนต์รายงานและกราฟ (แยกตามสายการผลิต)
+        │   │   ├── Laminate_ReportSheet.vue    # แบบฟอร์มรายงาน Laminate มาตรฐาน FM-PRD-01/55
+        │   │   ├── Laminate_ParameterTable.vue # ตารางพารามิเตอร์ Laminate พร้อมเช็ค Out-of-Spec
+        │   │   ├── Printing_ReportSheet.vue    # แบบฟอร์มรายงาน Printing มาตรฐาน FM-PRD-XX/XX
+        │   │   ├── Printing_ParameterTable.vue # ตารางพารามิเตอร์ Printing 32 แถวแบบ Compact
+        │   │   ├── BlownFilm_ReportSheet.vue   # แบบฟอร์มรายงาน BlownFilm มาตรฐาน FM-PRD-XX/XX
+        │   │   ├── BlownFilm_ParameterTable.vue# ตารางพารามิเตอร์ BlownFilm 40 แถวแบบ Ultra-Compact
+        │   │   └── Global_Chart.vue            # กราฟ Time Series กลาง รองรับทุกสายการผลิต (ApexCharts)
+        │   └── icons/                    # ไอคอน SVG แยกตามประเภทการใช้งาน (15 ไฟล์)
         └── utils/
             └── timeAgo.js        # Helper คำนวณเวลาเชิงสัมพันธ์ (Relative Time)
 ```
@@ -217,8 +219,19 @@ Router รองรับการ Mount 2 รูปแบบพร้อมก�
 | `GET` | `/api/report/laminate` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool`, `detail_index` | ดึงข้อมูลเซนเซอร์ Laminate (23 พารามิเตอร์) จาก `KEP_LOG` และค่า Set Point จาก `AXDB` กรองตาม `detail_index` และทำ Parameter Masking (หากไม่มีข้อมูลส่ง HTTP 404) |
 | `GET` | `/api/report/printing` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool` | ดึงข้อมูลเซนเซอร์ Printing (32 พารามิเตอร์) จาก `KEP_LOG` และค่า Set Point จาก `AXDB` (หากไม่มีข้อมูลส่ง HTTP 404) |
 | `GET` | `/api/report/blownfilm` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `hour_step`, `item_fg`, `prod_pool` | ดึงข้อมูลเซนเซอร์ BlownFilm (40 พารามิเตอร์) จาก `KEP_LOG` และค่า Set Point จาก `AXDB` (หากไม่มีข้อมูลส่ง HTTP 404) |
-| `GET` | `/api/chart/:processType` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `step_minutes` | ดึงข้อมูลเซนเซอร์ Time Series แบบไดนามิกตามสายการผลิต (`laminate`, `printing`, `blownfilm`) สำหรับ ApexCharts (หากไม่มีข้อมูลส่ง HTTP 404) |
+| `GET` | `/api/chart/:processType` | `machine`, `date_from`, `date_to`, `time_from`, `time_to`, `step_minutes` | ดึงข้อมูลเซนเซอร์ Time Series แบบไดนามิกตามสายการผลิต (`laminate`, `printing`, `blownfilm`) สำหรับ ApexCharts (รองรับ Legacy alias `/api/chart/laminate` ด้วย, หากไม่มีข้อมูลส่ง HTTP 404) |
 | `GET` | `/api/machineStatus` | `machine` | ตรวจสอบสถานะการทำงาน (Online: speed > 0 และอัปเดตไม่เกิน 30 นาที, Offline: speed = 0) พร้อม Cache 5 วินาที |
+
+> **การจำกัดช่วงเวลาค้นหาสูงสุด (Max Date Range Limit $\le$ 31 วัน)**:
+> ในทุก Endpoint ที่รับ `date_from` และ `date_to` ระบบจะตรวจสอบผ่านฟังก์ชัน `validateDateRange`:
+> 1. `date_from` และ `date_to` ต้องอยู่ในฟอร์แมต `YYYY-MM-DD` ที่ถูกต้อง
+> 2. `date_from` ต้องไม่มากกว่า `date_to`
+> 3. ผลต่างของช่วงเวลาต้อง**ไม่เกิน 31 วัน** (`diffDays <= 31`)
+> หากไม่ผ่านเงื่อนไข ระบบจะตอบกลับ **HTTP 400 Bad Request** เช่น:
+> ```json
+> { "detail": "ช่วงเวลาที่เลือกต้องไม่เกิน 31 วัน (คุณเลือก 35 วัน) เพื่อประสิทธิภาพและความเสถียรของระบบ" }
+> ```
+> ฝั่ง Frontend จะทำการดักตรวจสอบก่อนส่ง Request เช่นกันเพื่อ UX ที่รวดเร็วและลดภาระของเครือข่ายและเซิร์ฟเวอร์
 
 > **การจัดการกรณีไม่มีข้อมูล (Empty Data Response)**:
 > ในทุก Endpoint รายงานและกราฟ หาก Query ฐานข้อมูล `KEP_LOG` แล้วไม่พบข้อมูล (`sqlRows.length === 0`) Backend จะส่งสถานะ **HTTP 404** พร้อม JSON:
@@ -271,7 +284,7 @@ Router รองรับการ Mount 2 รูปแบบพร้อมก�
 - ออกแบบเฉพาะสำหรับกระดาษ **A4 Landscape (297mm x 210mm)**
 - ใช้ CSS `@media print` ซ่อนส่วน Filter, Controls, Navigation Bar และปุ่มต่างๆ (`no-print`)
 - กำหนด `page-break-after: always` ในแต่ละหน้ารายงานเพื่อให้พิมพ์ออกมาแยกหน้าอย่างสมบูรณ์
-- สำหรับ Printing ที่มีถึง 32 พารามิเตอร์ มีการปรับความสูงแถวตารางให้กะทัดรัด (`height: 15.5px`) และ BlownFilm ที่มีถึง 40 พารามิเตอร์ ใช้ความสูงแถว (`height: 12.5px`, `font-size: 8px`) เพื่อให้แสดงผลครบถ้วนภายใน 1 หน้ากระดาษ A4
+- ปรับขนาดตารางและสัดส่วนให้กะทัดรัดเป็นพิเศษสำหรับสายที่มีพารามิเตอร์จำนวนมาก (Printing 32 ค่า และ BlownFilm 40 ค่า) เพื่อให้แสดงผลและพิมพ์จบได้ครบถ้วนภายใน 1 หน้ากระดาษ A4
 
 ### 7.6 ระบบกราฟกลาง (Global Chart Component)
 - คอมโพเนนต์ `Global_Chart.vue` รองรับการแสดงผลกราฟ Time Series ของทุกสายการผลิต
@@ -300,21 +313,22 @@ Router รองรับการ Mount 2 รูปแบบพร้อมก�
 
 ## 9. ข้อพึงระวังและคำแนะนำสำหรับนักพัฒนา (Development Notes & Gotchas)
 
-1. **Backend ปัจจุบันคือ Node.js + Express**:
-   - ในอดีตโปรเจกต์เคยทดลองพัฒนาด้วย Python (FastAPI) แต่ถูกแปลงเป็น Node.js Express (`backend/server.js`) อย่างสมบูรณ์แล้ว
-   - โฟลเดอร์ `backend/venv` หรือไฟล์ `.pyc` เก่าไม่มีการใช้งานใน Production สามารถละเว้นได้
-   - ใน `run_backend.bat` หากพบคำสั่ง python ให้ใช้คำสั่ง `npm start` หรือ `node server.js`
-2. **การทำงานร่วมกับ `iisnode`**:
+1. **การทำงานร่วมกับ `iisnode`**:
    - ห้าม Hardcode พอร์ตเฉพาะใน `server.js` เพราะบน IIS ตัว `iisnode` จะส่ง Named Pipe มาทาง `process.env.PORT` (เช่น `\\.\pipe\...`)
-3. **ความปลอดภัยของฐานข้อมูล**:
+2. **ความปลอดภัยของฐานข้อมูล**:
    - คำสั่ง SQL Query ทั้งหมดต้องใช้ Parameterized Input ผ่าน `request.input()` ของ `mssql` เสมอ เพื่อป้องกัน SQL Injection
-4. **SQL Server Delimited Identifiers (วงเล็บเหลี่ยม `[...]`)**:
+3. **SQL Server Delimited Identifiers (วงเล็บเหลี่ยม `[...]`)**:
    - ใน T-SQL คอลัมน์หรือ Alias ที่ขึ้นต้นด้วยตัวเลข (เช่น `1U_Roll_C`, `13U_WORK`) **ต้องครอบด้วย `[...]` เสมอ** เช่น `AS [1U_Roll_C]`
    - หากเขียน `AS 1U_Roll_C` โดยไม่มีวงเล็บเหลี่ยม SQL Server จะมองตัวเลข `1` เป็น Literal และเกิดข้อผิดพลาด `Incorrect syntax near '1'.`
-5. **การค้นหาคอลัมน์ Speed**:
+4. **การค้นหาคอลัมน์ Speed**:
    - ใน `server.js` ควรใช้ Regex `/LINE_SPEED/i.test(col)` เสมอ เพราะคอลัมน์ของแต่ละเครื่องมีทั้ง `[LINE_SPEED]`, `LINE_SPEED`, และ `as` เล็ก/ใหญ่
-6. **รูปแบบโค้ด (Code Formatting)**:
+5. **รูปแบบโค้ด (Code Formatting)**:
    - โปรเจกต์ใช้ Prettier:
      - สำหรับไฟล์ `.vue`: `singleQuote: true`, `semi: false`
      - สำหรับไฟล์ `.js`: `printWidth: 100` (ยกเว้น `common.js` ใช้ `printWidth: 190`)
    - ก่อน Commit ควรทดสอบรัน `npm run format` ในโฟลเดอร์ `frontend`
+6. **การจัดการ Connection Pool (`backend/db.js`)**:
+   - ใช้ Singleton Promise Guard (`kepLogPoolPromise`, `axPoolPromise`) เพื่อป้องกันการสร้าง Connection Pool ซ้ำซ้อน (Race Condition) เมื่อมี Request เข้ามาพร้อมกันขณะกำลังเชื่อมต่อ โดยเรียกใช้งานผ่าน `getKepLogPool()` และ `getAxPool()`
+7. **การรันคำสั่งบน Windows PowerShell (Execution Policy)**:
+   - หากรันคำสั่ง `npm` บน PowerShell แล้วพบข้อผิดพลาด `npm.ps1 cannot be loaded because running scripts is disabled on this system` ให้เรียกผ่าน Command Prompt หรือรันด้วย `cmd.exe /c npm ...` หรือรันผ่านไฟล์ `.bat` เช่น `run_all.bat`, `run_backend.bat`, `run_frontend.bat`
+
