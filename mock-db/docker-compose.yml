@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  mock-sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver_express_mock
+    restart: always
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Express # กำหนดเป็นรุ่น SQL Server Express
+      - MSSQL_SA_PASSWORD=Welcome2026! # รหัสผ่านของ sa (ต้องมีตัวใหญ่, เล็ก, ตัวเลข, สัญลักษณ์)
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_mock_data:/var/opt/mssql
+
+volumes:
+  mssql_mock_data:
+    driver: local
