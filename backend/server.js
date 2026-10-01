@@ -380,7 +380,7 @@ router.get("/api/report/laminate", async (req, res) => {
     let itemFgName = "";
     const cleanDetailIndex =
       detail_index !== null && detail_index !== undefined && String(detail_index).trim() !== ""
-        ? parseInt(detail_index, 10)
+        ? String(detail_index).trim()
         : null;
 
     if (item_fg) {
@@ -397,8 +397,8 @@ router.get("/api/report/laminate", async (req, res) => {
           if (cleanProdPool) {
             axRequest.input("prod_pool", sql.VarChar, cleanProdPool);
           }
-          if (cleanDetailIndex) {
-            axRequest.input("detail_index", sql.Int, cleanDetailIndex);
+          if (cleanDetailIndex !== null) {
+            axRequest.input("detail_index", sql.VarChar, cleanDetailIndex);
           }
 
           const axQuery = `
@@ -412,7 +412,7 @@ router.get("/api/report/laminate", async (req, res) => {
             WHERE a.ITEMFG = @item_fg 
               AND a.MACHINE = @ax_machine
               ${cleanProdPool ? "AND bi.PRODPOOLID = @prod_pool" : ""}
-              ${cleanDetailIndex ? "AND a.DETAILINDEX = @detail_index" : ""}
+              ${cleanDetailIndex !== null ? "AND a.DETAILINDEX = @detail_index" : ""}
             ORDER BY a.REVID DESC, a.RECID DESC
           `;
           const axResult = await axRequest.query(axQuery);
@@ -434,7 +434,7 @@ router.get("/api/report/laminate", async (req, res) => {
     }
 
     const activeDetailIndex =
-      cleanDetailIndex || (setPointMap.DETAILINDEX ? parseInt(setPointMap.DETAILINDEX, 10) : null);
+      cleanDetailIndex || (setPointMap.DETAILINDEX ? String(setPointMap.DETAILINDEX).trim() : null);
 
     const response = processSqlViewData({
       sqlRows,
