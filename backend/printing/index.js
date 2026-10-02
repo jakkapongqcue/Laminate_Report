@@ -1,6 +1,6 @@
 const { PRINTING_MACHINES } = require("./machines");
 const { PRINTING_PARAMETERS } = require("./parameters");
-const { AX_PRINTING_PS_COLUMNS } = require("./axPs");
+const { AX_PRINTING_PS_COLUMNS, getPrintingAxPsColumns } = require("./axPs");
 
 module.exports = {
   processType: "Printing",
@@ -8,4 +8,5 @@ module.exports = {
   machines: PRINTING_MACHINES,
   parameters: PRINTING_PARAMETERS,
   axPsColumns: AX_PRINTING_PS_COLUMNS,
+  getAxPsColumns: getPrintingAxPsColumns,
 };

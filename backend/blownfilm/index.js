@@ -1,6 +1,6 @@
 const { BLOWNFILM_MACHINES } = require("./machines");
 const { BLOWNFILM_PARAMETERS } = require("./parameters");
-const { AX_BLOWNFILM_PS_COLUMNS } = require("./axPs");
+const { AX_BLOWNFILM_PS_COLUMNS, getBlownFilmAxPsColumns } = require("./axPs");
 
 module.exports = {
   processType: "BlownFilm",
@@ -8,4 +8,5 @@ module.exports = {
   machines: BLOWNFILM_MACHINES,
   parameters: BLOWNFILM_PARAMETERS,
   axPsColumns: AX_BLOWNFILM_PS_COLUMNS,
+  getAxPsColumns: getBlownFilmAxPsColumns,
 };
