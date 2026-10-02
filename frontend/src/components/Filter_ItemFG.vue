@@ -74,10 +74,10 @@
               :key="item.item_fg"
               role="option"
               @click="handleSelectSearchResult(item)"
-              class="group flex cursor-pointer flex-col px-3 py-2 text-left transition-colors hover:bg-sky-50"
+              class="group flex cursor-pointer flex-col px-3 py-2 text-left transition-colors hover:bg-sky-100"
             >
               <div class="flex items-center justify-between">
-                <span class="font-mono font-bold text-gray-800 group-hover:text-sky-600" v-html="highlightKeyword(item.item_fg, filters.item_fg)"></span>
+                <span class="font-mono font-bold text-gray-800 group-hover:text-sky-700" v-html="highlightKeyword(item.item_fg, filters.item_fg)"></span>
               </div>
               <div v-if="item.item_fg_name" class="mt-0.5 truncate text-[11px] text-gray-600" :title="item.item_fg_name">
                 {{ item.item_fg_name }}

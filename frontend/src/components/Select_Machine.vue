@@ -58,7 +58,7 @@
     >
       <div
         v-if="isOpen"
-        class="absolute top-full left-0 z-50 mt-1 max-h-72 w-full min-w-[280px] overflow-hidden rounded-lg border border-slate-200 bg-white text-xs shadow-xl sm:w-full"
+        class="absolute top-full left-0 z-50 mt-1 max-h-72 w-full min-w-40 overflow-hidden rounded-lg border border-slate-200 bg-white text-xs shadow-xl sm:w-full"
       >
         <!-- Options List -->
         <ul role="listbox" aria-label="รายการเครื่องจักร" class="max-h-60 divide-y divide-slate-100 overflow-y-auto">
@@ -166,7 +166,7 @@ const getItemClass = (m) => {
     return "bg-sky-50 font-medium cursor-pointer hover:bg-sky-100"
   }
   // Normal available machine
-  return "cursor-pointer hover:bg-sky-50"
+  return "cursor-pointer hover:bg-sky-100"
 }
 
 // Status badge styling
