@@ -22,7 +22,7 @@
         <!-- Badges for currently selected machine -->
         <div v-if="selectedMachine" class="flex shrink-0 items-center gap-1.5">
           <!-- MES Badge (Show only when isMES === true) -->
-          <span v-if="selectedMachine.isMES" class="inline-flex items-center rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-white shadow-xs">
+          <span v-if="selectedMachine.isMES" class="inline-flex items-center rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-white shadow-xl">
             MES
           </span>
 
