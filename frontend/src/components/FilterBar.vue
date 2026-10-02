@@ -10,11 +10,8 @@
             เครื่องจักร (Machine)
           </label>
           <div class="relative">
-            <select id="Input_Machine" v-model="filters.machineId" class="class_Input bg-white" @click.ctrl.alt="$emit('refreshMachine')" @change="handleMachineChange()">
-              <option v-for="m in machines" :key="m.id" :value="m.id" :disabled="m.isMES === false" :class="{ 'bg-gray-50 text-gray-400': m.isMES === false }">
-                {{ m.name }}{{ m.isMES === false ? " (No MES)" : "" }}
-              </option>
-            </select>
+            <Select_Machine v-model="filters.machineId" :machines="machines" @change="handleMachineChange()" @refreshMachine="$emit('refreshMachine')" />
+
             <!-- <Pill_MachineStatus
               :machineStatus="machineStatus"
               @fetchMachineStatus="$emit('fetchMachineStatus')"
@@ -136,9 +133,9 @@ import Icon_time from "./icons/Icon_time.vue"
 import Icon_print from "./icons/Icon_print.vue"
 import Icon_search from "./icons/Icon_search.vue"
 import Icon_machine from "./icons/Icon_machine.vue"
-
+import Select_Machine from "@/components/Select_Machine.vue"
 import Filter_ItemFG from "@/components/Filter_ItemFG.vue"
-import Pill_MachineStatus from "@/components/Pill_MachineStatus.vue"
+// import Pill_MachineStatus from "@/components/Pill_MachineStatus.vue"
 
 const props = defineProps({
   filters: {

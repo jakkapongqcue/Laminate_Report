@@ -4,6 +4,7 @@ const BLOWNFILM_MACHINES = [
     name: "1BF-01 Blownfilm",
     brand: "Blownfilm",
     isMES: true,
+    statusDesc: "Ready",
     processType: "BlownFilm",
     axMachineId: "1BF-01",
     tableName: "[KEP_LOG].[dbo].[View_1BF01_Blownfilm]",

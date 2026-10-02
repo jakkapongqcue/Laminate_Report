@@ -63,6 +63,7 @@ router.get("/api/machines", (req, res) => {
       name: m.name,
       brand: m.brand,
       isMES: m.isMES,
+      statusDesc: m.statusDesc,
       processType: m.processType,
       supportedSolventTypes: m.supportedSolventTypes || null,
       solventTypeRules: m.solventTypeRules || null,

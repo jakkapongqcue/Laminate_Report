@@ -13,6 +13,7 @@
           @dblclick.ctrl="handleDblClickExample()"
           @input="handleItemFgInput()"
           @change="handleEnterOrSearch()"
+          @keydown.esc="closeDropdown()"
           v-model.trim="filters.item_fg"
           placeholder="ระบุ Item FG หรือคำค้นหา เช่น 133502 (กด Enter เพื่อค้นหา)"
           class="class_Input w-full font-mono uppercase placeholder:text-xs"
