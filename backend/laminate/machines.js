@@ -5,7 +5,7 @@ const LAMINATE_MACHINES = [
     name: "1LB-09 Bobst",
     brand: "Bobst",
     isMES: true,
-    statusDesc: "Under Construction",
+    statusDesc: "Ready",
     processType: "Laminate",
     axMachineId: "1LB-09",
     tableName: "[KEP_LOG].[dbo].[View_1LB09_Bobst]",
@@ -70,7 +70,16 @@ const LAMINATE_MACHINES = [
       2: {
         detailIndex: 2,
         name: "Solvent Free",
-        inactiveKeys: ["SPLICE_SPEED", "TEMP_ZONE_1", "TEMP_ZONE_2"],
+        inactiveKeys: [
+          "SPLICE_SPEED",
+          "TEMP_ZONE_1",
+          "TEMP_ZONE_2",
+          "TEMP_ZONE_3",
+          "TEMP_ZONE_4",
+          "SMOOTHING_ROLL",
+          "CORONA_INSIDE",
+          "CORONA_OUTSIDE",
+        ],
       },
       3: {
         detailIndex: 3,
