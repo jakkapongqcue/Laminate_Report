@@ -1,5 +1,5 @@
 const { STANDARD_PARAMETERS } = require("./laminate/parameters");
-const { AX_PS_COLUMNS } = require("./laminate/axPs");
+const { AX_PS_COLUMNS, getAxPsColumns } = require("./laminate/axPs");
 const { ALL_MACHINES } = require("./processes");
 
 const MACHINES = ALL_MACHINES;
@@ -112,4 +112,5 @@ module.exports = {
   extractTimestampFromRow,
   extractValueFromRow,
   AX_PS_COLUMNS,
+  getAxPsColumns,
 };

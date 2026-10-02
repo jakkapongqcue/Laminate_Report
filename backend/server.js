@@ -8,6 +8,7 @@ const {
   formatDateTimeShort,
   formatDateTimeFull,
   AX_PS_COLUMNS,
+  getAxPsColumns,
 } = require("./common");
 const {
   PROCESS_LIST,
@@ -402,10 +403,7 @@ router.get("/api/report/laminate", async (req, res) => {
             axRequest.input("detail_index", sql.VarChar, cleanDetailIndex);
           }
 
-          const targetAxPsColumns =
-            machineConfig.axPsColumns && machineConfig.axPsColumns.length > 0
-              ? machineConfig.axPsColumns
-              : AX_PS_COLUMNS;
+          const targetAxPsColumns = getAxPsColumns(machineConfig);
 
           const axQuery = `
             SELECT TOP 1
