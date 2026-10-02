@@ -130,6 +130,11 @@ const PRINTING_MACHINES = [
       "[RewinderB length] as [RewingB_length]",
       "[Unwind Cutting Length] as [TOTAL_length]",
     ],
+    // ตัวอย่างการ Override คอลัมน์ AX Set Point เฉพาะเครื่อง PT-04
+    axPsOverrides: {
+      LINE_SPEED:
+        "CASE WHEN [SPEED] IS NULL OR LTRIM(RTRIM([SPEED])) = '' THEN [MAINSPEED] ELSE [SPEED] END AS [LINE_SPEED]",
+    },
   },
   {
     id: "PT08",

@@ -8,6 +8,7 @@ const {
   formatDateTimeShort,
   formatDateTimeFull,
   AX_PS_COLUMNS,
+  getAxPsColumns,
 } = require("./common");
 const {
   PROCESS_LIST,
@@ -402,10 +403,7 @@ router.get("/api/report/laminate", async (req, res) => {
             axRequest.input("detail_index", sql.VarChar, cleanDetailIndex);
           }
 
-          const targetAxPsColumns =
-            machineConfig.axPsColumns && machineConfig.axPsColumns.length > 0
-              ? machineConfig.axPsColumns
-              : AX_PS_COLUMNS;
+          const targetAxPsColumns = getAxPsColumns(machineConfig);
 
           const axQuery = `
             SELECT TOP 1
@@ -556,16 +554,13 @@ router.get("/api/report/printing", async (req, res) => {
             axRequest.input("prod_pool", sql.VarChar, cleanProdPool);
           }
 
-          const axPsCols =
-            machineConfig.axPsColumns && machineConfig.axPsColumns.length > 0
-              ? machineConfig.axPsColumns.join(",\n              ")
-              : printing.axPsColumns && printing.axPsColumns.length > 0
-                ? printing.axPsColumns.join(",\n              ")
-                : "a.RECID";
+          const targetAxPsColumns = printing.getAxPsColumns
+            ? printing.getAxPsColumns(machineConfig)
+            : machineConfig.axPsColumns || printing.axPsColumns || ["a.RECID"];
 
           const axQuery = `
             SELECT TOP 1
-              ${axPsCols},
+              ${targetAxPsColumns.join(",\n              ")},
               ISNULL(ai.ITEMNAME, '') AS [ITEM_FG_NAME]
             FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] a
             LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] bi ON bi.ITEMID = a.ITEMID
@@ -709,16 +704,13 @@ router.get("/api/report/blownfilm", async (req, res) => {
             axRequest.input("prod_pool", sql.VarChar, cleanProdPool);
           }
 
-          const axPsCols =
-            machineConfig.axPsColumns && machineConfig.axPsColumns.length > 0
-              ? machineConfig.axPsColumns.join(",\n              ")
-              : blownfilm.axPsColumns && blownfilm.axPsColumns.length > 0
-                ? blownfilm.axPsColumns.join(",\n              ")
-                : "a.RECID";
+          const targetAxPsColumns = blownfilm.getAxPsColumns
+            ? blownfilm.getAxPsColumns(machineConfig)
+            : machineConfig.axPsColumns || blownfilm.axPsColumns || ["a.RECID"];
 
           const axQuery = `
             SELECT TOP 1
-              ${axPsCols},
+              ${targetAxPsColumns.join(",\n              ")},
               ISNULL(ai.ITEMNAME, '') AS [ITEM_FG_NAME]
             FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] a
             LEFT JOIN [AX50_SF_PRD_SP1].[dbo].[SF_ViewInventTable_SF] bi ON bi.ITEMID = a.ITEMID
