@@ -402,9 +402,14 @@ router.get("/api/report/laminate", async (req, res) => {
             axRequest.input("detail_index", sql.VarChar, cleanDetailIndex);
           }
 
+          const targetAxPsColumns =
+            machineConfig.axPsColumns && machineConfig.axPsColumns.length > 0
+              ? machineConfig.axPsColumns
+              : AX_PS_COLUMNS;
+
           const axQuery = `
             SELECT TOP 1
-              ${AX_PS_COLUMNS.join(",\n              ")},
+              ${targetAxPsColumns.join(",\n              ")},
               a.DETAILINDEX AS [DETAILINDEX],
               ISNULL(ai.ITEMNAME, '') AS [ITEM_FG_NAME]
             FROM [AX50_SF_PRD_SP1].[dbo].[SF_PRODSPECMACHINE] a
@@ -552,9 +557,11 @@ router.get("/api/report/printing", async (req, res) => {
           }
 
           const axPsCols =
-            printing.axPsColumns && printing.axPsColumns.length > 0
-              ? printing.axPsColumns.join(",\n              ")
-              : "a.RECID";
+            machineConfig.axPsColumns && machineConfig.axPsColumns.length > 0
+              ? machineConfig.axPsColumns.join(",\n              ")
+              : printing.axPsColumns && printing.axPsColumns.length > 0
+                ? printing.axPsColumns.join(",\n              ")
+                : "a.RECID";
 
           const axQuery = `
             SELECT TOP 1
@@ -703,9 +710,11 @@ router.get("/api/report/blownfilm", async (req, res) => {
           }
 
           const axPsCols =
-            blownfilm.axPsColumns && blownfilm.axPsColumns.length > 0
-              ? blownfilm.axPsColumns.join(",\n              ")
-              : "a.RECID";
+            machineConfig.axPsColumns && machineConfig.axPsColumns.length > 0
+              ? machineConfig.axPsColumns.join(",\n              ")
+              : blownfilm.axPsColumns && blownfilm.axPsColumns.length > 0
+                ? blownfilm.axPsColumns.join(",\n              ")
+                : "a.RECID";
 
           const axQuery = `
             SELECT TOP 1
